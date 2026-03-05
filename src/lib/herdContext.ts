@@ -28,20 +28,22 @@ export async function buildHerdContext(): Promise<string> {
     fetchAllRows<BreedingCalvingRecord>('blair_breeding_calving'),
   ]);
 
-  const activeAnimals = allAnimals.filter(a => a.status?.toLowerCase() === 'active');
+  const activeAnimals = allAnimals.filter(a => a.status?.toLowerCase() === 'active' && a.operation === 'Blair');
+  const blairLids = new Set(activeAnimals.map(a => a.lifetime_id).filter(Boolean));
+  const blairRecords = allRecords.filter(r => r.lifetime_id && blairLids.has(r.lifetime_id));
 
-  // Overall stats
-  const withCalves = allRecords.filter(r => r.calf_status && r.calf_status.toLowerCase() !== 'open');
-  const totalBreedings = allRecords.filter(r => r.lifetime_id).length;
+  // Overall stats — scoped to Blair
+  const withCalves = blairRecords.filter(r => r.calf_status && r.calf_status.toLowerCase() !== 'open');
+  const totalBreedings = blairRecords.filter(r => r.lifetime_id).length;
   const conceptionRate = totalBreedings > 0 ? (withCalves.length / totalBreedings) * 100 : 0;
   const liveCalves = withCalves.filter(r => r.calf_status?.toLowerCase() === 'alive');
   const survivalRate = withCalves.length > 0 ? (liveCalves.length / withCalves.length) * 100 : 0;
-  const gestations = allRecords.map(r => r.gestation_days).filter((v): v is number => v != null && v >= 250 && v <= 310);
+  const gestations = blairRecords.map(r => r.gestation_days).filter((v): v is number => v != null && v >= 250 && v <= 310);
   const avgGestation = gestations.length > 0 ? gestations.reduce((a, b) => a + b, 0) / gestations.length : 0;
 
   // Year-over-year open rate
   const byYear = new Map<number, { total: number; open: number }>();
-  allRecords.forEach(r => {
+  blairRecords.forEach(r => {
     if (!r.breeding_year) return;
     const y = byYear.get(r.breeding_year) || { total: 0, open: 0 };
     y.total++;
@@ -55,7 +57,7 @@ export async function buildHerdContext(): Promise<string> {
 
   // Calving intervals
   const byCowDates = new Map<string, string[]>();
-  allRecords.forEach(r => {
+  blairRecords.forEach(r => {
     if (r.lifetime_id && r.calving_date) {
       const d = byCowDates.get(r.lifetime_id) || [];
       d.push(r.calving_date);
@@ -76,13 +78,13 @@ export async function buildHerdContext(): Promise<string> {
   const cowsWithIntervals = byCowDates.size;
 
   // Sire stats
-  const sireStats = computeSireStats(allRecords);
+  const sireStats = computeSireStats(blairRecords);
   const sireLines = sireStats.slice(0, 15).map(s =>
     `${s.sire} | Calves: ${s.total_calves} | Conception: ${s.ai_conception_rate}% | Avg Gest: ${s.avg_gestation_days}d | Avg BW: ${s.avg_calf_bw}lbs | Survival: ${s.calf_survival_rate}%`
   ).join('\n');
 
   // Composite scores
-  const cowStatsList = activeAnimals.map(a => computeCowStats(a, allRecords)).filter(c => c.composite_score > 0);
+  const cowStatsList = activeAnimals.map(a => computeCowStats(a, blairRecords)).filter(c => c.composite_score > 0);
   const sorted = [...cowStatsList].sort((a, b) => b.composite_score - a.composite_score);
   const top10 = sorted.slice(0, 10).map(c => `${c.tag || '—'} | ${c.lifetime_id} | Score: ${c.composite_score} | Calves: ${c.total_calves} | Conception: ${c.ai_conception_rate}% | Survival: ${c.calf_survival_rate}%`).join('\n');
   const bottom10 = sorted.slice(-10).map(c => `${c.tag || '—'} | ${c.lifetime_id} | Score: ${c.composite_score} | Calves: ${c.total_calves} | Conception: ${c.ai_conception_rate}% | Survival: ${c.calf_survival_rate}%`).join('\n');
@@ -97,7 +99,7 @@ export async function buildHerdContext(): Promise<string> {
   // Cull candidates
   const currentYear = new Date().getFullYear();
   const openMultiple = cowStatsList.filter(c => {
-    const cowRecs = allRecords.filter(r => r.lifetime_id === c.lifetime_id);
+    const cowRecs = blairRecords.filter(r => r.lifetime_id === c.lifetime_id);
     const opens = cowRecs.filter(r => r.breeding_year && r.breeding_year >= currentYear - 3 && (r.preg_stage?.toLowerCase() === 'open' || r.calf_status?.toLowerCase() === 'open')).length;
     return opens >= 2;
   }).length;
@@ -112,7 +114,7 @@ Report generated: ${new Date().toLocaleString()}
 
 HERD OVERVIEW
 - Total active cows: ${activeAnimals.length}
-- Total calving records: ${allRecords.length}
+- Total calving records: ${blairRecords.length}
 - Years of data: 2017–2025
 
 REPRODUCTIVE PERFORMANCE

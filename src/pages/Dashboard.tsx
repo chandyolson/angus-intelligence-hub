@@ -107,14 +107,18 @@ export default function Dashboard() {
   const { data: records, isLoading: loadingRecords, error: recordsError } = useBreedingCalvingRecords();
   const loading = loadingAnimals || loadingRecords;
 
+  // Filter breeding records to only Blair animals
+  const blairLids = useMemo(() => new Set(animals?.map(a => a.lifetime_id).filter(Boolean) ?? []), [animals]);
+  const blairRecords = useMemo(() => records?.filter(r => r.lifetime_id && blairLids.has(r.lifetime_id)) ?? [], [records, blairLids]);
+
   const kpis = useMemo(() => {
     if (!animals || !records) return null;
-    return computeKPIs(records, animals.length);
-  }, [animals, records]);
+    return computeKPIs(blairRecords, animals.length);
+  }, [animals, blairRecords]);
 
-  const scoreDistribution = useMemo(() => records ? computeScoreDistribution(records) : [], [records]);
-  const yoyData = useMemo(() => records ? computeYoY(records) : [], [records]);
-  const calvingIntervals = useMemo(() => records ? computeCalvingIntervalsFull(records) : null, [records]);
+  const scoreDistribution = useMemo(() => blairRecords.length > 0 ? computeScoreDistribution(blairRecords) : [], [blairRecords]);
+  const yoyData = useMemo(() => blairRecords.length > 0 ? computeYoY(blairRecords) : [], [blairRecords]);
+  const calvingIntervals = useMemo(() => blairRecords.length > 0 ? computeCalvingIntervalsFull(blairRecords) : null, [blairRecords]);
 
   if (animalsError || recordsError) return <ErrorBox />;
 
