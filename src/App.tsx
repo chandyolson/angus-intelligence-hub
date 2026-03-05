@@ -9,6 +9,7 @@ import CowRoster from "@/pages/CowRoster";
 import CowDetail from "@/pages/CowDetail";
 import Rankings from "@/pages/Rankings";
 import SireAnalysis from "@/pages/SireAnalysis";
+import AIAssistant from "@/pages/AIAssistant";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/cow/:lifetime_id" element={<CowDetail />} />
             <Route path="/rankings" element={<Rankings />} />
             <Route path="/sires" element={<SireAnalysis />} />
+            <Route path="/assistant" element={<AIAssistant />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Layout>
