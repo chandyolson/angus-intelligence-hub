@@ -34,7 +34,7 @@ export async function buildHerdContext(): Promise<string> {
   const withCalves = allRecords.filter(r => r.calf_status && r.calf_status.toLowerCase() !== 'open');
   const totalBreedings = allRecords.filter(r => r.lifetime_id).length;
   const conceptionRate = totalBreedings > 0 ? (withCalves.length / totalBreedings) * 100 : 0;
-  const liveCalves = withCalves.filter(r => r.calf_status && !['dead', 'stillborn', 'died'].includes(r.calf_status!.toLowerCase()));
+  const liveCalves = withCalves.filter(r => r.calf_status?.toLowerCase() === 'alive');
   const survivalRate = withCalves.length > 0 ? (liveCalves.length / withCalves.length) * 100 : 0;
   const gestations = allRecords.map(r => r.gestation_days).filter((v): v is number => v != null && v >= 250 && v <= 310);
   const avgGestation = gestations.length > 0 ? gestations.reduce((a, b) => a + b, 0) / gestations.length : 0;

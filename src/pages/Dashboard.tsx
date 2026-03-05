@@ -35,7 +35,7 @@ function computeKPIs(records: BreedingCalvingRecord[], activeCowCount: number) {
   const cowRates = Array.from(byCow.values()).filter(c => c.total > 0).map(c => (c.settled / c.total) * 100);
   const avgConception = cowRates.length > 0 ? cowRates.reduce((a, b) => a + b, 0) / cowRates.length : 0;
   const withStatus = records.filter(r => r.calf_status != null);
-  const alive = withStatus.filter(r => r.calf_status!.toLowerCase() === 'live');
+  const alive = withStatus.filter(r => r.calf_status!.toLowerCase() === 'alive');
   const survivalRate = withStatus.length > 0 ? (alive.length / withStatus.length) * 100 : 0;
   const gestations = records.map(r => r.gestation_days).filter((v): v is number => v != null && v >= 250 && v <= 310);
   const avgGestation = gestations.length > 0 ? gestations.reduce((a, b) => a + b, 0) / gestations.length : 0;
