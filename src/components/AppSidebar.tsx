@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { LayoutDashboard, List, Trophy, FlaskConical, Menu, X, Bot } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useRecordCounts } from '@/hooks/useCattleData';
@@ -14,6 +15,7 @@ const navItems = [
 export function AppSidebar() {
   const { data: counts } = useRecordCounts();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <>
@@ -46,10 +48,10 @@ export function AppSidebar() {
         </button>
 
         {/* Branding */}
-        <div className="px-5 py-6 border-b border-border">
+        <div className="px-5 py-6 border-b border-border cursor-pointer" onClick={() => navigate('/')}>
           <div className="flex items-center gap-2">
             <div>
-              <h1 className="text-lg font-bold text-primary leading-tight">AI²</h1>
+              <h1 className="text-lg font-bold text-primary leading-tight drop-shadow-[0_0_8px_hsl(40,63%,49%,0.6)]">AI²</h1>
               <p className="text-[10px] text-muted-foreground tracking-wide uppercase">Blair Bros Angus</p>
             </div>
           </div>
