@@ -14,7 +14,7 @@ function computeConsistencyScore(bws: number[]): number {
 
 export function computeCowStats(animal: Animal, records: BreedingCalvingRecord[]): CowStats {
   const cowRecords = records.filter(r => r.lifetime_id === animal.lifetime_id);
-  const withCalves = cowRecords.filter(r => r.calf_status && r.calf_status.toLowerCase() !== 'open');
+  const withCalves = cowRecords.filter(r => r.calf_status && !['open'].includes(r.calf_status.toLowerCase()));
   const totalCalves = withCalves.length;
   const bws = withCalves.map(r => r.calf_bw).filter((v): v is number => v != null && v > 0);
   const avg_bw = bws.length > 0 ? bws.reduce((a, b) => a + b, 0) / bws.length : 0;
@@ -22,7 +22,7 @@ export function computeCowStats(animal: Animal, records: BreedingCalvingRecord[]
   const totalBreedings = cowRecords.length;
   const ai_conception_rate = totalBreedings > 0 ? (totalCalves / totalBreedings) * 100 : 0;
 
-  const bornAlive = withCalves.filter(r => r.calf_status && !['dead', 'stillborn', 'died'].includes(r.calf_status.toLowerCase())).length;
+  const bornAlive = withCalves.filter(r => r.calf_status?.toLowerCase() === 'alive').length;
   const calf_survival_rate = totalCalves > 0 ? (bornAlive / totalCalves) * 100 : 0;
 
   const consistency = computeConsistencyScore(bws);
@@ -95,7 +95,7 @@ export function computeCompositeFromRecords(recs: BreedingCalvingRecord[]): numb
   if (totalBreedings === 0) return 0;
   const withCalves = recs.filter(r => r.calf_status && r.calf_status.toLowerCase() !== 'open');
   const conceptionRate = (withCalves.length / totalBreedings) * 100;
-  const liveCalves = withCalves.filter(r => r.calf_status && !['dead', 'stillborn', 'died'].includes(r.calf_status.toLowerCase())).length;
+  const liveCalves = withCalves.filter(r => r.calf_status?.toLowerCase() === 'alive').length;
   const survivalRate = withCalves.length > 0 ? (liveCalves / withCalves.length) * 100 : 0;
   const bws = withCalves.map(r => r.calf_bw).filter((v): v is number => v != null && v > 0);
   const consistency = computeConsistencyScore(bws);
@@ -123,7 +123,7 @@ export function computeSireStats(records: BreedingCalvingRecord[]): SireStats[] 
     const avgGest = gestations.length > 0 ? gestations.reduce((a, b) => a + b, 0) / gestations.length : 0;
     const bws = withCalves.map(r => r.calf_bw).filter((v): v is number => v != null && v > 0);
     const avgBW = bws.length > 0 ? bws.reduce((a, b) => a + b, 0) / bws.length : 0;
-    const alive = withCalves.filter(r => r.calf_status && !['dead', 'stillborn', 'died'].includes(r.calf_status.toLowerCase())).length;
+    const alive = withCalves.filter(r => r.calf_status?.toLowerCase() === 'alive').length;
     const survival = totalCalves > 0 ? (alive / totalCalves) * 100 : 0;
     const knownSex = withCalves.filter(r => r.calf_sex && ['bull', 'male', 'b', 'm', 'steer'].some(s => r.calf_sex!.toLowerCase().includes(s)));
     const totalKnownSex = withCalves.filter(r => r.calf_sex && r.calf_sex.trim() !== '').length;
