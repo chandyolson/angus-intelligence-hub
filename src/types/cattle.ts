@@ -1,5 +1,6 @@
 export interface Animal {
-  lifetime_id: string;
+  id: number;
+  lifetime_id: string | null;
   tag: string | null;
   status: string | null;
   sex: string | null;
@@ -7,13 +8,26 @@ export interface Animal {
   dob: string | null;
   animal_type: string | null;
   sire: string | null;
+  dam: string | null;
   dam_sire: string | null;
+  dam_lid: string | null;
+  dam_bw: number | null;
   bw: number | null;
   ww: number | null;
   yw: number | null;
   cattle_type: string | null;
   operation: string | null;
   owner: string | null;
+  eid: number | null;
+  granddam: string | null;
+  other_id: string | null;
+  origin: string | null;
+  pedigree: string | null;
+  registration_name: string | null;
+  registration_number: number | null;
+  tag_color: string | null;
+  snyder_auto_number: number | null;
+  snyder_system_id: number | null;
 }
 
 export interface BreedingCalvingRecord {
@@ -39,26 +53,32 @@ export interface BreedingCalvingRecord {
 }
 
 export interface BreedingRecord {
-  id: string;
+  id: number;
   lifetime_id: string | null;
   tag: string | null;
-  ai_date: string | null;
-  ai_sire: string | null;
+  ai_date: string;
+  ai_sire: string;
   status: string | null;
   cow_lookup: string | null;
+  auto_number: number | null;
+  master_eid: number | null;
+  record_number: number | null;
 }
 
 export interface UltrasoundRecord {
-  id: string;
+  id: number;
   lifetime_id: string | null;
   tag: string | null;
-  ultrasound_date: string | null;
-  preg_stage: string | null;
-  dog: string | null;
+  ultrasound_date: string;
+  preg_stage: string;
+  dog: number | null;
   calf_sex: string | null;
   cow_sire: string | null;
   cow_lookup: string | null;
   notes: string | null;
+  auto_number: number | null;
+  master_eid: number | null;
+  project_record_id: string | null;
 }
 
 export interface CowStats {
