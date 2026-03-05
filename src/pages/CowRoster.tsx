@@ -46,7 +46,7 @@ function buildCowRows(animals: Animal[], records: BreedingCalvingRecord[]): CowR
     const bws = withCalf.map(r => r.calf_bw).filter((v): v is number => v != null && v > 0);
     const avgBw = bws.length > 0 ? Math.round(bws.reduce((a, b) => a + b, 0) / bws.length) : 0;
     const conceptionRate = recs.length > 0 ? (withCalf.length / recs.length) * 100 : 0;
-    const liveCalves = withCalf.filter(r => r.calf_status!.toLowerCase() === 'live').length;
+    const liveCalves = withCalf.filter(r => r.calf_status?.toLowerCase() === 'alive').length;
     const survivalRate = withCalf.length > 0 ? (liveCalves / withCalf.length) * 100 : 0;
     const composite = computeCompositeFromRecords(recs);
 
@@ -72,21 +72,25 @@ export default function CowRoster() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [yearFilter, setYearFilter] = useState('all');
   const [sireFilter, setSireFilter] = useState('all');
+  const [operationFilter, setOperationFilter] = useState('Blair');
   const [sortKey, setSortKey] = useState<SortKey>('composite_score');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [page, setPage] = useState(0);
   const PER_PAGE = 50;
 
-  // Server-side paginated animal fetch
+  // Server-side paginated animal fetch with operation filter
   const { data: animalPage, isLoading: la, error: animalsError } = useQuery({
-    queryKey: ['animals_page', page],
+    queryKey: ['animals_page', page, operationFilter],
     queryFn: async () => {
       const from = page * PER_PAGE;
       const to = from + PER_PAGE - 1;
-      const [pageResult, countResult] = await Promise.all([
-        supabase.from('animals').select('*').range(from, to),
-        supabase.from('animals').select('*', { count: 'exact', head: true }),
-      ]);
+      let pageQuery = supabase.from('animals').select('*').range(from, to);
+      let countQuery = supabase.from('animals').select('*', { count: 'exact', head: true });
+      if (operationFilter !== 'all') {
+        pageQuery = pageQuery.eq('operation', operationFilter);
+        countQuery = countQuery.eq('operation', operationFilter);
+      }
+      const [pageResult, countResult] = await Promise.all([pageQuery, countQuery]);
       if (pageResult.error) throw pageResult.error;
       return {
         animals: pageResult.data as unknown as Animal[],
@@ -115,20 +119,6 @@ export default function CowRoster() {
 
   const cowRows = useMemo(() => {
     if (!animalPage?.animals || !records) return [];
-
-    // Debug: log first 5 grouped breeding records
-    const debugMap = new Map<string, BreedingCalvingRecord[]>();
-    records.forEach(r => {
-      if (!r.lifetime_id) return;
-      const arr = debugMap.get(r.lifetime_id) || [];
-      arr.push(r);
-      debugMap.set(r.lifetime_id, arr);
-    });
-    console.log('[CowRoster] First 5 grouped breeding records:', Object.fromEntries([...debugMap.entries()].slice(0, 5)));
-    console.log('[CowRoster] Distinct calf_status values (first 20 rows):', [...new Set(records.slice(0, 20).map(r => r.calf_status))]);
-    console.log('[CowRoster] Total breeding records:', records.length);
-    console.log('[CowRoster] Sample animal sire/dam_sire:', animalPage.animals.slice(0, 3).map(a => ({ lid: a.lifetime_id, sire: a.sire, dam_sire: a.dam_sire })));
-
     return buildCowRows(animalPage.animals, records);
   }, [animalPage, records]);
 
@@ -202,6 +192,14 @@ export default function CowRoster() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Search tag or lifetime ID..." value={search} onChange={e => { setSearch(e.target.value); }} className="pl-9 bg-card border-border text-[13px]" />
         </div>
+        <Select value={operationFilter} onValueChange={v => { setOperationFilter(v); setPage(0); }}>
+          <SelectTrigger className="w-[140px] bg-card border-border text-[13px]"><SelectValue placeholder="Operation" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Operations</SelectItem>
+            <SelectItem value="Blair">Blair</SelectItem>
+            <SelectItem value="Snyder">Snyder</SelectItem>
+          </SelectContent>
+        </Select>
         <Select value={statusFilter} onValueChange={v => { setStatusFilter(v); }}>
           <SelectTrigger className="w-[140px] bg-card border-border text-[13px]"><SelectValue placeholder="Status" /></SelectTrigger>
           <SelectContent>
