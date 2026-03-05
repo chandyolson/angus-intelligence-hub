@@ -28,8 +28,9 @@ export async function buildHerdContext(): Promise<string> {
     fetchAllRows<BreedingCalvingRecord>('blair_breeding_calving'),
   ]);
 
-  const activeAnimals = allAnimals.filter(a => a.status?.toLowerCase() === 'active' && a.operation === 'Blair');
-  const blairLids = new Set(activeAnimals.map(a => a.lifetime_id).filter(Boolean));
+  const blairAnimals = allAnimals.filter(a => a.operation === 'Blair');
+  const activeAnimals = blairAnimals.filter(a => a.status?.toLowerCase() === 'active');
+  const blairLids = new Set(blairAnimals.map(a => a.lifetime_id).filter(Boolean));
   const blairRecords = allRecords.filter(r => r.lifetime_id && blairLids.has(r.lifetime_id));
 
   // Overall stats — scoped to Blair
