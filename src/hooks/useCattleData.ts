@@ -2,14 +2,38 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Animal, BreedingCalvingRecord, UltrasoundRecord } from '@/types/cattle';
 
+/** Paginated fetch to bypass Supabase's 1000-row default limit */
+async function fetchAllRows<T>(table: string, filter?: { column: string; value: string }): Promise<T[]> {
+  const PAGE_SIZE = 1000;
+  const allRows: any[] = [];
+  let from = 0;
+  let done = false;
+
+  while (!done) {
+    let query = (supabase.from as any)(table).select('*').range(from, from + PAGE_SIZE - 1);
+    if (filter) query = query.eq(filter.column, filter.value);
+    const { data, error } = await query;
+    if (error) throw error;
+    if (!data || data.length === 0) {
+      done = true;
+    } else {
+      allRows.push(...data);
+      if (data.length < PAGE_SIZE) {
+        done = true;
+      } else {
+        from += PAGE_SIZE;
+      }
+    }
+  }
+
+  console.log(`[fetchAllRows] ${table}: ${allRows.length} rows`);
+  return allRows as T[];
+}
+
 export function useAnimals() {
   return useQuery({
     queryKey: ['animals'],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('animals').select('*');
-      if (error) throw error;
-      return data as unknown as Animal[];
-    },
+    queryFn: () => fetchAllRows<Animal>('animals'),
   });
 }
 
@@ -17,11 +41,8 @@ export function useActiveAnimals() {
   return useQuery({
     queryKey: ['animals', 'active'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('animals').select('*');
-      if (error) throw error;
-      return (data as unknown as Animal[]).filter(a =>
-        a.status?.toLowerCase() === 'active'
-      );
+      const all = await fetchAllRows<Animal>('animals');
+      return all.filter(a => a.status?.toLowerCase() === 'active');
     },
   });
 }
@@ -29,43 +50,17 @@ export function useActiveAnimals() {
 export function useBreedingCalvingRecords() {
   return useQuery({
     queryKey: ['breeding_calving_records'],
-    queryFn: async () => {
-      const allData: BreedingCalvingRecord[] = [];
-      const batchSize = 1000;
-      let offset = 0;
-      let hasMore = true;
-
-      while (hasMore) {
-        const { data, error } = await supabase
-          .from('blair_breeding_calving')
-          .select('*')
-          .range(offset, offset + batchSize - 1);
-        if (error) throw error;
-        if (data && data.length > 0) {
-          allData.push(...(data as unknown as BreedingCalvingRecord[]));
-          offset += batchSize;
-          hasMore = data.length === batchSize;
-        } else {
-          hasMore = false;
-        }
-      }
-
-      console.log(`[useCattleData] Fetched ${allData.length} breeding_calving records total`);
-      return allData;
-    },
+    queryFn: () => fetchAllRows<BreedingCalvingRecord>('blair_breeding_calving'),
   });
 }
 
 export function useUltrasoundRecords(lifetimeId?: string) {
   return useQuery({
     queryKey: ['ultrasound_records', lifetimeId],
-    queryFn: async () => {
-      let query = supabase.from('ultrasound').select('*');
-      if (lifetimeId) query = query.eq('lifetime_id', lifetimeId);
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as unknown as UltrasoundRecord[];
-    },
+    queryFn: () =>
+      lifetimeId
+        ? fetchAllRows<UltrasoundRecord>('ultrasound', { column: 'lifetime_id', value: lifetimeId })
+        : fetchAllRows<UltrasoundRecord>('ultrasound'),
     enabled: lifetimeId !== undefined,
   });
 }
@@ -85,11 +80,7 @@ export function useAnimal(lifetimeId: string) {
 export function useCowBreedingRecords(lifetimeId: string) {
   return useQuery({
     queryKey: ['breeding_calving_records', lifetimeId],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('blair_breeding_calving').select('*').eq('lifetime_id', lifetimeId);
-      if (error) throw error;
-      return data as unknown as BreedingCalvingRecord[];
-    },
+    queryFn: () => fetchAllRows<BreedingCalvingRecord>('blair_breeding_calving', { column: 'lifetime_id', value: lifetimeId }),
     enabled: !!lifetimeId,
   });
 }
