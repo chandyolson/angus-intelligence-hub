@@ -103,7 +103,7 @@ function computeCalvingIntervalsFull(records: BreedingCalvingRecord[]) {
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { data: animals, isLoading: loadingAnimals, error: animalsError } = useActiveAnimals();
+  const { data: animals, isLoading: loadingAnimals, error: animalsError } = useActiveAnimals('Blair');
   const { data: records, isLoading: loadingRecords, error: recordsError } = useBreedingCalvingRecords();
   const loading = loadingAnimals || loadingRecords;
 

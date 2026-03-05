@@ -37,12 +37,16 @@ export function useAnimals() {
   });
 }
 
-export function useActiveAnimals() {
+export function useActiveAnimals(operation?: string) {
   return useQuery({
-    queryKey: ['animals', 'active'],
+    queryKey: ['animals', 'active', operation],
     queryFn: async () => {
       const all = await fetchAllRows<Animal>('animals');
-      return all.filter(a => a.status?.toLowerCase() === 'active');
+      return all.filter(a => {
+        if (a.status?.toLowerCase() !== 'active') return false;
+        if (operation && a.operation !== operation) return false;
+        return true;
+      });
     },
   });
 }
