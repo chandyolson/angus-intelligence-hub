@@ -137,17 +137,17 @@ export default function Dashboard() {
       ) : kpis && (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {[
-            { label: 'Active Cows', value: kpis.activeCows, suffix: '' },
-            { label: 'Avg AI Conception Rate', value: kpis.avgConception.toFixed(1), suffix: '%' },
-            { label: 'Avg Calf Survival Rate', value: kpis.survivalRate.toFixed(1), suffix: '%' },
-            { label: 'Avg Gestation Length', value: Math.round(kpis.avgGestation), suffix: ' days' },
-            { label: '2024 Open Rate', value: kpis.openRate2024.toFixed(1), suffix: '%', alert: kpis.openRate2024 > 12 },
-            { label: 'Total Calving Records', value: kpis.totalRecords.toLocaleString(), suffix: '' },
+            { label: 'Active Cows', value: kpis.activeCows, suffix: '', link: '/roster' },
+            { label: 'Avg AI Conception Rate', value: kpis.avgConception.toFixed(1), suffix: '%', link: '/rankings' },
+            { label: 'Avg Calf Survival Rate', value: kpis.survivalRate.toFixed(1), suffix: '%', link: '/rankings' },
+            { label: 'Avg Gestation Length', value: Math.round(kpis.avgGestation), suffix: ' days', link: '/sire-analysis' },
+            { label: '2024 Open Rate', value: kpis.openRate2024.toFixed(1), suffix: '%', alert: kpis.openRate2024 > 12, link: '/rankings' },
+            { label: 'Total Calving Records', value: kpis.totalRecords.toLocaleString(), suffix: '', link: '/roster' },
           ].map(k => (
             <Card
               key={k.label}
-              className={`bg-card border-border ${k.label === 'Active Cows' ? 'cursor-pointer hover:border-primary transition-colors' : ''}`}
-              onClick={k.label === 'Active Cows' ? () => navigate('/roster') : undefined}
+              className="bg-card border-border cursor-pointer hover:border-primary transition-colors"
+              onClick={() => navigate(k.link)}
             >
               <CardContent className="p-4">
                 <p className={`text-[24px] font-bold ${'alert' in k && k.alert ? 'text-destructive' : 'text-primary'}`}>{k.value}{k.suffix}</p>
