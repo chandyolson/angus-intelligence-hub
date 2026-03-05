@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { Animal, BreedingCalvingRecord, UltrasoundRecord } from '@/types/cattle';
 
 export function useAnimals() {
@@ -8,7 +8,7 @@ export function useAnimals() {
     queryFn: async () => {
       const { data, error } = await supabase.from('animals').select('*');
       if (error) throw error;
-      return data as Animal[];
+      return data as unknown as Animal[];
     },
   });
 }
@@ -19,7 +19,7 @@ export function useActiveAnimals() {
     queryFn: async () => {
       const { data, error } = await supabase.from('animals').select('*');
       if (error) throw error;
-      return (data as Animal[]).filter(a =>
+      return (data as unknown as Animal[]).filter(a =>
         a.status?.toLowerCase() === 'active'
       );
     },
@@ -30,9 +30,9 @@ export function useBreedingCalvingRecords() {
   return useQuery({
     queryKey: ['breeding_calving_records'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('breeding_calving_records').select('*');
+      const { data, error } = await supabase.from('blair_breeding_calving').select('*');
       if (error) throw error;
-      return data as BreedingCalvingRecord[];
+      return data as unknown as BreedingCalvingRecord[];
     },
   });
 }
@@ -41,11 +41,11 @@ export function useUltrasoundRecords(lifetimeId?: string) {
   return useQuery({
     queryKey: ['ultrasound_records', lifetimeId],
     queryFn: async () => {
-      let query = supabase.from('ultrasound_records').select('*');
+      let query = supabase.from('ultrasound').select('*');
       if (lifetimeId) query = query.eq('lifetime_id', lifetimeId);
       const { data, error } = await query;
       if (error) throw error;
-      return data as UltrasoundRecord[];
+      return data as unknown as UltrasoundRecord[];
     },
     enabled: lifetimeId !== undefined,
   });
@@ -57,7 +57,7 @@ export function useAnimal(lifetimeId: string) {
     queryFn: async () => {
       const { data, error } = await supabase.from('animals').select('*').eq('lifetime_id', lifetimeId).single();
       if (error) throw error;
-      return data as Animal;
+      return data as unknown as Animal;
     },
     enabled: !!lifetimeId,
   });
@@ -67,9 +67,9 @@ export function useCowBreedingRecords(lifetimeId: string) {
   return useQuery({
     queryKey: ['breeding_calving_records', lifetimeId],
     queryFn: async () => {
-      const { data, error } = await supabase.from('breeding_calving_records').select('*').eq('lifetime_id', lifetimeId);
+      const { data, error } = await supabase.from('blair_breeding_calving').select('*').eq('lifetime_id', lifetimeId);
       if (error) throw error;
-      return data as BreedingCalvingRecord[];
+      return data as unknown as BreedingCalvingRecord[];
     },
     enabled: !!lifetimeId,
   });
@@ -81,8 +81,8 @@ export function useRecordCounts() {
     queryFn: async () => {
       const [animals, bcr, ultrasound] = await Promise.all([
         supabase.from('animals').select('*', { count: 'exact', head: true }),
-        supabase.from('breeding_calving_records').select('*', { count: 'exact', head: true }),
-        supabase.from('ultrasound_records').select('*', { count: 'exact', head: true }),
+        supabase.from('blair_breeding_calving').select('*', { count: 'exact', head: true }),
+        supabase.from('ultrasound').select('*', { count: 'exact', head: true }),
       ]);
       return {
         animals: animals.count ?? 0,
