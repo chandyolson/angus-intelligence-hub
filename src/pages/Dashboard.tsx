@@ -5,6 +5,7 @@ import { BreedingCalvingRecord } from '@/types/cattle';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LineChart, Line, ReferenceLine, ResponsiveContainer, Cell } from 'recharts';
 import { AlertTriangle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { ShimmerSkeleton, ShimmerCard } from '@/components/ui/shimmer-skeleton';
 import { ErrorBox } from '@/components/ui/error-box';
 
@@ -101,6 +102,7 @@ function computeCalvingIntervalsFull(records: BreedingCalvingRecord[]) {
 }
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const { data: animals, isLoading: loadingAnimals, error: animalsError } = useActiveAnimals();
   const { data: records, isLoading: loadingRecords, error: recordsError } = useBreedingCalvingRecords();
   const loading = loadingAnimals || loadingRecords;
@@ -135,7 +137,11 @@ export default function Dashboard() {
             { label: '2024 Open Rate', value: kpis.openRate2024.toFixed(1), suffix: '%', alert: kpis.openRate2024 > 12 },
             { label: 'Total Calving Records', value: kpis.totalRecords.toLocaleString(), suffix: '' },
           ].map(k => (
-            <Card key={k.label} className="bg-card border-border">
+            <Card
+              key={k.label}
+              className={`bg-card border-border ${k.label === 'Active Cows' ? 'cursor-pointer hover:border-primary transition-colors' : ''}`}
+              onClick={k.label === 'Active Cows' ? () => navigate('/roster') : undefined}
+            >
               <CardContent className="p-4">
                 <p className={`text-[24px] font-bold ${'alert' in k && k.alert ? 'text-destructive' : 'text-primary'}`}>{k.value}{k.suffix}</p>
                 <p className="text-[13px] text-foreground mt-1">{k.label}</p>
