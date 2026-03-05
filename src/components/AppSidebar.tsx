@@ -32,11 +32,11 @@ export function AppSidebar() {
       )}
 
       <aside className={`
-        fixed left-0 top-0 h-screen bg-sidebar flex flex-col z-[60] border-r border-border transition-all duration-200
+        fixed left-0 top-0 h-screen flex flex-col z-[60] border-r border-border transition-all duration-200
         w-[220px]
         max-lg:${mobileOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0
-      `}>
+      `} style={{ background: 'linear-gradient(180deg, hsl(224, 52%, 8%) 0%, hsl(190, 40%, 12%) 60%, hsl(40, 50%, 14%) 100%)' }}>
         {/* Mobile close */}
         <button
           onClick={() => setMobileOpen(false)}
