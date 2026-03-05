@@ -115,6 +115,20 @@ export default function CowRoster() {
 
   const cowRows = useMemo(() => {
     if (!animalPage?.animals || !records) return [];
+
+    // Debug: log first 5 grouped breeding records
+    const debugMap = new Map<string, BreedingCalvingRecord[]>();
+    records.forEach(r => {
+      if (!r.lifetime_id) return;
+      const arr = debugMap.get(r.lifetime_id) || [];
+      arr.push(r);
+      debugMap.set(r.lifetime_id, arr);
+    });
+    console.log('[CowRoster] First 5 grouped breeding records:', Object.fromEntries([...debugMap.entries()].slice(0, 5)));
+    console.log('[CowRoster] Distinct calf_status values (first 20 rows):', [...new Set(records.slice(0, 20).map(r => r.calf_status))]);
+    console.log('[CowRoster] Total breeding records:', records.length);
+    console.log('[CowRoster] Sample animal sire/dam_sire:', animalPage.animals.slice(0, 3).map(a => ({ lid: a.lifetime_id, sire: a.sire, dam_sire: a.dam_sire })));
+
     return buildCowRows(animalPage.animals, records);
   }, [animalPage, records]);
 

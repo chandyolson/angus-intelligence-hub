@@ -30,9 +30,28 @@ export function useBreedingCalvingRecords() {
   return useQuery({
     queryKey: ['breeding_calving_records'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('blair_breeding_calving').select('*');
-      if (error) throw error;
-      return data as unknown as BreedingCalvingRecord[];
+      const allData: BreedingCalvingRecord[] = [];
+      const batchSize = 1000;
+      let offset = 0;
+      let hasMore = true;
+
+      while (hasMore) {
+        const { data, error } = await supabase
+          .from('blair_breeding_calving')
+          .select('*')
+          .range(offset, offset + batchSize - 1);
+        if (error) throw error;
+        if (data && data.length > 0) {
+          allData.push(...(data as unknown as BreedingCalvingRecord[]));
+          offset += batchSize;
+          hasMore = data.length === batchSize;
+        } else {
+          hasMore = false;
+        }
+      }
+
+      console.log(`[useCattleData] Fetched ${allData.length} breeding_calving records total`);
+      return allData;
     },
   });
 }
