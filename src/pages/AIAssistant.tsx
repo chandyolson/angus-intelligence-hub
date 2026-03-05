@@ -216,7 +216,7 @@ export default function AIAssistant() {
           {/* Header card */}
           <Card className="bg-card border-border mb-3 shrink-0">
             <CardContent className="p-4 flex items-start gap-3">
-              <span className="text-2xl">🤖</span>
+              <Bot className="h-5 w-5 text-primary shrink-0 mt-0.5" />
               <div>
                 <h2 className="text-base font-semibold text-foreground">Blair Herd Assistant</h2>
                 <p className="text-xs text-muted-foreground mt-0.5">
