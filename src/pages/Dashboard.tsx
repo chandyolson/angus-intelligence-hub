@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { ShimmerSkeleton, ShimmerCard } from '@/components/ui/shimmer-skeleton';
 import { ErrorBox } from '@/components/ui/error-box';
 
-const QUARTILE_COLORS = ['#ef4444', '#f97316', '#eab308', '#4ade80'];
+const QUARTILE_COLORS = ['#134e4a', '#0d9488', '#2dd4bf', '#5eead4'];
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload) return null;
