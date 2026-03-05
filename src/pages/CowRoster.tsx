@@ -99,7 +99,6 @@ export default function CowRoster() {
     },
   });
 
-  // Still need all breeding records for stats
   const { data: records, isLoading: lr, error: recordsError } = useBreedingCalvingRecords();
 
   // For filters we need all unique years/sires — use breeding records
