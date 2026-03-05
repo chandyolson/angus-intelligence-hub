@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAnimals, useBreedingCalvingRecords } from '@/hooks/useCattleData';
+import { useActiveAnimals, useBreedingCalvingRecords } from '@/hooks/useCattleData';
 import { exportToCSV, computeCompositeFromRecords } from '@/lib/calculations';
 import { Animal, BreedingCalvingRecord } from '@/types/cattle';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -36,7 +36,7 @@ function computeRankedCows(animals: Animal[], records: BreedingCalvingRecord[]):
     const bws = withCalf.map(r => r.calf_bw).filter((v): v is number => v != null && v > 0);
     const avgBw = bws.length > 0 ? Math.round(bws.reduce((a, b) => a + b, 0) / bws.length) : 0;
     const conceptionRate = recs.length > 0 ? Math.round((withCalf.length / recs.length) * 1000) / 10 : 0;
-    const liveCalves = withCalf.filter(r => r.calf_status!.toLowerCase() === 'live').length;
+    const liveCalves = withCalf.filter(r => r.calf_status?.toLowerCase() === 'alive').length;
     const survivalRate = withCalf.length > 0 ? Math.round((liveCalves / withCalf.length) * 1000) / 10 : 0;
     const composite = computeCompositeFromRecords(recs);
     return { lifetime_id: a.lifetime_id ?? '', tag: a.tag, year_born: a.year_born, sire: a.sire, total_calves: withCalf.length, ai_conception_rate: conceptionRate, calf_survival_rate: survivalRate, avg_bw: avgBw, composite_score: composite, rank: 0, quartile: 'AVERAGE' as const };
@@ -84,7 +84,7 @@ function computeSireMetrics(sire: string, records: BreedingCalvingRecord[]): Sir
   const avgGestation = gests.length > 0 ? Math.round(gests.reduce((a, b) => a + b, 0) / gests.length * 10) / 10 : 0;
   const bws = withCalf.map(r => r.calf_bw).filter((v): v is number => v != null && v > 0);
   const avgBW = bws.length > 0 ? Math.round(bws.reduce((a, b) => a + b, 0) / bws.length) : 0;
-  const alive = withCalf.filter(r => !['dead', 'stillborn', 'died'].includes(r.calf_status?.toLowerCase() || ''));
+  const alive = withCalf.filter(r => r.calf_status?.toLowerCase() === 'alive');
   const survivalRate = withCalf.length > 0 ? Math.round((alive.length / withCalf.length) * 1000) / 10 : 0;
   const knownSex = withCalf.filter(r => r.calf_sex && r.calf_sex.trim() !== '');
   const bulls = knownSex.filter(r => ['bull', 'male', 'b', 'steer'].some(s => r.calf_sex!.toLowerCase().includes(s)));
@@ -95,7 +95,7 @@ function computeSireMetrics(sire: string, records: BreedingCalvingRecord[]): Sir
 type ViewMode = 'top-bottom' | 'top50' | 'bottom50' | 'all';
 
 export default function Rankings() {
-  const { data: animals, isLoading: la, error: animalsError } = useAnimals();
+  const { data: animals, isLoading: la, error: animalsError } = useActiveAnimals('Blair');
   const { data: records, isLoading: lr, error: recordsError } = useBreedingCalvingRecords();
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<ViewMode>('top-bottom');
@@ -114,7 +114,7 @@ export default function Rankings() {
     return computeCullFlags(ranked, records);
   }, [ranked, records]);
 
-  const activeCowCount = useMemo(() => animals?.filter(a => a.status?.toLowerCase() === 'active').length ?? 0, [animals]);
+  const activeCowCount = useMemo(() => animals?.length ?? 0, [animals]);
   const uniqueFlaggedIds = useMemo(() => new Set(cullFlags.map(f => f.lifetime_id)), [cullFlags]);
 
   const sires = useMemo(() => {
