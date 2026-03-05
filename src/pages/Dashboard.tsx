@@ -139,16 +139,17 @@ export default function Dashboard() {
       ) : kpis && (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {[
-            { label: 'Active Cows', value: kpis.activeCows, suffix: '', link: '/roster' },
-            { label: 'Avg AI Conception Rate', value: kpis.avgConception.toFixed(1), suffix: '%', link: '/rankings' },
-            { label: 'Avg Calf Survival Rate', value: kpis.survivalRate.toFixed(1), suffix: '%', link: '/rankings' },
-            { label: 'Avg Gestation Length', value: Math.round(kpis.avgGestation), suffix: ' days', link: '/sire-analysis' },
-            { label: '2024 Open Rate', value: kpis.openRate2024.toFixed(1), suffix: '%', alert: kpis.openRate2024 > 12, link: '/rankings' },
-            { label: 'Total Calving Records', value: kpis.totalRecords.toLocaleString(), suffix: '', link: '/roster' },
+            { label: 'Active Cows', value: kpis.activeCows, suffix: '', link: '/roster', gradient: 'linear-gradient(135deg, hsl(224, 52%, 14%) 0%, hsl(190, 40%, 18%) 100%)' },
+            { label: 'Avg AI Conception Rate', value: kpis.avgConception.toFixed(1), suffix: '%', link: '/rankings', gradient: 'linear-gradient(135deg, hsl(224, 52%, 14%) 0%, hsl(40, 40%, 16%) 100%)' },
+            { label: 'Avg Calf Survival Rate', value: kpis.survivalRate.toFixed(1), suffix: '%', link: '/rankings', gradient: 'linear-gradient(135deg, hsl(224, 52%, 14%) 0%, hsl(190, 40%, 18%) 100%)' },
+            { label: 'Avg Gestation Length', value: Math.round(kpis.avgGestation), suffix: ' days', link: '/sire-analysis', gradient: 'linear-gradient(135deg, hsl(224, 52%, 14%) 0%, hsl(40, 40%, 16%) 100%)' },
+            { label: '2024 Open Rate', value: kpis.openRate2024.toFixed(1), suffix: '%', alert: kpis.openRate2024 > 12, link: '/rankings', gradient: 'linear-gradient(135deg, hsl(224, 52%, 14%) 0%, hsl(190, 40%, 18%) 100%)' },
+            { label: 'Total Calving Records', value: kpis.totalRecords.toLocaleString(), suffix: '', link: '/roster', gradient: 'linear-gradient(135deg, hsl(224, 52%, 14%) 0%, hsl(40, 40%, 16%) 100%)' },
           ].map(k => (
             <Card
               key={k.label}
-              className="bg-card border-border cursor-pointer hover:border-primary transition-colors"
+              className="border-border cursor-pointer hover:border-primary transition-colors"
+              style={{ background: k.gradient }}
               onClick={() => navigate(k.link)}
             >
               <CardContent className="p-4">
