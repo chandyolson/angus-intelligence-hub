@@ -127,7 +127,9 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-[20px] font-semibold text-foreground">Dashboard</h1>
+      <div className="-mx-6 -mt-6 lg:-mt-6 px-6 pt-6 pb-6 mb-2" style={{ background: 'linear-gradient(180deg, hsl(224, 52%, 14%) 0%, hsl(224, 48%, 11%) 100%)' }}>
+        <h1 className="text-[20px] font-semibold text-foreground">Dashboard</h1>
+      </div>
 
       {/* KPI Cards */}
       {loading ? (
