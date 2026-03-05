@@ -78,9 +78,9 @@ export default function CowRoster() {
   const [page, setPage] = useState(0);
   const PER_PAGE = 50;
 
-  // Server-side paginated animal fetch with operation filter
+  // Server-side paginated animal fetch with ALL filters applied server-side
   const { data: animalPage, isLoading: la, error: animalsError } = useQuery({
-    queryKey: ['animals_page', page, operationFilter],
+    queryKey: ['animals_page', page, operationFilter, statusFilter, yearFilter, sireFilter, search],
     queryFn: async () => {
       const from = page * PER_PAGE;
       const to = from + PER_PAGE - 1;
@@ -89,6 +89,22 @@ export default function CowRoster() {
       if (operationFilter !== 'all') {
         pageQuery = pageQuery.eq('operation', operationFilter);
         countQuery = countQuery.eq('operation', operationFilter);
+      }
+      if (statusFilter !== 'all') {
+        pageQuery = pageQuery.eq('status', statusFilter);
+        countQuery = countQuery.eq('status', statusFilter);
+      }
+      if (yearFilter !== 'all') {
+        pageQuery = pageQuery.eq('year_born', parseInt(yearFilter));
+        countQuery = countQuery.eq('year_born', parseInt(yearFilter));
+      }
+      if (sireFilter !== 'all') {
+        pageQuery = pageQuery.eq('sire', sireFilter);
+        countQuery = countQuery.eq('sire', sireFilter);
+      }
+      if (search) {
+        pageQuery = pageQuery.or(`tag.ilike.%${search}%,lifetime_id.ilike.%${search}%`);
+        countQuery = countQuery.or(`tag.ilike.%${search}%,lifetime_id.ilike.%${search}%`);
       }
       const [pageResult, countResult] = await Promise.all([pageQuery, countQuery]);
       if (pageResult.error) throw pageResult.error;
@@ -101,53 +117,48 @@ export default function CowRoster() {
 
   const { data: records, isLoading: lr, error: recordsError } = useBreedingCalvingRecords();
 
-  // For filters we need all unique years/sires — use breeding records
-  const allYears = useMemo(() => {
-    if (!records) return [];
-    const years = new Set<number>();
-    records.forEach(r => { if (r.year_born) years.add(r.year_born); });
-    return [...years].sort((a, b) => b - a);
-  }, [records]);
+  // Fetch distinct filter options from the database for the current operation
+  const { data: filterOptions } = useQuery({
+    queryKey: ['animal_filter_options', operationFilter],
+    queryFn: async () => {
+      let q = supabase.from('animals').select('year_born, sire, status');
+      if (operationFilter !== 'all') q = q.eq('operation', operationFilter);
+      const { data } = await q;
+      const years = new Set<number>();
+      const sires = new Set<string>();
+      const statuses = new Set<string>();
+      (data ?? []).forEach(r => {
+        if (r.year_born) years.add(r.year_born);
+        if (r.sire) sires.add(r.sire);
+        if (r.status) statuses.add(r.status);
+      });
+      return {
+        years: [...years].sort((a, b) => b - a),
+        sires: [...sires].sort(),
+        statuses: [...statuses].sort(),
+      };
+    },
+  });
 
-  const allSires = useMemo(() => {
-    if (!records) return [];
-    const sires = new Set<string>();
-    records.forEach(r => { if (r.sire) sires.add(r.sire); });
-    return [...sires].sort();
-  }, [records]);
+  const allYears = filterOptions?.years ?? [];
+  const allSires = filterOptions?.sires ?? [];
+  const allStatuses = filterOptions?.statuses ?? [];
 
   const cowRows = useMemo(() => {
     if (!animalPage?.animals || !records) return [];
     return buildCowRows(animalPage.animals, records);
   }, [animalPage, records]);
 
-  const quartiles = useMemo(() => {
-    const scores = cowRows.filter(c => c.composite_score > 0).map(c => c.composite_score).sort((a, b) => a - b);
-    if (scores.length === 0) return { q25: 25, q75: 75 };
-    return {
-      q25: scores[Math.floor(scores.length * 0.25)] ?? 25,
-      q75: scores[Math.floor(scores.length * 0.75)] ?? 75,
-    };
-  }, [cowRows]);
-
-  const filtered = useMemo(() => {
-    let result = cowRows;
-    if (search) {
-      const q = search.toLowerCase();
-      result = result.filter(c => c.tag?.toLowerCase().includes(q) || c.lifetime_id.toLowerCase().includes(q));
-    }
-    if (statusFilter !== 'all') result = result.filter(c => c.status?.toLowerCase() === statusFilter.toLowerCase());
-    if (yearFilter !== 'all') result = result.filter(c => String(c.year_born) === yearFilter);
-    if (sireFilter !== 'all') result = result.filter(c => c.sire === sireFilter);
-    result = [...result].sort((a, b) => {
+  // Sort only — all filtering is server-side
+  const sorted = useMemo(() => {
+    return [...cowRows].sort((a, b) => {
       const av = a[sortKey] ?? '';
       const bv = b[sortKey] ?? '';
       if (av < bv) return sortDir === 'asc' ? -1 : 1;
       if (av > bv) return sortDir === 'asc' ? 1 : -1;
       return 0;
     });
-    return result;
-  }, [cowRows, search, statusFilter, yearFilter, sireFilter, sortKey, sortDir]);
+  }, [cowRows, sortKey, sortDir]);
 
   const totalAll = animalPage?.totalCount ?? 0;
   const totalPages = Math.ceil(totalAll / PER_PAGE);
@@ -189,9 +200,9 @@ export default function CowRoster() {
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[200px] max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search tag or lifetime ID..." value={search} onChange={e => { setSearch(e.target.value); }} className="pl-9 bg-card border-border text-[13px]" />
+          <Input placeholder="Search tag or lifetime ID..." value={search} onChange={e => { setSearch(e.target.value); setPage(0); }} className="pl-9 bg-card border-border text-[13px]" />
         </div>
-        <Select value={operationFilter} onValueChange={v => { setOperationFilter(v); setPage(0); }}>
+        <Select value={operationFilter} onValueChange={v => { setOperationFilter(v); setStatusFilter('all'); setYearFilter('all'); setSireFilter('all'); setPage(0); }}>
           <SelectTrigger className="w-[140px] bg-card border-border text-[13px]"><SelectValue placeholder="Operation" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Operations</SelectItem>
@@ -199,29 +210,28 @@ export default function CowRoster() {
             <SelectItem value="Snyder">Snyder</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={statusFilter} onValueChange={v => { setStatusFilter(v); }}>
+        <Select value={statusFilter} onValueChange={v => { setStatusFilter(v); setPage(0); }}>
           <SelectTrigger className="w-[140px] bg-card border-border text-[13px]"><SelectValue placeholder="Status" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="inactive">Inactive</SelectItem>
+            {allStatuses.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
           </SelectContent>
         </Select>
-        <Select value={yearFilter} onValueChange={v => { setYearFilter(v); }}>
+        <Select value={yearFilter} onValueChange={v => { setYearFilter(v); setPage(0); }}>
           <SelectTrigger className="w-[140px] bg-card border-border text-[13px]"><SelectValue placeholder="Year Born" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Years</SelectItem>
             {allYears.map(y => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
           </SelectContent>
         </Select>
-        <Select value={sireFilter} onValueChange={v => { setSireFilter(v); }}>
+        <Select value={sireFilter} onValueChange={v => { setSireFilter(v); setPage(0); }}>
           <SelectTrigger className="w-[180px] bg-card border-border text-[13px]"><SelectValue placeholder="Sire" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Sires</SelectItem>
             {allSires.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
           </SelectContent>
         </Select>
-        <span className="text-[12px] text-muted-foreground ml-auto">Showing {filtered.length} of {totalAll} cows</span>
+        <span className="text-[12px] text-muted-foreground ml-auto">Showing {sorted.length} of {totalAll} cows</span>
       </div>
 
       {/* Table */}
@@ -245,10 +255,10 @@ export default function CowRoster() {
           <TableBody>
             {(la || lr) ? (
               <ShimmerTableRows rows={10} cols={11} />
-            ) : filtered.length === 0 ? (
+            ) : sorted.length === 0 ? (
               <tr><td colSpan={11}><EmptyState message="No cows match your filters." /></td></tr>
             ) : (
-              filtered.map((cow, i) => (
+              sorted.map((cow, i) => (
                 <TableRow
                   key={cow.lifetime_id}
                   className="cursor-pointer border-border text-[13px]"
