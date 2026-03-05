@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
-import { useActiveAnimals, useBreedingCalvingRecords } from '@/hooks/useCattleData';
+import { useAnimals, useBreedingCalvingRecords } from '@/hooks/useCattleData';
 import { computeCalvingIntervals, computeCompositeFromRecords } from '@/lib/calculations';
 import { BreedingCalvingRecord } from '@/types/cattle';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -103,18 +103,21 @@ function computeCalvingIntervalsFull(records: BreedingCalvingRecord[]) {
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { data: animals, isLoading: loadingAnimals, error: animalsError } = useActiveAnimals('Blair');
+  const { data: animals, isLoading: loadingAnimals, error: animalsError } = useAnimals();
   const { data: records, isLoading: loadingRecords, error: recordsError } = useBreedingCalvingRecords();
   const loading = loadingAnimals || loadingRecords;
 
-  // Filter breeding records to only Blair animals
-  const blairLids = useMemo(() => new Set(animals?.map(a => a.lifetime_id).filter(Boolean) ?? []), [animals]);
+  const blairAnimals = useMemo(() => animals?.filter(a => a.operation === 'Blair') ?? [], [animals]);
+  const activeBlairAnimals = useMemo(() => blairAnimals.filter(a => a.status?.toLowerCase() === 'active'), [blairAnimals]);
+
+  // Filter breeding records to all Blair animals (not just active)
+  const blairLids = useMemo(() => new Set(blairAnimals.map(a => a.lifetime_id).filter(Boolean)), [blairAnimals]);
   const blairRecords = useMemo(() => records?.filter(r => r.lifetime_id && blairLids.has(r.lifetime_id)) ?? [], [records, blairLids]);
 
   const kpis = useMemo(() => {
     if (!animals || !records) return null;
-    return computeKPIs(blairRecords, animals.length);
-  }, [animals, blairRecords]);
+    return computeKPIs(blairRecords, activeBlairAnimals.length);
+  }, [animals, records, blairRecords, activeBlairAnimals.length]);
 
   const scoreDistribution = useMemo(() => blairRecords.length > 0 ? computeScoreDistribution(blairRecords) : [], [blairRecords]);
   const yoyData = useMemo(() => blairRecords.length > 0 ? computeYoY(blairRecords) : [], [blairRecords]);
