@@ -1,11 +1,12 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useActiveAnimals, useBreedingCalvingRecords } from '@/hooks/useCattleData';
-import { computeCalvingIntervals } from '@/lib/calculations';
+import { computeCalvingIntervals, computeCompositeFromRecords } from '@/lib/calculations';
 import { BreedingCalvingRecord } from '@/types/cattle';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LineChart, Line, ReferenceLine, ResponsiveContainer, Cell } from 'recharts';
 import { AlertTriangle } from 'lucide-react';
+import { ShimmerSkeleton, ShimmerCard } from '@/components/ui/shimmer-skeleton';
+import { ErrorBox } from '@/components/ui/error-box';
 
 const QUARTILE_COLORS = ['#ef4444', '#f97316', '#eab308', '#4ade80'];
 
@@ -21,75 +22,38 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   );
 };
 
-/* ── KPI helpers ── */
-
 function computeKPIs(records: BreedingCalvingRecord[], activeCowCount: number) {
-  // Conception rate per cow then average
   const byCow = new Map<string, { settled: number; total: number }>();
   records.forEach(r => {
     if (!r.lifetime_id) return;
     const entry = byCow.get(r.lifetime_id) || { settled: 0, total: 0 };
     entry.total++;
-    if (r.calf_status && r.calf_status.toLowerCase() !== 'open' && r.calf_status.toLowerCase() !== 'dead') {
-      entry.settled++;
-    }
+    if (r.calf_status && r.calf_status.toLowerCase() !== 'open' && r.calf_status.toLowerCase() !== 'dead') entry.settled++;
     byCow.set(r.lifetime_id, entry);
   });
   const cowRates = Array.from(byCow.values()).filter(c => c.total > 0).map(c => (c.settled / c.total) * 100);
   const avgConception = cowRates.length > 0 ? cowRates.reduce((a, b) => a + b, 0) / cowRates.length : 0;
-
-  // Survival rate
   const withStatus = records.filter(r => r.calf_status != null);
   const alive = withStatus.filter(r => r.calf_status!.toLowerCase() === 'live');
   const survivalRate = withStatus.length > 0 ? (alive.length / withStatus.length) * 100 : 0;
-
-  // Avg gestation
   const gestations = records.map(r => r.gestation_days).filter((v): v is number => v != null && v >= 250 && v <= 310);
   const avgGestation = gestations.length > 0 ? gestations.reduce((a, b) => a + b, 0) / gestations.length : 0;
-
-  // 2024 open rate
   const recs2024 = records.filter(r => r.breeding_year === 2024);
   const open2024 = recs2024.filter(r => r.preg_stage?.toLowerCase() === 'open').length;
   const openRate2024 = recs2024.length > 0 ? (open2024 / recs2024.length) * 100 : 0;
-
   return { activeCows: activeCowCount, avgConception, survivalRate, avgGestation, openRate2024, totalRecords: records.length };
 }
-
-/* ── Composite score for distribution chart ── */
 
 function computeScoreDistribution(records: BreedingCalvingRecord[]) {
   const byCow = new Map<string, BreedingCalvingRecord[]>();
   records.forEach(r => { if (r.lifetime_id) { const a = byCow.get(r.lifetime_id) || []; a.push(r); byCow.set(r.lifetime_id, a); } });
-
   const scores: number[] = [];
-  byCow.forEach(recs => {
-    const totalBreedings = recs.length;
-    const settled = recs.filter(r => r.calf_status && r.calf_status.toLowerCase() !== 'open').length;
-    const conceptionRate = totalBreedings > 0 ? (settled / totalBreedings) * 100 : 0;
-
-    const withCalves = recs.filter(r => r.calf_status && r.calf_status.toLowerCase() !== 'open');
-    const liveCalves = withCalves.filter(r => r.calf_status!.toLowerCase() === 'live').length;
-    const survivalRate = withCalves.length > 0 ? (liveCalves / withCalves.length) * 100 : 0;
-
-    const bws = recs.map(r => r.calf_bw).filter((v): v is number => v != null && v > 0);
-    let bwConsistency = 50;
-    if (bws.length >= 2) {
-      const mean = bws.reduce((a, b) => a + b, 0) / bws.length;
-      const std = Math.sqrt(bws.reduce((a, b) => a + (b - mean) ** 2, 0) / bws.length);
-      const cv = mean > 0 ? std / mean : 0;
-      bwConsistency = Math.max(0, Math.min(100, (1 - cv) * 100));
-    }
-
-    const composite = (conceptionRate * 0.4 + survivalRate * 0.35 + bwConsistency * 0.25);
-    if (totalBreedings > 0) scores.push(Math.round(composite * 10) / 10);
-  });
-
+  byCow.forEach(recs => { const c = computeCompositeFromRecords(recs); if (c > 0) scores.push(c); });
   if (scores.length === 0) return [];
   const sorted = [...scores].sort((a, b) => a - b);
   const q25 = sorted[Math.floor(sorted.length * 0.25)] ?? 0;
   const q50 = sorted[Math.floor(sorted.length * 0.5)] ?? 0;
   const q75 = sorted[Math.floor(sorted.length * 0.75)] ?? 0;
-
   return [
     { name: 'Bottom 25%', count: scores.filter(s => s < q25).length },
     { name: '25–50%', count: scores.filter(s => s >= q25 && s < q50).length },
@@ -97,8 +61,6 @@ function computeScoreDistribution(records: BreedingCalvingRecord[]) {
     { name: 'Top 25%', count: scores.filter(s => s >= q75).length },
   ];
 }
-
-/* ── YoY data ── */
 
 function computeYoY(records: BreedingCalvingRecord[]) {
   const byYear = new Map<number, { total: number; open: number; conceived: number }>();
@@ -110,27 +72,16 @@ function computeYoY(records: BreedingCalvingRecord[]) {
     if (r.calf_status && r.calf_status.toLowerCase() !== 'open') y.conceived++;
     byYear.set(r.breeding_year, y);
   });
-  return Array.from(byYear.entries())
-    .sort(([a], [b]) => a - b)
-    .map(([year, d]) => ({
-      year: String(year),
-      openRate: Math.round((d.open / d.total) * 1000) / 10,
-      conceptionRate: Math.round((d.conceived / d.total) * 1000) / 10,
-    }));
+  return Array.from(byYear.entries()).sort(([a], [b]) => a - b).map(([year, d]) => ({
+    year: String(year),
+    openRate: Math.round((d.open / d.total) * 1000) / 10,
+    conceptionRate: Math.round((d.conceived / d.total) * 1000) / 10,
+  }));
 }
-
-/* ── Calving interval with cow count ── */
 
 function computeCalvingIntervalsFull(records: BreedingCalvingRecord[]) {
   const byCow = new Map<string, string[]>();
-  records.forEach(r => {
-    if (r.lifetime_id && r.calving_date) {
-      const dates = byCow.get(r.lifetime_id) || [];
-      dates.push(r.calving_date);
-      byCow.set(r.lifetime_id, dates);
-    }
-  });
-
+  records.forEach(r => { if (r.lifetime_id && r.calving_date) { const dates = byCow.get(r.lifetime_id) || []; dates.push(r.calving_date); byCow.set(r.lifetime_id, dates); } });
   const intervals: number[] = [];
   let cowCount = 0;
   byCow.forEach(dates => {
@@ -142,15 +93,12 @@ function computeCalvingIntervalsFull(records: BreedingCalvingRecord[]) {
       if (days > 200 && days < 800) intervals.push(days);
     }
   });
-
   if (intervals.length === 0) return null;
   intervals.sort((a, b) => a - b);
   const avg = Math.round(intervals.reduce((a, b) => a + b, 0) / intervals.length);
   const median = intervals[Math.floor(intervals.length / 2)];
   return { average: avg, median, best: intervals[0], longest: intervals[intervals.length - 1], cowCount };
 }
-
-/* ── Component ── */
 
 export default function Dashboard() {
   const { data: animals, isLoading: loadingAnimals, error: animalsError } = useActiveAnimals();
@@ -162,84 +110,63 @@ export default function Dashboard() {
     return computeKPIs(records, animals.length);
   }, [animals, records]);
 
-  const scoreDistribution = useMemo(() => {
-    if (!records) return [];
-    return computeScoreDistribution(records);
-  }, [records]);
+  const scoreDistribution = useMemo(() => records ? computeScoreDistribution(records) : [], [records]);
+  const yoyData = useMemo(() => records ? computeYoY(records) : [], [records]);
+  const calvingIntervals = useMemo(() => records ? computeCalvingIntervalsFull(records) : null, [records]);
 
-  const yoyData = useMemo(() => {
-    if (!records) return [];
-    return computeYoY(records);
-  }, [records]);
-
-  const calvingIntervals = useMemo(() => {
-    if (!records) return null;
-    return computeCalvingIntervalsFull(records);
-  }, [records]);
-
-  if (animalsError || recordsError) {
-    return <div className="text-destructive p-4">Error loading data: {(animalsError || recordsError)?.message}</div>;
-  }
-
-  const KPICard = ({ label, value, suffix = '', subtitle, alert = false }: { label: string; value: string | number; suffix?: string; subtitle?: string; alert?: boolean }) => (
-    <Card className="bg-card border-border">
-      <CardContent className="p-4">
-        <p className={`text-2xl font-bold ${alert ? 'text-destructive' : 'text-primary'}`}>{value}{suffix}</p>
-        <p className="text-sm text-foreground mt-1">{label}</p>
-        {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
-      </CardContent>
-    </Card>
-  );
+  if (animalsError || recordsError) return <ErrorBox />;
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+      <h1 className="text-[20px] font-semibold text-foreground">Dashboard</h1>
 
       {/* KPI Cards */}
       {loading ? (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-lg" />)}
+          {Array.from({ length: 6 }).map((_, i) => <ShimmerCard key={i} />)}
         </div>
       ) : kpis && (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          <KPICard label="Active Cows" value={kpis.activeCows} subtitle="status = Active" />
-          <KPICard label="Avg AI Conception Rate" value={kpis.avgConception.toFixed(1)} suffix="%" subtitle="per-cow average" />
-          <KPICard label="Avg Calf Survival Rate" value={kpis.survivalRate.toFixed(1)} suffix="%" subtitle="calf_status = Live" />
-          <KPICard label="Avg Gestation Length" value={Math.round(kpis.avgGestation)} suffix=" days" subtitle="250–310 day filter" />
-          <KPICard label="2024 Open Rate" value={kpis.openRate2024.toFixed(1)} suffix="%" subtitle="breeding_year = 2024" alert={kpis.openRate2024 > 12} />
-          <KPICard label="Total Calving Records" value={kpis.totalRecords.toLocaleString()} subtitle="blair_breeding_calving" />
+          {[
+            { label: 'Active Cows', value: kpis.activeCows, suffix: '' },
+            { label: 'Avg AI Conception Rate', value: kpis.avgConception.toFixed(1), suffix: '%' },
+            { label: 'Avg Calf Survival Rate', value: kpis.survivalRate.toFixed(1), suffix: '%' },
+            { label: 'Avg Gestation Length', value: Math.round(kpis.avgGestation), suffix: ' days' },
+            { label: '2024 Open Rate', value: kpis.openRate2024.toFixed(1), suffix: '%', alert: kpis.openRate2024 > 12 },
+            { label: 'Total Calving Records', value: kpis.totalRecords.toLocaleString(), suffix: '' },
+          ].map(k => (
+            <Card key={k.label} className="bg-card border-border">
+              <CardContent className="p-4">
+                <p className={`text-[24px] font-bold ${'alert' in k && k.alert ? 'text-destructive' : 'text-primary'}`}>{k.value}{k.suffix}</p>
+                <p className="text-[13px] text-foreground mt-1">{k.label}</p>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       )}
 
-      {/* Open Rate Alert Banner */}
+      {/* Alert Banner */}
       {kpis && kpis.openRate2024 > 12 && (
         <div className="w-full rounded-md px-4 py-3 flex items-start gap-3" style={{ backgroundColor: '#1A0E00', borderLeft: '3px solid hsl(var(--primary))' }}>
           <AlertTriangle className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-          <p className="text-sm text-foreground">
-            ⚠ Open rate is trending upward. Investigate nutrition, body condition score at breeding time, heat detection accuracy, and semen handling protocols.
-          </p>
+          <p className="text-sm text-foreground">⚠ Open rate is trending upward. Investigate nutrition, body condition score at breeding time, heat detection accuracy, and semen handling protocols.</p>
         </div>
       )}
 
-      {/* Two Charts Side by Side */}
+      {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Score Distribution */}
         <Card className="bg-card border-border">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-foreground">Score Distribution</CardTitle>
-          </CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">Score Distribution</CardTitle></CardHeader>
           <CardContent>
-            {loading ? <Skeleton className="h-64" /> : (
+            {loading ? <ShimmerSkeleton className="h-64" /> : (
               <ResponsiveContainer width="100%" height={260}>
                 <BarChart data={scoreDistribution}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(218 42% 20%)" />
-                  <XAxis dataKey="name" tick={{ fill: 'hsl(219 23% 53%)', fontSize: 11 }} />
-                  <YAxis tick={{ fill: 'hsl(219 23% 53%)', fontSize: 11 }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(218, 42%, 20%)" />
+                  <XAxis dataKey="name" tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 11 }} />
+                  <YAxis tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 11 }} />
                   <Tooltip content={<CustomTooltip />} />
                   <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                    {scoreDistribution.map((_, i) => (
-                      <Cell key={i} fill={QUARTILE_COLORS[i]} />
-                    ))}
+                    {scoreDistribution.map((_, i) => <Cell key={i} fill={QUARTILE_COLORS[i]} />)}
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
@@ -247,22 +174,19 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Year-over-Year Trends */}
         <Card className="bg-card border-border">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-foreground">Year-over-Year Trends</CardTitle>
-          </CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">Year-over-Year Trends</CardTitle></CardHeader>
           <CardContent>
-            {loading ? <Skeleton className="h-64" /> : (
+            {loading ? <ShimmerSkeleton className="h-64" /> : (
               <ResponsiveContainer width="100%" height={260}>
                 <LineChart data={yoyData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(218 42% 20%)" />
-                  <XAxis dataKey="year" tick={{ fill: 'hsl(219 23% 53%)', fontSize: 11 }} />
-                  <YAxis tick={{ fill: 'hsl(219 23% 53%)', fontSize: 11 }} unit="%" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(218, 42%, 20%)" />
+                  <XAxis dataKey="year" tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 11 }} />
+                  <YAxis tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 11 }} unit="%" />
                   <Tooltip content={<CustomTooltip />} />
-                  <ReferenceLine y={10} stroke="hsl(0 86% 71%)" strokeDasharray="5 5" label={{ value: '10% concern threshold', fill: 'hsl(0 86% 71%)', fontSize: 10 }} />
-                  <Line type="monotone" dataKey="openRate" stroke="hsl(0 86% 71%)" name="Open Rate" strokeWidth={2} dot={{ r: 3 }} />
-                  <Line type="monotone" dataKey="conceptionRate" stroke="hsl(142 69% 58%)" name="AI Conception Rate" strokeWidth={2} dot={{ r: 3 }} />
+                  <ReferenceLine y={10} stroke="hsl(0, 86%, 71%)" strokeDasharray="5 5" label={{ value: '10% concern threshold', fill: 'hsl(0, 86%, 71%)', fontSize: 10 }} />
+                  <Line type="monotone" dataKey="openRate" stroke="hsl(0, 86%, 71%)" name="Open Rate" strokeWidth={2} dot={{ r: 3 }} />
+                  <Line type="monotone" dataKey="conceptionRate" stroke="hsl(142, 69%, 58%)" name="AI Conception Rate" strokeWidth={2} dot={{ r: 3 }} />
                 </LineChart>
               </ResponsiveContainer>
             )}
@@ -270,41 +194,29 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Calving Interval Stats */}
+      {/* Calving Interval */}
       {calvingIntervals && (
         <Card className="bg-card border-border">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-foreground">Calving Interval</CardTitle>
-          </CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">Calving Interval</CardTitle></CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div>
-                <p className="text-xs text-muted-foreground">Average</p>
-                <p className={`text-xl font-bold ${calvingIntervals.average > 370 ? 'text-destructive' : 'text-primary'}`}>{calvingIntervals.average} days</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Median</p>
-                <p className="text-xl font-bold text-primary">{calvingIntervals.median} days</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Best (Shortest)</p>
-                <p className="text-xl font-bold text-success">{calvingIntervals.best} days</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Longest</p>
-                <p className={`text-xl font-bold ${calvingIntervals.longest > 370 ? 'text-destructive' : 'text-primary'}`}>{calvingIntervals.longest} days</p>
-              </div>
+              {[
+                { label: 'Average', value: `${calvingIntervals.average} days`, alert: calvingIntervals.average > 370 },
+                { label: 'Median', value: `${calvingIntervals.median} days` },
+                { label: 'Best (Shortest)', value: `${calvingIntervals.best} days`, success: true },
+                { label: 'Longest', value: `${calvingIntervals.longest} days`, alert: calvingIntervals.longest > 370 },
+              ].map(s => (
+                <div key={s.label}>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{s.label}</p>
+                  <p className={`text-[22px] font-bold ${'alert' in s && s.alert ? 'text-destructive' : 'success' in s ? 'text-success' : 'text-primary'}`}>{s.value}</p>
+                </div>
+              ))}
             </div>
-            {calvingIntervals.average > 365 && (
-              <p className="text-xs text-success mt-3">
-                Each extra day beyond 365 is one lost production day per cow. At {calvingIntervals.average} days average, that's {calvingIntervals.average - 365} days × {calvingIntervals.cowCount} cows = {(calvingIntervals.average - 365) * calvingIntervals.cowCount} lost production days annually.
-              </p>
-            )}
-            {calvingIntervals.average <= 365 && (
-              <p className="text-xs text-success mt-3">
-                Each extra day beyond 365 is one lost production day per cow. Your herd average of {calvingIntervals.average} days is within the optimal range.
-              </p>
-            )}
+            <p className="text-xs text-muted-foreground mt-3">
+              {calvingIntervals.average > 365
+                ? `Each extra day beyond 365 is one lost production day. At ${calvingIntervals.average} days average, that's ${calvingIntervals.average - 365} days × ${calvingIntervals.cowCount} cows = ${(calvingIntervals.average - 365) * calvingIntervals.cowCount} lost production days annually.`
+                : `Your herd average of ${calvingIntervals.average} days is within the optimal range.`}
+            </p>
           </CardContent>
         </Card>
       )}

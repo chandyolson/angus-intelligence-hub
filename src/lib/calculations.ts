@@ -1,5 +1,17 @@
 import { BreedingCalvingRecord, CowStats, SireStats, CalvingIntervalStats, CullCandidate, Animal } from '@/types/cattle';
 
+/** Compute per-cow composite using the canonical formula:
+ *  avg of (conception score, survival score, BW consistency score) */
+function computeConsistencyScore(bws: number[]): number {
+  if (bws.length === 0) return 0;
+  if (bws.length === 1) return 75;
+  const mean = bws.reduce((a, b) => a + b, 0) / bws.length;
+  if (mean === 0) return 0;
+  const std = Math.sqrt(bws.reduce((a, b) => a + (b - mean) ** 2, 0) / bws.length);
+  const cv = (std / mean) * 100;
+  return Math.max(0, Math.min(100, 100 - cv));
+}
+
 export function computeCowStats(animal: Animal, records: BreedingCalvingRecord[]): CowStats {
   const cowRecords = records.filter(r => r.lifetime_id === animal.lifetime_id);
   const withCalves = cowRecords.filter(r => r.calf_status && r.calf_status.toLowerCase() !== 'open');
@@ -13,6 +25,11 @@ export function computeCowStats(animal: Animal, records: BreedingCalvingRecord[]
   const bornAlive = withCalves.filter(r => r.calf_status && !['dead', 'stillborn', 'died'].includes(r.calf_status.toLowerCase())).length;
   const calf_survival_rate = totalCalves > 0 ? (bornAlive / totalCalves) * 100 : 0;
 
+  const consistency = computeConsistencyScore(bws);
+  const composite = totalBreedings > 0
+    ? Math.round(((ai_conception_rate + calf_survival_rate + consistency) / 3) * 10) / 10
+    : 0;
+
   return {
     lifetime_id: animal.lifetime_id,
     tag: animal.tag,
@@ -25,33 +42,13 @@ export function computeCowStats(animal: Animal, records: BreedingCalvingRecord[]
     avg_bw: Math.round(avg_bw),
     ai_conception_rate: Math.round(ai_conception_rate * 10) / 10,
     calf_survival_rate: Math.round(calf_survival_rate * 10) / 10,
-    composite_score: 0,
+    composite_score: composite,
   };
 }
 
 export function computeCompositeScores(stats: CowStats[]): CowStats[] {
-  const withRecords = stats.filter(s => s.total_calves > 0 || s.ai_conception_rate > 0);
-  if (withRecords.length === 0) return stats;
-
-  const conceptions = withRecords.map(s => s.ai_conception_rate);
-  const survivals = withRecords.map(s => s.calf_survival_rate);
-  const bws = withRecords.filter(s => s.avg_bw > 0).map(s => s.avg_bw);
-
-  const maxC = Math.max(...conceptions, 1);
-  const maxS = Math.max(...survivals, 1);
-  const avgBW = bws.length > 0 ? bws.reduce((a, b) => a + b, 0) / bws.length : 80;
-  const maxBWDev = Math.max(...bws.map(b => Math.abs(b - avgBW)), 1);
-
-  return stats.map(s => {
-    if (s.total_calves === 0 && s.ai_conception_rate === 0) {
-      return { ...s, composite_score: 0 };
-    }
-    const normC = s.ai_conception_rate / maxC;
-    const normS = s.calf_survival_rate / maxS;
-    const normBW = s.avg_bw > 0 ? 1 - (Math.abs(s.avg_bw - avgBW) / maxBWDev) : 0.5;
-    const score = ((normC * 0.4) + (normS * 0.35) + (normBW * 0.25)) * 100;
-    return { ...s, composite_score: Math.round(score * 10) / 10 };
-  });
+  // Already computed inline — pass-through
+  return stats;
 }
 
 export function getQuartile(score: number, allScores: number[]): 'top' | 'upper' | 'lower' | 'bottom' {
@@ -92,6 +89,19 @@ export function computeCalvingIntervals(records: BreedingCalvingRecord[]): Calvi
   return { average: avg, median, best: intervals[0], longest: intervals[intervals.length - 1] };
 }
 
+/** Canonical composite score from raw records (for use in pages that don't have Animal objects) */
+export function computeCompositeFromRecords(recs: BreedingCalvingRecord[]): number {
+  const totalBreedings = recs.length;
+  if (totalBreedings === 0) return 0;
+  const withCalves = recs.filter(r => r.calf_status && r.calf_status.toLowerCase() !== 'open');
+  const conceptionRate = (withCalves.length / totalBreedings) * 100;
+  const liveCalves = withCalves.filter(r => r.calf_status && !['dead', 'stillborn', 'died'].includes(r.calf_status.toLowerCase())).length;
+  const survivalRate = withCalves.length > 0 ? (liveCalves / withCalves.length) * 100 : 0;
+  const bws = withCalves.map(r => r.calf_bw).filter((v): v is number => v != null && v > 0);
+  const consistency = computeConsistencyScore(bws);
+  return Math.round(((conceptionRate + survivalRate + consistency) / 3) * 10) / 10;
+}
+
 export function computeSireStats(records: BreedingCalvingRecord[]): SireStats[] {
   const bySire = new Map<string, BreedingCalvingRecord[]>();
   records.forEach(r => {
@@ -109,21 +119,20 @@ export function computeSireStats(records: BreedingCalvingRecord[]): SireStats[] 
     const withCalves = recs.filter(r => r.calf_status && r.calf_status.toLowerCase() !== 'open');
     const totalCalves = withCalves.length;
     const conceptionRate = recs.length > 0 ? (totalCalves / recs.length) * 100 : 0;
-    const gestations = recs.map(r => r.gestation_days).filter((v): v is number => v != null && v > 0);
+    const gestations = recs.map(r => r.gestation_days).filter((v): v is number => v != null && v >= 250 && v <= 310);
     const avgGest = gestations.length > 0 ? gestations.reduce((a, b) => a + b, 0) / gestations.length : 0;
     const bws = withCalves.map(r => r.calf_bw).filter((v): v is number => v != null && v > 0);
     const avgBW = bws.length > 0 ? bws.reduce((a, b) => a + b, 0) / bws.length : 0;
     const alive = withCalves.filter(r => r.calf_status && !['dead', 'stillborn', 'died'].includes(r.calf_status.toLowerCase())).length;
     const survival = totalCalves > 0 ? (alive / totalCalves) * 100 : 0;
-    const knownSex = withCalves.filter(r => r.calf_sex && ['bull', 'male', 'b', 'steer'].some(s => r.calf_sex!.toLowerCase().includes(s)));
+    const knownSex = withCalves.filter(r => r.calf_sex && ['bull', 'male', 'b', 'm', 'steer'].some(s => r.calf_sex!.toLowerCase().includes(s)));
     const totalKnownSex = withCalves.filter(r => r.calf_sex && r.calf_sex.trim() !== '').length;
     const bullPct = totalKnownSex > 0 ? (knownSex.length / totalKnownSex) * 100 : 50;
 
     let badge: SireStats['performance_badge'] = 'AVERAGE';
-    const overallScore = (conceptionRate * 0.4) + (survival * 0.3) + ((100 - Math.abs(avgBW - 80)) * 0.3);
-    if (overallScore >= 90) badge = 'ELITE';
-    else if (overallScore >= 80) badge = 'STRONG';
-    else if (overallScore < 70) badge = 'BELOW AVG';
+    if (conceptionRate >= 95) badge = 'ELITE';
+    else if (conceptionRate >= 88) badge = 'STRONG';
+    else if (conceptionRate < 80) badge = 'BELOW AVG';
 
     stats.push({
       sire,
@@ -155,25 +164,21 @@ export function generateCullList(
     const reasons: string[] = [];
     const cowRecords = records.filter(r => r.lifetime_id === cow.lifetime_id);
 
-    // Open 2+ times in last 4 years
     const recentOpens = cowRecords.filter(r =>
       r.breeding_year && r.breeding_year >= currentYear - 3 &&
       (r.preg_stage?.toLowerCase() === 'open' || r.calf_status?.toLowerCase() === 'open')
     ).length;
     if (recentOpens >= 2) reasons.push(`Open ${recentOpens}x in last 4 years`);
 
-    // Bottom 25% composite + 5+ years old
     const age = cow.year_born ? currentYear - cow.year_born : 0;
     if (cow.composite_score > 0 && cow.composite_score <= q25 && age >= 5) {
       reasons.push('Bottom 25% composite score & 5+ years old');
     }
 
-    // Calf survival below 85%
-    if (cow.total_calves >= 2 && cow.calf_survival_rate < 85) {
+    if (cow.total_calves >= 3 && cow.calf_survival_rate < 85) {
       reasons.push(`Low calf survival rate (${cow.calf_survival_rate}%)`);
     }
 
-    // No calving in last 2 breeding years
     const recentCalving = cowRecords.some(r =>
       r.breeding_year && r.breeding_year >= currentYear - 1 && r.calving_date
     );
