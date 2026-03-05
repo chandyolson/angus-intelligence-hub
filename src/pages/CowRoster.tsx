@@ -1,13 +1,18 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAnimals, useBreedingCalvingRecords } from '@/hooks/useCattleData';
+import { useBreedingCalvingRecords } from '@/hooks/useCattleData';
 import { Animal, BreedingCalvingRecord } from '@/types/cattle';
-import { Skeleton } from '@/components/ui/skeleton';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { ArrowUp, ArrowDown, ArrowUpDown, Search } from 'lucide-react';
+import { ShimmerSkeleton, ShimmerTableRows } from '@/components/ui/shimmer-skeleton';
+import { ErrorBox } from '@/components/ui/error-box';
+import { EmptyState } from '@/components/ui/empty-state';
+import { computeCompositeFromRecords } from '@/lib/calculations';
 
 interface CowRow {
   lifetime_id: string;
@@ -38,29 +43,12 @@ function buildCowRows(animals: Animal[], records: BreedingCalvingRecord[]): CowR
     const recs = byLid.get(a.lifetime_id ?? '') || [];
     const withCalf = recs.filter(r => r.calf_status && r.calf_status.toLowerCase() !== 'open');
     const totalCalves = withCalf.length;
-
     const bws = withCalf.map(r => r.calf_bw).filter((v): v is number => v != null && v > 0);
     const avgBw = bws.length > 0 ? Math.round(bws.reduce((a, b) => a + b, 0) / bws.length) : 0;
-
-    const totalBreedings = recs.length;
-    const settled = recs.filter(r => r.calf_status && r.calf_status.toLowerCase() !== 'open').length;
-    const conceptionRate = totalBreedings > 0 ? (settled / totalBreedings) * 100 : 0;
-
+    const conceptionRate = recs.length > 0 ? (withCalf.length / recs.length) * 100 : 0;
     const liveCalves = withCalf.filter(r => r.calf_status!.toLowerCase() === 'live').length;
     const survivalRate = withCalf.length > 0 ? (liveCalves / withCalf.length) * 100 : 0;
-
-    // BW consistency
-    let bwConsistency = 50;
-    if (bws.length >= 2) {
-      const mean = bws.reduce((a, b) => a + b, 0) / bws.length;
-      const std = Math.sqrt(bws.reduce((a, b) => a + (b - mean) ** 2, 0) / bws.length);
-      const cv = mean > 0 ? std / mean : 0;
-      bwConsistency = Math.max(0, Math.min(100, (1 - cv) * 100));
-    }
-
-    const composite = totalBreedings > 0
-      ? Math.round((conceptionRate * 0.4 + survivalRate * 0.35 + bwConsistency * 0.25) * 10) / 10
-      : 0;
+    const composite = computeCompositeFromRecords(recs);
 
     return {
       lifetime_id: a.lifetime_id ?? '',
@@ -79,10 +67,7 @@ function buildCowRows(animals: Animal[], records: BreedingCalvingRecord[]): CowR
 }
 
 export default function CowRoster() {
-  const { data: animals, isLoading: la } = useAnimals();
-  const { data: records, isLoading: lr } = useBreedingCalvingRecords();
   const navigate = useNavigate();
-
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [yearFilter, setYearFilter] = useState('all');
@@ -92,23 +77,55 @@ export default function CowRoster() {
   const [page, setPage] = useState(0);
   const PER_PAGE = 50;
 
-  const cowRows = useMemo(() => {
-    if (!animals || !records) return [];
-    return buildCowRows(animals, records);
-  }, [animals, records]);
+  // Server-side paginated animal fetch
+  const { data: animalPage, isLoading: la, error: animalsError } = useQuery({
+    queryKey: ['animals_page', page],
+    queryFn: async () => {
+      const from = page * PER_PAGE;
+      const to = from + PER_PAGE - 1;
+      const [pageResult, countResult] = await Promise.all([
+        supabase.from('animals').select('*').range(from, to),
+        supabase.from('animals').select('*', { count: 'exact', head: true }),
+      ]);
+      if (pageResult.error) throw pageResult.error;
+      return {
+        animals: pageResult.data as unknown as Animal[],
+        totalCount: countResult.count ?? 0,
+      };
+    },
+  });
 
-  // Quartile thresholds
+  // Still need all breeding records for stats
+  const { data: records, isLoading: lr, error: recordsError } = useBreedingCalvingRecords();
+
+  // For filters we need all unique years/sires — use breeding records
+  const allYears = useMemo(() => {
+    if (!records) return [];
+    const years = new Set<number>();
+    records.forEach(r => { if (r.year_born) years.add(r.year_born); });
+    return [...years].sort((a, b) => b - a);
+  }, [records]);
+
+  const allSires = useMemo(() => {
+    if (!records) return [];
+    const sires = new Set<string>();
+    records.forEach(r => { if (r.sire) sires.add(r.sire); });
+    return [...sires].sort();
+  }, [records]);
+
+  const cowRows = useMemo(() => {
+    if (!animalPage?.animals || !records) return [];
+    return buildCowRows(animalPage.animals, records);
+  }, [animalPage, records]);
+
   const quartiles = useMemo(() => {
     const scores = cowRows.filter(c => c.composite_score > 0).map(c => c.composite_score).sort((a, b) => a - b);
-    if (scores.length === 0) return { q25: 0, q75: 0 };
+    if (scores.length === 0) return { q25: 25, q75: 75 };
     return {
-      q25: scores[Math.floor(scores.length * 0.25)] ?? 0,
-      q75: scores[Math.floor(scores.length * 0.75)] ?? 0,
+      q25: scores[Math.floor(scores.length * 0.25)] ?? 25,
+      q75: scores[Math.floor(scores.length * 0.75)] ?? 75,
     };
   }, [cowRows]);
-
-  const years = useMemo(() => [...new Set(cowRows.map(c => c.year_born).filter((v): v is number => v != null))].sort((a, b) => b - a), [cowRows]);
-  const sires = useMemo(() => [...new Set(cowRows.map(c => c.sire).filter(Boolean) as string[])].sort(), [cowRows]);
 
   const filtered = useMemo(() => {
     let result = cowRows;
@@ -116,15 +133,9 @@ export default function CowRoster() {
       const q = search.toLowerCase();
       result = result.filter(c => c.tag?.toLowerCase().includes(q) || c.lifetime_id.toLowerCase().includes(q));
     }
-    if (statusFilter !== 'all') {
-      result = result.filter(c => c.status?.toLowerCase() === statusFilter.toLowerCase());
-    }
-    if (yearFilter !== 'all') {
-      result = result.filter(c => String(c.year_born) === yearFilter);
-    }
-    if (sireFilter !== 'all') {
-      result = result.filter(c => c.sire === sireFilter);
-    }
+    if (statusFilter !== 'all') result = result.filter(c => c.status?.toLowerCase() === statusFilter.toLowerCase());
+    if (yearFilter !== 'all') result = result.filter(c => String(c.year_born) === yearFilter);
+    if (sireFilter !== 'all') result = result.filter(c => c.sire === sireFilter);
     result = [...result].sort((a, b) => {
       const av = a[sortKey] ?? '';
       const bv = b[sortKey] ?? '';
@@ -135,22 +146,20 @@ export default function CowRoster() {
     return result;
   }, [cowRows, search, statusFilter, yearFilter, sireFilter, sortKey, sortDir]);
 
-  const totalFiltered = filtered.length;
-  const totalAll = cowRows.length;
-  const paginated = filtered.slice(page * PER_PAGE, (page + 1) * PER_PAGE);
-  const totalPages = Math.ceil(totalFiltered / PER_PAGE);
+  const totalAll = animalPage?.totalCount ?? 0;
+  const totalPages = Math.ceil(totalAll / PER_PAGE);
 
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
     else { setSortKey(key); setSortDir('desc'); }
-    setPage(0);
   };
 
   const scoreStyle = (score: number): string => {
     if (score <= 0) return '';
-    if (score >= quartiles.q75) return 'bg-success/20 text-success';
-    if (score <= quartiles.q25) return 'bg-destructive/20 text-destructive';
-    return 'bg-yellow-500/20 text-yellow-400';
+    if (score >= 75) return 'bg-success/20 text-success';
+    if (score >= 50) return 'bg-yellow-500/20 text-yellow-400';
+    if (score >= 25) return 'bg-orange-500/20 text-orange-400';
+    return 'bg-destructive/20 text-destructive';
   };
 
   const SortIcon = ({ field }: { field: SortKey }) => {
@@ -159,7 +168,7 @@ export default function CowRoster() {
   };
 
   const SortHeader = ({ label, field }: { label: string; field: SortKey }) => (
-    <TableHead className="cursor-pointer select-none hover:text-foreground whitespace-nowrap" onClick={() => toggleSort(field)}>
+    <TableHead className="cursor-pointer select-none hover:text-foreground whitespace-nowrap text-[13px] uppercase tracking-[0.1em] text-primary" onClick={() => toggleSort(field)}>
       <div className="flex items-center gap-1">
         {label}
         <SortIcon field={field} />
@@ -167,59 +176,48 @@ export default function CowRoster() {
     </TableHead>
   );
 
-  if (la || lr) return (
-    <div className="space-y-4">
-      <Skeleton className="h-10 w-full" />
-      <Skeleton className="h-12 w-full" />
-      <Skeleton className="h-96 w-full" />
-    </div>
-  );
-
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold text-foreground">Cow Roster</h1>
+      <h1 className="text-[20px] font-semibold text-foreground">Cow Roster</h1>
+
+      {(animalsError || recordsError) && <ErrorBox />}
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[200px] max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search tag or lifetime ID..."
-            value={search}
-            onChange={e => { setSearch(e.target.value); setPage(0); }}
-            className="pl-9 bg-card border-border"
-          />
+          <Input placeholder="Search tag or lifetime ID..." value={search} onChange={e => { setSearch(e.target.value); }} className="pl-9 bg-card border-border text-[13px]" />
         </div>
-        <Select value={statusFilter} onValueChange={v => { setStatusFilter(v); setPage(0); }}>
-          <SelectTrigger className="w-[140px] bg-card border-border"><SelectValue placeholder="Status" /></SelectTrigger>
+        <Select value={statusFilter} onValueChange={v => { setStatusFilter(v); }}>
+          <SelectTrigger className="w-[140px] bg-card border-border text-[13px]"><SelectValue placeholder="Status" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Status</SelectItem>
             <SelectItem value="active">Active</SelectItem>
             <SelectItem value="inactive">Inactive</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={yearFilter} onValueChange={v => { setYearFilter(v); setPage(0); }}>
-          <SelectTrigger className="w-[140px] bg-card border-border"><SelectValue placeholder="Year Born" /></SelectTrigger>
+        <Select value={yearFilter} onValueChange={v => { setYearFilter(v); }}>
+          <SelectTrigger className="w-[140px] bg-card border-border text-[13px]"><SelectValue placeholder="Year Born" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Years</SelectItem>
-            {years.map(y => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
+            {allYears.map(y => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
           </SelectContent>
         </Select>
-        <Select value={sireFilter} onValueChange={v => { setSireFilter(v); setPage(0); }}>
-          <SelectTrigger className="w-[180px] bg-card border-border"><SelectValue placeholder="Sire" /></SelectTrigger>
+        <Select value={sireFilter} onValueChange={v => { setSireFilter(v); }}>
+          <SelectTrigger className="w-[180px] bg-card border-border text-[13px]"><SelectValue placeholder="Sire" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Sires</SelectItem>
-            {sires.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+            {allSires.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
           </SelectContent>
         </Select>
-        <span className="text-sm text-muted-foreground ml-auto">Showing {totalFiltered} of {totalAll} cows</span>
+        <span className="text-[12px] text-muted-foreground ml-auto">Showing {filtered.length} of {totalAll} cows</span>
       </div>
 
       {/* Table */}
       <div className="rounded-lg border border-border overflow-auto">
         <Table>
           <TableHeader>
-            <TableRow className="bg-sidebar-background border-border hover:bg-sidebar-background">
+            <TableRow className="bg-sidebar border-border hover:bg-sidebar">
               <SortHeader label="Tag #" field="tag" />
               <SortHeader label="Lifetime ID" field="lifetime_id" />
               <SortHeader label="Year Born" field="year_born" />
@@ -234,45 +232,46 @@ export default function CowRoster() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paginated.map((cow, i) => (
-              <TableRow
-                key={cow.lifetime_id}
-                className={`cursor-pointer border-border ${i % 2 === 0 ? 'bg-card' : 'bg-background'}`}
-                style={{ ['--tw-bg-opacity' as string]: 1 }}
-                onClick={() => navigate(`/cow/${encodeURIComponent(cow.lifetime_id)}`)}
-                onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#1A2A45')}
-                onMouseLeave={e => (e.currentTarget.style.backgroundColor = '')}
-              >
-                <TableCell className="font-medium text-foreground">{cow.tag || '—'}</TableCell>
-                <TableCell className="text-muted-foreground text-xs">{cow.lifetime_id}</TableCell>
-                <TableCell>{cow.year_born || '—'}</TableCell>
-                <TableCell>{cow.sire || '—'}</TableCell>
-                <TableCell>{cow.dam_sire || '—'}</TableCell>
-                <TableCell>{cow.total_calves}</TableCell>
-                <TableCell>{cow.avg_bw || '—'}</TableCell>
-                <TableCell>{cow.ai_conception_rate}%</TableCell>
-                <TableCell>{cow.calf_survival_rate}%</TableCell>
-                <TableCell>
-                  <span className={`px-2 py-0.5 rounded text-xs font-semibold ${scoreStyle(cow.composite_score)}`}>
-                    {cow.composite_score}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <Badge
-                    className={`text-xs ${cow.status?.toLowerCase() === 'active'
-                      ? 'bg-success/20 text-success border-success/30'
-                      : 'bg-muted text-muted-foreground border-border'}`}
-                    variant="outline"
-                  >
-                    {cow.status || '—'}
-                  </Badge>
-                </TableCell>
-              </TableRow>
-            ))}
-            {paginated.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={11} className="text-center text-muted-foreground py-8">No cows match your filters.</TableCell>
-              </TableRow>
+            {(la || lr) ? (
+              <ShimmerTableRows rows={10} cols={11} />
+            ) : filtered.length === 0 ? (
+              <tr><td colSpan={11}><EmptyState message="No cows match your filters." /></td></tr>
+            ) : (
+              filtered.map((cow, i) => (
+                <TableRow
+                  key={cow.lifetime_id}
+                  className="cursor-pointer border-border text-[13px]"
+                  style={{ backgroundColor: i % 2 === 0 ? undefined : '#0E1528' }}
+                  onClick={() => navigate(`/cow/${encodeURIComponent(cow.lifetime_id)}`)}
+                  onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#1A2A45')}
+                  onMouseLeave={e => (e.currentTarget.style.backgroundColor = i % 2 === 0 ? '' : '#0E1528')}
+                >
+                  <TableCell className="font-medium text-foreground">{cow.tag || '—'}</TableCell>
+                  <TableCell className="text-muted-foreground text-xs">{cow.lifetime_id}</TableCell>
+                  <TableCell>{cow.year_born || '—'}</TableCell>
+                  <TableCell>{cow.sire || '—'}</TableCell>
+                  <TableCell>{cow.dam_sire || '—'}</TableCell>
+                  <TableCell>{cow.total_calves}</TableCell>
+                  <TableCell>{cow.avg_bw || '—'}</TableCell>
+                  <TableCell>{cow.ai_conception_rate}%</TableCell>
+                  <TableCell>{cow.calf_survival_rate}%</TableCell>
+                  <TableCell>
+                    <span className={`px-2 py-0.5 rounded text-xs font-semibold ${scoreStyle(cow.composite_score)}`}>
+                      {cow.composite_score}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      className={`text-xs ${cow.status?.toLowerCase() === 'active'
+                        ? 'bg-success/20 text-success border-success/30'
+                        : 'bg-muted text-muted-foreground border-border'}`}
+                      variant="outline"
+                    >
+                      {cow.status || '—'}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
+              ))
             )}
           </TableBody>
         </Table>
