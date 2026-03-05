@@ -50,12 +50,16 @@ function buildCowRows(animals: Animal[], records: BreedingCalvingRecord[]): CowR
     const survivalRate = withCalf.length > 0 ? (liveCalves / withCalf.length) * 100 : 0;
     const composite = computeCompositeFromRecords(recs);
 
+    // Fall back to breeding records for sire/dam_sire when animal table has nulls
+    const sire = a.sire || recs.find(r => r.sire)?.sire || null;
+    const damSire = a.dam_sire || recs.find(r => r.dam_sire)?.dam_sire || null;
+
     return {
       lifetime_id: a.lifetime_id ?? '',
       tag: a.tag,
       year_born: a.year_born,
-      sire: a.sire,
-      dam_sire: a.dam_sire,
+      sire,
+      dam_sire: damSire,
       status: a.status,
       total_calves: totalCalves,
       avg_bw: avgBw,
