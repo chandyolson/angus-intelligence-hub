@@ -398,8 +398,6 @@ export default function Dashboard() {
       <TabsContent value="breeding" className="mt-0">
         <BreedingTab />
       </TabsContent>
-
-      </Tabs>
-    </div>
+    </Tabs>
   );
 }
