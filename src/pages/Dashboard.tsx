@@ -35,17 +35,10 @@ function computeKPIs(records: BlairCombinedRecord[], activeCowCount: number) {
   const alive = withStatus.filter(r => r.calf_status!.toLowerCase() === 'alive');
   const survivalRate = withStatus.length > 0 ? (alive.length / withStatus.length) * 100 : 0;
 
-  // Conception: records with a calf (not open/dead) vs total
-  const byCow = new Map<string, { settled: number; total: number }>();
-  records.forEach(r => {
-    if (!r.lifetime_id) return;
-    const entry = byCow.get(r.lifetime_id) || { settled: 0, total: 0 };
-    entry.total++;
-    if (r.calf_status && !['open', 'dead'].includes(r.calf_status.toLowerCase())) entry.settled++;
-    byCow.set(r.lifetime_id, entry);
-  });
-  const cowRates = Array.from(byCow.values()).filter(c => c.total > 0).map(c => (c.settled / c.total) * 100);
-  const avgConception = cowRates.length > 0 ? cowRates.reduce((a, b) => a + b, 0) / cowRates.length : 0;
+  // Overall AI Conception Rate: preg_stage 'AI' or 'Second AI' / total with ai_date_1
+  const withAiDate1 = records.filter(r => r.ai_date_1 != null);
+  const aiConceived = records.filter(r => r.preg_stage?.toLowerCase() === 'ai' || r.preg_stage?.toLowerCase() === 'second ai');
+  const avgConception = withAiDate1.length > 0 ? (aiConceived.length / withAiDate1.length) * 100 : 0;
 
   // Gestation: compute from ai_date_1 → calving_date
   const gestations: number[] = [];
