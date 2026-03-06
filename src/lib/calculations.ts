@@ -105,7 +105,7 @@ export function computeCompositeFromRecords(recs: BreedingCalvingRecord[]): numb
 export function computeSireStats(records: BreedingCalvingRecord[]): SireStats[] {
   const bySire = new Map<string, BreedingCalvingRecord[]>();
   records.forEach(r => {
-    const sire = r.calf_sire || r.sire;
+    const sire = r.calf_sire || r.ai_sire_1;
     if (sire) {
       const arr = bySire.get(sire) || [];
       arr.push(r);
