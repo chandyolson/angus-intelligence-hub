@@ -110,72 +110,6 @@ export type Database = {
         }
         Relationships: []
       }
-      blair_breeding_calving: {
-        Row: {
-          ai_date_1: string | null
-          ai_date_2: string | null
-          breeding_year: number | null
-          calf_bw: number | null
-          calf_sex: string | null
-          calf_sire: string | null
-          calf_status: string | null
-          calving_date: string | null
-          dam_sire: string | null
-          days_of_gestation_at_scan: number | null
-          est_calving_date: string | null
-          fetal_sex: string | null
-          gestation_days: number | null
-          lifetime_id: string | null
-          preg_stage: string | null
-          sire: string | null
-          status: string | null
-          ultrasound_date: string | null
-          year_born: number | null
-        }
-        Insert: {
-          ai_date_1?: string | null
-          ai_date_2?: string | null
-          breeding_year?: number | null
-          calf_bw?: number | null
-          calf_sex?: string | null
-          calf_sire?: string | null
-          calf_status?: string | null
-          calving_date?: string | null
-          dam_sire?: string | null
-          days_of_gestation_at_scan?: number | null
-          est_calving_date?: string | null
-          fetal_sex?: string | null
-          gestation_days?: number | null
-          lifetime_id?: string | null
-          preg_stage?: string | null
-          sire?: string | null
-          status?: string | null
-          ultrasound_date?: string | null
-          year_born?: number | null
-        }
-        Update: {
-          ai_date_1?: string | null
-          ai_date_2?: string | null
-          breeding_year?: number | null
-          calf_bw?: number | null
-          calf_sex?: string | null
-          calf_sire?: string | null
-          calf_status?: string | null
-          calving_date?: string | null
-          dam_sire?: string | null
-          days_of_gestation_at_scan?: number | null
-          est_calving_date?: string | null
-          fetal_sex?: string | null
-          gestation_days?: number | null
-          lifetime_id?: string | null
-          preg_stage?: string | null
-          sire?: string | null
-          status?: string | null
-          ultrasound_date?: string | null
-          year_born?: number | null
-        }
-        Relationships: []
-      }
       blair_combined: {
         Row: {
           ai_date_1: string | null
@@ -242,48 +176,6 @@ export type Database = {
           project_record_id?: string | null
           ultrasound_date?: string | null
           ultrasound_notes?: string | null
-        }
-        Relationships: []
-      }
-      breeding: {
-        Row: {
-          ai_date: string
-          ai_sire: string
-          auto_number: number | null
-          breeding_year: number | null
-          cow_lookup: string | null
-          id: number
-          lifetime_id: string | null
-          master_eid: number | null
-          record_number: number | null
-          status: string | null
-          tag: string | null
-        }
-        Insert: {
-          ai_date: string
-          ai_sire: string
-          auto_number?: number | null
-          breeding_year?: number | null
-          cow_lookup?: string | null
-          id?: number
-          lifetime_id?: string | null
-          master_eid?: number | null
-          record_number?: number | null
-          status?: string | null
-          tag?: string | null
-        }
-        Update: {
-          ai_date?: string
-          ai_sire?: string
-          auto_number?: number | null
-          breeding_year?: number | null
-          cow_lookup?: string | null
-          id?: number
-          lifetime_id?: string | null
-          master_eid?: number | null
-          record_number?: number | null
-          status?: string | null
-          tag?: string | null
         }
         Relationships: []
       }
@@ -425,57 +317,6 @@ export type Database = {
           quick_notes?: string | null
           snyder_auto_number?: number | null
           snyder_system_id?: number | null
-        }
-        Relationships: []
-      }
-      ultrasound: {
-        Row: {
-          auto_number: number | null
-          breeding_year: number | null
-          calf_sex: string | null
-          cow_lookup: string | null
-          cow_sire: string | null
-          dog: number | null
-          id: number
-          lifetime_id: string | null
-          master_eid: number | null
-          notes: string | null
-          preg_stage: string
-          project_record_id: string | null
-          tag: string | null
-          ultrasound_date: string
-        }
-        Insert: {
-          auto_number?: number | null
-          breeding_year?: number | null
-          calf_sex?: string | null
-          cow_lookup?: string | null
-          cow_sire?: string | null
-          dog?: number | null
-          id?: number
-          lifetime_id?: string | null
-          master_eid?: number | null
-          notes?: string | null
-          preg_stage: string
-          project_record_id?: string | null
-          tag?: string | null
-          ultrasound_date: string
-        }
-        Update: {
-          auto_number?: number | null
-          breeding_year?: number | null
-          calf_sex?: string | null
-          cow_lookup?: string | null
-          cow_sire?: string | null
-          dog?: number | null
-          id?: number
-          lifetime_id?: string | null
-          master_eid?: number | null
-          notes?: string | null
-          preg_stage?: string
-          project_record_id?: string | null
-          tag?: string | null
-          ultrasound_date?: string
         }
         Relationships: []
       }
