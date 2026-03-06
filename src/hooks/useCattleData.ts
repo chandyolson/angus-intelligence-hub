@@ -84,7 +84,7 @@ export function useAnimal(lifetimeId: string) {
 export function useCowBreedingRecords(lifetimeId: string) {
   return useQuery({
     queryKey: ['breeding_calving_records', lifetimeId],
-    queryFn: () => fetchAllRows<BreedingCalvingRecord>('blaicombined', { coledumn: 'lifetime_id', value: lifetimeId }),
+    queryFn: () => fetchAllRows<BreedingCalvingRecord>('blair_combined', { column: 'lifetime_id', value: lifetimeId }),
     enabled: !!lifetimeId,
   });
 }
