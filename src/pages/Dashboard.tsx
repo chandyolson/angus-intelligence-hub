@@ -35,17 +35,10 @@ function computeKPIs(records: BlairCombinedRecord[], activeCowCount: number) {
   const alive = withStatus.filter(r => r.calf_status!.toLowerCase() === 'alive');
   const survivalRate = withStatus.length > 0 ? (alive.length / withStatus.length) * 100 : 0;
 
-  // Conception: records with a calf (not open/dead) vs total
-  const byCow = new Map<string, { settled: number; total: number }>();
-  records.forEach(r => {
-    if (!r.lifetime_id) return;
-    const entry = byCow.get(r.lifetime_id) || { settled: 0, total: 0 };
-    entry.total++;
-    if (r.calf_status && !['open', 'dead'].includes(r.calf_status.toLowerCase())) entry.settled++;
-    byCow.set(r.lifetime_id, entry);
-  });
-  const cowRates = Array.from(byCow.values()).filter(c => c.total > 0).map(c => (c.settled / c.total) * 100);
-  const avgConception = cowRates.length > 0 ? cowRates.reduce((a, b) => a + b, 0) / cowRates.length : 0;
+  // Overall AI Conception Rate: preg_stage 'AI' or 'Second AI' / total with ai_date_1
+  const withAiDate1 = records.filter(r => r.ai_date_1 != null);
+  const aiConceived = records.filter(r => r.preg_stage?.toLowerCase() === 'ai' || r.preg_stage?.toLowerCase() === 'second ai');
+  const avgConception = withAiDate1.length > 0 ? (aiConceived.length / withAiDate1.length) * 100 : 0;
 
   // Gestation: compute from ai_date_1 → calving_date
   const gestations: number[] = [];
@@ -98,19 +91,19 @@ function computeScoreDistribution(records: BlairCombinedRecord[]) {
 
 /* ─── Year-over-Year Trends ─── */
 function computeYoY(records: BlairCombinedRecord[]) {
-  const byYear = new Map<number, { total: number; open: number; conceived: number }>();
+  const byYear = new Map<number, { totalWithAiDate1: number; open: number; aiConceived: number }>();
   records.forEach(r => {
     if (!r.breeding_year) return;
-    const y = byYear.get(r.breeding_year) || { total: 0, open: 0, conceived: 0 };
-    y.total++;
+    const y = byYear.get(r.breeding_year) || { totalWithAiDate1: 0, open: 0, aiConceived: 0 };
+    if (r.ai_date_1 != null) y.totalWithAiDate1++;
     if (r.preg_stage?.toLowerCase() === 'open') y.open++;
-    if (r.calf_status && r.calf_status.toLowerCase() !== 'open') y.conceived++;
+    if (r.preg_stage?.toLowerCase() === 'ai' || r.preg_stage?.toLowerCase() === 'second ai') y.aiConceived++;
     byYear.set(r.breeding_year, y);
   });
   return Array.from(byYear.entries()).sort(([a], [b]) => a - b).map(([year, d]) => ({
     year: String(year),
-    openRate: Math.round((d.open / d.total) * 1000) / 10,
-    conceptionRate: Math.round((d.conceived / d.total) * 1000) / 10,
+    openRate: d.totalWithAiDate1 > 0 ? Math.round((d.open / d.totalWithAiDate1) * 1000) / 10 : 0,
+    conceptionRate: d.totalWithAiDate1 > 0 ? Math.round((d.aiConceived / d.totalWithAiDate1) * 1000) / 10 : 0,
   }));
 }
 
@@ -156,17 +149,17 @@ function computeSireGestation(records: BlairCombinedRecord[]) {
 
 /* ─── Sire AI Conception Chart: GROUP BY ai_sire_1, conception rate ─── */
 function computeSireConception(records: BlairCombinedRecord[]) {
-  const bySire = new Map<string, { total: number; conceived: number }>();
+  const bySire = new Map<string, { totalWithAiDate1: number; aiConceived: number }>();
   records.forEach(r => {
-    if (!r.ai_sire_1) return;
-    const entry = bySire.get(r.ai_sire_1) || { total: 0, conceived: 0 };
-    entry.total++;
-    if (r.preg_stage && r.preg_stage.toLowerCase() !== 'open') entry.conceived++;
+    if (!r.ai_sire_1 || r.ai_date_1 == null) return;
+    const entry = bySire.get(r.ai_sire_1) || { totalWithAiDate1: 0, aiConceived: 0 };
+    entry.totalWithAiDate1++;
+    if (r.preg_stage?.toLowerCase() === 'ai' || r.preg_stage?.toLowerCase() === 'second ai') entry.aiConceived++;
     bySire.set(r.ai_sire_1, entry);
   });
   return Array.from(bySire.entries())
-    .filter(([, v]) => v.total >= 5)
-    .map(([sire, d]) => ({ sire, conceptionRate: Math.round((d.conceived / d.total) * 1000) / 10, count: d.total }))
+    .filter(([, v]) => v.totalWithAiDate1 >= 5)
+    .map(([sire, d]) => ({ sire, conceptionRate: Math.round((d.aiConceived / d.totalWithAiDate1) * 1000) / 10, count: d.totalWithAiDate1 }))
     .sort((a, b) => b.conceptionRate - a.conceptionRate)
     .slice(0, 15);
 }

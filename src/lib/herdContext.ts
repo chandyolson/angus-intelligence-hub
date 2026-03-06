@@ -35,8 +35,9 @@ export async function buildHerdContext(): Promise<string> {
 
   // Overall stats — scoped to Blair
   const withCalves = blairRecords.filter(r => r.calf_status && r.calf_status.toLowerCase() !== 'open');
-  const totalBreedings = blairRecords.filter(r => r.lifetime_id).length;
-  const conceptionRate = totalBreedings > 0 ? (withCalves.length / totalBreedings) * 100 : 0;
+  const withAiDate1 = blairRecords.filter(r => r.ai_date_1 != null);
+  const aiConceived = blairRecords.filter(r => r.preg_stage?.toLowerCase() === 'ai' || r.preg_stage?.toLowerCase() === 'second ai');
+  const conceptionRate = withAiDate1.length > 0 ? (aiConceived.length / withAiDate1.length) * 100 : 0;
   const liveCalves = withCalves.filter(r => r.calf_status?.toLowerCase() === 'alive');
   const survivalRate = withCalves.length > 0 ? (liveCalves.length / withCalves.length) * 100 : 0;
   const avgGestation = 0;

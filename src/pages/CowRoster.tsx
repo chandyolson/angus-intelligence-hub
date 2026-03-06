@@ -45,7 +45,9 @@ function buildCowRows(animals: Animal[], records: BreedingCalvingRecord[]): CowR
     const totalCalves = withCalf.length;
     const bws = withCalf.map(r => r.calf_bw).filter((v): v is number => v != null && v > 0);
     const avgBw = bws.length > 0 ? Math.round(bws.reduce((a, b) => a + b, 0) / bws.length) : 0;
-    const conceptionRate = recs.length > 0 ? (withCalf.length / recs.length) * 100 : 0;
+    const withAiDate1 = recs.filter(r => r.ai_date_1 != null);
+    const aiConceived = recs.filter(r => r.preg_stage?.toLowerCase() === 'ai' || r.preg_stage?.toLowerCase() === 'second ai');
+    const conceptionRate = withAiDate1.length > 0 ? (aiConceived.length / withAiDate1.length) * 100 : 0;
     const liveCalves = withCalf.filter(r => r.calf_status?.toLowerCase() === 'alive').length;
     const survivalRate = withCalf.length > 0 ? (liveCalves / withCalf.length) * 100 : 0;
     const composite = computeCompositeFromRecords(recs);

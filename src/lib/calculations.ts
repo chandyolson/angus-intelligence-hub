@@ -19,14 +19,16 @@ export function computeCowStats(animal: Animal, records: BreedingCalvingRecord[]
   const bws = withCalves.map(r => r.calf_bw).filter((v): v is number => v != null && v > 0);
   const avg_bw = bws.length > 0 ? bws.reduce((a, b) => a + b, 0) / bws.length : 0;
 
-  const totalBreedings = cowRecords.length;
-  const ai_conception_rate = totalBreedings > 0 ? (totalCalves / totalBreedings) * 100 : 0;
+  // Overall AI Conception Rate: cows with preg_stage 'AI' or 'Second AI' / total with ai_date_1
+  const withAiDate1 = cowRecords.filter(r => r.ai_date_1 != null);
+  const aiConceived = cowRecords.filter(r => r.preg_stage?.toLowerCase() === 'ai' || r.preg_stage?.toLowerCase() === 'second ai');
+  const ai_conception_rate = withAiDate1.length > 0 ? (aiConceived.length / withAiDate1.length) * 100 : 0;
 
   const bornAlive = withCalves.filter(r => r.calf_status?.toLowerCase() === 'alive').length;
   const calf_survival_rate = totalCalves > 0 ? (bornAlive / totalCalves) * 100 : 0;
 
   const consistency = computeConsistencyScore(bws);
-  const composite = totalBreedings > 0
+  const composite = withAiDate1.length > 0
     ? Math.round(((ai_conception_rate + calf_survival_rate + consistency) / 3) * 10) / 10
     : 0;
 
@@ -91,10 +93,13 @@ export function computeCalvingIntervals(records: BreedingCalvingRecord[]): Calvi
 
 /** Canonical composite score from raw records (for use in pages that don't have Animal objects) */
 export function computeCompositeFromRecords(recs: BreedingCalvingRecord[]): number {
-  const totalBreedings = recs.length;
-  if (totalBreedings === 0) return 0;
+  if (recs.length === 0) return 0;
+  // Overall AI Conception Rate: preg_stage 'AI' or 'Second AI' / total with ai_date_1
+  const withAiDate1 = recs.filter(r => r.ai_date_1 != null);
+  if (withAiDate1.length === 0) return 0;
+  const aiConceived = recs.filter(r => r.preg_stage?.toLowerCase() === 'ai' || r.preg_stage?.toLowerCase() === 'second ai');
+  const conceptionRate = (aiConceived.length / withAiDate1.length) * 100;
   const withCalves = recs.filter(r => r.calf_status && r.calf_status.toLowerCase() !== 'open');
-  const conceptionRate = (withCalves.length / totalBreedings) * 100;
   const liveCalves = withCalves.filter(r => r.calf_status?.toLowerCase() === 'alive').length;
   const survivalRate = withCalves.length > 0 ? (liveCalves / withCalves.length) * 100 : 0;
   const bws = withCalves.map(r => r.calf_bw).filter((v): v is number => v != null && v > 0);
@@ -118,7 +123,10 @@ export function computeSireStats(records: BreedingCalvingRecord[]): SireStats[] 
     if (recs.length < 20) return;
     const withCalves = recs.filter(r => r.calf_status && r.calf_status.toLowerCase() !== 'open');
     const totalCalves = withCalves.length;
-    const conceptionRate = recs.length > 0 ? (totalCalves / recs.length) * 100 : 0;
+    // AI Conception Rate: preg_stage 'AI' or 'Second AI' / total with ai_date_1
+    const withAiDate1 = recs.filter(r => r.ai_date_1 != null);
+    const aiConceived = recs.filter(r => r.preg_stage?.toLowerCase() === 'ai' || r.preg_stage?.toLowerCase() === 'second ai');
+    const conceptionRate = withAiDate1.length > 0 ? (aiConceived.length / withAiDate1.length) * 100 : 0;
     const avgGest = 0;
     const bws = withCalves.map(r => r.calf_bw).filter((v): v is number => v != null && v > 0);
     const avgBW = bws.length > 0 ? bws.reduce((a, b) => a + b, 0) / bws.length : 0;
