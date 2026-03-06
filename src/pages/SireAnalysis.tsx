@@ -153,9 +153,9 @@ export default function SireAnalysis() {
                         <span style={{ color: conceptionColor(s.ai_conception_rate) }}>{s.ai_conception_rate}%</span>
                       </div>
                     </TableCell>
-                    <TableCell>{s.avg_gestation_days > 0 ? `${s.avg_gestation_days} d` : '—'}</TableCell>
                     <TableCell>{s.first_service_rate}%</TableCell>
                     <TableCell>{s.second_service_rate}%</TableCell>
+                    <TableCell>{s.avg_gestation_days > 0 ? `${s.avg_gestation_days} d` : '—'}</TableCell>
                     <TableCell>{s.avg_calf_bw > 0 ? `${s.avg_calf_bw} lbs` : '—'}</TableCell>
                     <TableCell>{s.calf_survival_rate}%</TableCell>
                     <TableCell>{s.bull_calf_pct}%</TableCell>
