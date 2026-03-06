@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useAnimals, useBlairCombined } from '@/hooks/useCattleData';
 import { computeCompositeFromRecords } from '@/lib/calculations';
 import { BlairCombinedRecord } from '@/types/cattle';
