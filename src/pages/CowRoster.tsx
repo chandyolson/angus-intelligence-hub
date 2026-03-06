@@ -267,7 +267,9 @@ export default function CowRoster() {
               <SortHeader label="Dam Sire" field="dam_sire" />
               <SortHeader label="Total Calves" field="total_calves" />
               <SortHeader label="Avg Birth Wt" field="avg_bw" />
-              <SortHeader label="AI Conception %" field="ai_conception_rate" />
+              <SortHeader label="Overall AI %" field="ai_conception_rate" />
+              <SortHeader label="1st Service %" field="first_service_rate" />
+              <SortHeader label="2nd Service %" field="second_service_rate" />
               <SortHeader label="Calf Survival %" field="calf_survival_rate" />
               <SortHeader label="Composite Score" field="composite_score" />
               <SortHeader label="Status" field="status" />
