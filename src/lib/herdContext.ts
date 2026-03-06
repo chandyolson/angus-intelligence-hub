@@ -25,7 +25,7 @@ async function fetchAllRows<T>(table: string, filter?: { column: string; value: 
 export async function buildHerdContext(): Promise<string> {
   const [allAnimals, allRecords] = await Promise.all([
     fetchAllRows<Animal>('animals'),
-    fetchAllRows<BreedingCalvingRecord>('blair_breeding_calving'),
+    fetchAllRows<BreedingCalvingRecord>('blair_combined'),
   ]);
 
   const blairAnimals = allAnimals.filter(a => a.operation === 'Blair');
