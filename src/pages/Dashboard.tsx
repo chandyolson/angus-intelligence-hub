@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useAnimals, useBlairCombined } from '@/hooks/useCattleData';
 import { computeCompositeFromRecords } from '@/lib/calculations';
-import { BlairCombinedRecord } from '@/types/cattle';
+import { BlairCombinedRecord, BreedingCalvingRecord } from '@/types/cattle';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -71,13 +71,16 @@ function computeScoreDistribution(records: BlairCombinedRecord[]) {
   const scores: number[] = [];
   byCow.forEach(recs => {
     // Map to BreedingCalvingRecord shape for computeCompositeFromRecords
-    const mapped = recs.map(r => ({
+    const mapped: BreedingCalvingRecord[] = recs.map(r => ({
       lifetime_id: r.lifetime_id, status: null, sire: r.cow_sire, dam_sire: null,
       year_born: null, breeding_year: r.breeding_year, ai_date_1: r.ai_date_1, ai_date_2: r.ai_date_2,
       ultrasound_date: r.ultrasound_date, preg_stage: r.preg_stage, fetal_sex: r.fetal_sex,
       days_of_gestation_at_scan: r.dog, calving_date: r.calving_date, calf_sire: r.calf_sire,
       calf_sex: r.calf_sex, calf_status: r.calf_status, calf_bw: r.calf_bw,
       est_calving_date: null, gestation_days: null,
+      ai_sire_1: r.ai_sire_1, ai_sire_2: r.ai_sire_2, dog: r.dog,
+      cow_sire: r.cow_sire, project_record_id: r.project_record_id,
+      group: r.group, memo: r.memo,
     }));
     const c = computeCompositeFromRecords(mapped);
     if (c > 0) scores.push(c);

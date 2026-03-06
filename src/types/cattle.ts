@@ -50,6 +50,13 @@ export interface BreedingCalvingRecord {
   calf_bw: number | null;
   est_calving_date: string | null;
   gestation_days: number | null;
+  ai_sire_1: string | null;
+  ai_sire_2: string | null;
+  dog: number | null;
+  cow_sire: string | null;
+  project_record_id: string | null;
+  group: string | null;
+  memo: string | null;
 }
 
 export interface BreedingRecord {
