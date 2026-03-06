@@ -179,7 +179,7 @@ export function computeSireStats(records: BreedingCalvingRecord[]): SireStats[] 
     const avg_calf_bw = bws.length > 0 ? bws.reduce((a, b) => a + b, 0) / bws.length : 0;
 
     // --- Gestation (from all records where this sire is calf_sire and conceived by AI) ---
-    const gestDays = calfRecs.map(computeGestation).filter((v): v is number => v != null);
+    const gestDays = calfRecs.map(getGestation).filter((v): v is number => v != null);
     const avg_gestation_days = gestDays.length > 0 ? gestDays.reduce((a, b) => a + b, 0) / gestDays.length : 0;
 
     // --- Bull calf % ---
