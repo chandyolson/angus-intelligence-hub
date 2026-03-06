@@ -24,6 +24,8 @@ interface CowRow {
   total_calves: number;
   avg_bw: number;
   ai_conception_rate: number;
+  first_service_rate: number;
+  second_service_rate: number;
   calf_survival_rate: number;
   composite_score: number;
 }
@@ -48,6 +50,11 @@ function buildCowRows(animals: Animal[], records: BreedingCalvingRecord[]): CowR
     const withAiDate1 = recs.filter(r => r.ai_date_1 != null);
     const aiConceived = recs.filter(r => r.preg_stage?.toLowerCase() === 'ai' || r.preg_stage?.toLowerCase() === 'second ai');
     const conceptionRate = withAiDate1.length > 0 ? (aiConceived.length / withAiDate1.length) * 100 : 0;
+    const firstServiceConceived = recs.filter(r => r.preg_stage?.toLowerCase() === 'ai');
+    const firstServiceRate = withAiDate1.length > 0 ? (firstServiceConceived.length / withAiDate1.length) * 100 : 0;
+    const withAiDate2 = recs.filter(r => r.ai_date_2 != null);
+    const secondServiceConceived = recs.filter(r => r.preg_stage?.toLowerCase() === 'second ai');
+    const secondServiceRate = withAiDate2.length > 0 ? (secondServiceConceived.length / withAiDate2.length) * 100 : 0;
     const liveCalves = withCalf.filter(r => r.calf_status?.toLowerCase() === 'alive').length;
     const survivalRate = withCalf.length > 0 ? (liveCalves / withCalf.length) * 100 : 0;
     const composite = computeCompositeFromRecords(recs);
@@ -65,6 +72,8 @@ function buildCowRows(animals: Animal[], records: BreedingCalvingRecord[]): CowR
       total_calves: totalCalves,
       avg_bw: avgBw,
       ai_conception_rate: Math.round(conceptionRate * 10) / 10,
+      first_service_rate: Math.round(firstServiceRate * 10) / 10,
+      second_service_rate: Math.round(secondServiceRate * 10) / 10,
       calf_survival_rate: Math.round(survivalRate * 10) / 10,
       composite_score: composite,
     };
@@ -258,7 +267,9 @@ export default function CowRoster() {
               <SortHeader label="Dam Sire" field="dam_sire" />
               <SortHeader label="Total Calves" field="total_calves" />
               <SortHeader label="Avg Birth Wt" field="avg_bw" />
-              <SortHeader label="AI Conception %" field="ai_conception_rate" />
+              <SortHeader label="Overall AI %" field="ai_conception_rate" />
+              <SortHeader label="1st Service %" field="first_service_rate" />
+              <SortHeader label="2nd Service %" field="second_service_rate" />
               <SortHeader label="Calf Survival %" field="calf_survival_rate" />
               <SortHeader label="Composite Score" field="composite_score" />
               <SortHeader label="Status" field="status" />
@@ -266,9 +277,9 @@ export default function CowRoster() {
           </TableHeader>
           <TableBody>
             {(la || lr) ? (
-              <ShimmerTableRows rows={10} cols={11} />
+              <ShimmerTableRows rows={10} cols={13} />
             ) : sorted.length === 0 ? (
-              <tr><td colSpan={11}><EmptyState message="No cows match your filters." /></td></tr>
+              <tr><td colSpan={13}><EmptyState message="No cows match your filters." /></td></tr>
             ) : (
               sorted.map((cow, i) => (
                 <TableRow
@@ -287,6 +298,8 @@ export default function CowRoster() {
                   <TableCell>{cow.total_calves}</TableCell>
                   <TableCell>{cow.avg_bw || '—'}</TableCell>
                   <TableCell>{cow.ai_conception_rate}%</TableCell>
+                  <TableCell>{cow.first_service_rate}%</TableCell>
+                  <TableCell>{cow.second_service_rate}%</TableCell>
                   <TableCell>{cow.calf_survival_rate}%</TableCell>
                   <TableCell>
                     <span className={`px-2 py-0.5 rounded text-xs font-semibold ${scoreStyle(cow.composite_score)}`}>

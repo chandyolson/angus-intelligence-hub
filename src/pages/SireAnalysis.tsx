@@ -129,7 +129,8 @@ export default function SireAnalysis() {
                 <TableRow className="bg-sidebar border-border hover:bg-sidebar">
                   {[
                     { key: 'sire', label: 'Sire' }, { key: 'total_calves', label: 'Total Calves' },
-                    { key: 'ai_conception_rate', label: 'AI Conception %' }, { key: 'avg_gestation_days', label: 'Avg Gestation (days)' },
+                    { key: 'ai_conception_rate', label: 'Overall AI %' }, { key: 'first_service_rate', label: '1st Service %' },
+                    { key: 'second_service_rate', label: '2nd Service %' }, { key: 'avg_gestation_days', label: 'Avg Gestation (days)' },
                     { key: 'avg_calf_bw', label: 'Avg BW (lbs)' }, { key: 'calf_survival_rate', label: 'Survival %' },
                     { key: 'bull_calf_pct', label: 'Bull Calf %' }, { key: 'performance_badge', label: 'Performance' },
                   ].map(col => (
@@ -152,6 +153,8 @@ export default function SireAnalysis() {
                         <span style={{ color: conceptionColor(s.ai_conception_rate) }}>{s.ai_conception_rate}%</span>
                       </div>
                     </TableCell>
+                    <TableCell>{s.first_service_rate}%</TableCell>
+                    <TableCell>{s.second_service_rate}%</TableCell>
                     <TableCell>{s.avg_gestation_days > 0 ? `${s.avg_gestation_days} d` : '—'}</TableCell>
                     <TableCell>{s.avg_calf_bw > 0 ? `${s.avg_calf_bw} lbs` : '—'}</TableCell>
                     <TableCell>{s.calf_survival_rate}%</TableCell>

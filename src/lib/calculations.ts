@@ -24,6 +24,15 @@ export function computeCowStats(animal: Animal, records: BreedingCalvingRecord[]
   const aiConceived = cowRecords.filter(r => r.preg_stage?.toLowerCase() === 'ai' || r.preg_stage?.toLowerCase() === 'second ai');
   const ai_conception_rate = withAiDate1.length > 0 ? (aiConceived.length / withAiDate1.length) * 100 : 0;
 
+  // First Service: preg_stage = 'AI' / total with ai_date_1
+  const firstServiceConceived = cowRecords.filter(r => r.preg_stage?.toLowerCase() === 'ai');
+  const first_service_rate = withAiDate1.length > 0 ? (firstServiceConceived.length / withAiDate1.length) * 100 : 0;
+
+  // Second Service: preg_stage = 'Second AI' / total with ai_date_2
+  const withAiDate2 = cowRecords.filter(r => r.ai_date_2 != null);
+  const secondServiceConceived = cowRecords.filter(r => r.preg_stage?.toLowerCase() === 'second ai');
+  const second_service_rate = withAiDate2.length > 0 ? (secondServiceConceived.length / withAiDate2.length) * 100 : 0;
+
   const bornAlive = withCalves.filter(r => r.calf_status?.toLowerCase() === 'alive').length;
   const calf_survival_rate = totalCalves > 0 ? (bornAlive / totalCalves) * 100 : 0;
 
@@ -43,6 +52,8 @@ export function computeCowStats(animal: Animal, records: BreedingCalvingRecord[]
     total_calves: totalCalves,
     avg_bw: Math.round(avg_bw),
     ai_conception_rate: Math.round(ai_conception_rate * 10) / 10,
+    first_service_rate: Math.round(first_service_rate * 10) / 10,
+    second_service_rate: Math.round(second_service_rate * 10) / 10,
     calf_survival_rate: Math.round(calf_survival_rate * 10) / 10,
     composite_score: composite,
   };
@@ -141,10 +152,19 @@ export function computeSireStats(records: BreedingCalvingRecord[]): SireStats[] 
     else if (conceptionRate >= 88) badge = 'STRONG';
     else if (conceptionRate < 80) badge = 'BELOW AVG';
 
+    // First/Second service rates for this sire
+    const firstServiceConceived = recs.filter(r => r.preg_stage?.toLowerCase() === 'ai');
+    const firstServiceRate = withAiDate1.length > 0 ? (firstServiceConceived.length / withAiDate1.length) * 100 : 0;
+    const withAiDate2 = recs.filter(r => r.ai_date_2 != null);
+    const secondServiceConceived = recs.filter(r => r.preg_stage?.toLowerCase() === 'second ai');
+    const secondServiceRate = withAiDate2.length > 0 ? (secondServiceConceived.length / withAiDate2.length) * 100 : 0;
+
     stats.push({
       sire,
       total_calves: totalCalves,
       ai_conception_rate: Math.round(conceptionRate * 10) / 10,
+      first_service_rate: Math.round(firstServiceRate * 10) / 10,
+      second_service_rate: Math.round(secondServiceRate * 10) / 10,
       avg_gestation_days: Math.round(avgGest * 10) / 10,
       avg_calf_bw: Math.round(avgBW),
       calf_survival_rate: Math.round(survival * 10) / 10,
