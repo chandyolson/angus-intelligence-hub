@@ -106,3 +106,10 @@ export function useRecordCounts() {
     },
   });
 }
+
+export function useBlairCombined() {
+  return useQuery({
+    queryKey: ['blair_combined'],
+    queryFn: () => fetchAllRows<BlairCombinedRecord>('blair_combined'),
+  });
+}
