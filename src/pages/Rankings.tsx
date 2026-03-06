@@ -119,7 +119,7 @@ export default function Rankings() {
   const sires = useMemo(() => {
     if (!records) return [];
     const counts = new Map<string, number>();
-    records.forEach(r => { const s = r.calf_sire || r.sire; if (s) counts.set(s, (counts.get(s) || 0) + 1); });
+    records.forEach(r => { const s = r.calf_sire || r.ai_sire_1; if (s) counts.set(s, (counts.get(s) || 0) + 1); });
     return [...counts.entries()].filter(([, c]) => c >= 10).map(([s]) => s).sort();
   }, [records]);
 

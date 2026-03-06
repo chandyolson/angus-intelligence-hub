@@ -156,10 +156,10 @@ export async function fetchCowContext(tagNumber: string): Promise<string | null>
   const lid = (animal as any).lifetime_id;
   if (!lid) return `Found cow with tag ${tagNumber} but no lifetime_id linked.`;
 
-  const records = await fetchAllRows<BreedingCalvingRecord>('blair_breeding_calving', { column: 'lifetime_id', value: lid });
+  const records = await fetchAllRows<BreedingCalvingRecord>('blair_combined', { column: 'lifetime_id', value: lid });
 
   const lines = records.map(r =>
-    `Year: ${r.breeding_year} | AI Date: ${r.ai_date_1 || '—'} | Sire: ${r.sire || '—'} | Preg: ${r.preg_stage || '—'} | Calving: ${r.calving_date || '—'} | Calf Status: ${r.calf_status || '—'} | Calf BW: ${r.calf_bw ?? '—'} | Gestation: ${r.gestation_days ?? '—'}d`
+    `Year: ${r.breeding_year} | AI Date: ${r.ai_date_1 || '—'} | Sire: ${r.ai_sire_1 || '—'} | Preg: ${r.preg_stage || '—'} | Calving: ${r.calving_date || '—'} | Calf Status: ${r.calf_status || '—'} | Calf BW: ${r.calf_bw ?? '—'}`
   ).join('\n');
 
   return `\nSPECIFIC COW DATA REQUESTED — Tag: ${tagNumber}, Lifetime ID: ${lid}

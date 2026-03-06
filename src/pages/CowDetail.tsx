@@ -217,10 +217,10 @@ export default function CowDetail() {
                 <TableBody>
                   {sortedCalving.map((r, i) => (
                     <TableRow key={i} className="border-border text-[13px]" style={{ backgroundColor: i % 2 === 1 ? '#0E1528' : undefined }}>
-                      <TableCell>{r.breeding_year ?? '—'}</TableCell><TableCell className="text-xs">{r.ai_date_1 ?? '—'}</TableCell><TableCell>{r.calf_sire || r.sire || '—'}</TableCell>
+                      <TableCell>{r.breeding_year ?? '—'}</TableCell><TableCell className="text-xs">{r.ai_date_1 ?? '—'}</TableCell><TableCell>{r.calf_sire || r.ai_sire_1 || '—'}</TableCell>
                       <TableCell className={pregColor(r.preg_stage)}>{r.preg_stage ?? '—'}</TableCell><TableCell className="text-xs">{r.calving_date ?? '—'}</TableCell>
                       <TableCell>{r.calf_sex ?? '—'}</TableCell><TableCell>{r.calf_bw ?? '—'}</TableCell>
-                      <TableCell className={calfStatusColor(r.calf_status)}>{r.calf_status ?? '—'}</TableCell><TableCell>{r.gestation_days ?? '—'}</TableCell>
+                      <TableCell className={calfStatusColor(r.calf_status)}>{r.calf_status ?? '—'}</TableCell><TableCell>{'—'}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
