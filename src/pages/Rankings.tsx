@@ -81,7 +81,9 @@ function computeCullFlags(ranked: RankedCow[], records: BreedingCalvingRecord[])
 function computeSireMetrics(sire: string, records: BreedingCalvingRecord[]): SireMetrics {
   const recs = records.filter(r => r.calf_sire === sire || r.ai_sire_1 === sire);
   const withCalf = recs.filter(r => r.calf_status && r.calf_status.toLowerCase() !== 'open');
-  const conceptionRate = recs.length > 0 ? Math.round((withCalf.length / recs.length) * 1000) / 10 : 0;
+  const withAiDate1 = recs.filter(r => r.ai_date_1 != null);
+  const aiConceived = recs.filter(r => r.preg_stage?.toLowerCase() === 'ai' || r.preg_stage?.toLowerCase() === 'second ai');
+  const conceptionRate = withAiDate1.length > 0 ? Math.round((aiConceived.length / withAiDate1.length) * 1000) / 10 : 0;
   const avgGestation = 0;
   const bws = withCalf.map(r => r.calf_bw).filter((v): v is number => v != null && v > 0);
   const avgBW = bws.length > 0 ? Math.round(bws.reduce((a, b) => a + b, 0) / bws.length) : 0;

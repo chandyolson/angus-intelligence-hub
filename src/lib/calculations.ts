@@ -123,7 +123,10 @@ export function computeSireStats(records: BreedingCalvingRecord[]): SireStats[] 
     if (recs.length < 20) return;
     const withCalves = recs.filter(r => r.calf_status && r.calf_status.toLowerCase() !== 'open');
     const totalCalves = withCalves.length;
-    const conceptionRate = recs.length > 0 ? (totalCalves / recs.length) * 100 : 0;
+    // AI Conception Rate: preg_stage 'AI' or 'Second AI' / total with ai_date_1
+    const withAiDate1 = recs.filter(r => r.ai_date_1 != null);
+    const aiConceived = recs.filter(r => r.preg_stage?.toLowerCase() === 'ai' || r.preg_stage?.toLowerCase() === 'second ai');
+    const conceptionRate = withAiDate1.length > 0 ? (aiConceived.length / withAiDate1.length) * 100 : 0;
     const avgGest = 0;
     const bws = withCalves.map(r => r.calf_bw).filter((v): v is number => v != null && v > 0);
     const avgBW = bws.length > 0 ? bws.reduce((a, b) => a + b, 0) / bws.length : 0;

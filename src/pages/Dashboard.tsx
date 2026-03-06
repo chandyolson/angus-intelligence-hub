@@ -158,8 +158,8 @@ function computeSireConception(records: BlairCombinedRecord[]) {
     bySire.set(r.ai_sire_1, entry);
   });
   return Array.from(bySire.entries())
-    .filter(([, v]) => v.total >= 5)
-    .map(([sire, d]) => ({ sire, conceptionRate: Math.round((d.conceived / d.total) * 1000) / 10, count: d.total }))
+    .filter(([, v]) => v.totalWithAiDate1 >= 5)
+    .map(([sire, d]) => ({ sire, conceptionRate: Math.round((d.aiConceived / d.totalWithAiDate1) * 1000) / 10, count: d.totalWithAiDate1 }))
     .sort((a, b) => b.conceptionRate - a.conceptionRate)
     .slice(0, 15);
 }
