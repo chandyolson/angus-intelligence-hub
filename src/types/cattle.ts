@@ -114,6 +114,29 @@ export interface CalvingIntervalStats {
   longest: number;
 }
 
+export interface BlairCombinedRecord {
+  lifetime_id: string | null;
+  ai_date_1: string | null;
+  ai_date_2: string | null;
+  ai_sire_1: string | null;
+  ai_sire_2: string | null;
+  breeding_year: number | null;
+  ultrasound_date: string | null;
+  preg_stage: string | null;
+  fetal_sex: string | null;
+  dog: number | null;
+  calving_date: string | null;
+  calf_sire: string | null;
+  calf_sex: string | null;
+  calf_status: string | null;
+  calf_bw: number | null;
+  cow_sire: string | null;
+  ultrasound_notes: string | null;
+  memo: string | null;
+  group: string | null;
+  project_record_id: string | null;
+}
+
 export interface CullCandidate {
   lifetime_id: string;
   tag: string | null;

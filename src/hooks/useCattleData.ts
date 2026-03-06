@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Animal, BreedingCalvingRecord, UltrasoundRecord } from '@/types/cattle';
+import { Animal, BreedingCalvingRecord, UltrasoundRecord, BlairCombinedRecord } from '@/types/cattle';
 
 /** Paginated fetch to bypass Supabase's 1000-row default limit */
 async function fetchAllRows<T>(table: string, filter?: { column: string; value: string }): Promise<T[]> {
