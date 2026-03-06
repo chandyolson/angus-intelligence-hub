@@ -19,8 +19,10 @@ export function computeCowStats(animal: Animal, records: BreedingCalvingRecord[]
   const bws = withCalves.map(r => r.calf_bw).filter((v): v is number => v != null && v > 0);
   const avg_bw = bws.length > 0 ? bws.reduce((a, b) => a + b, 0) / bws.length : 0;
 
-  const totalBreedings = cowRecords.length;
-  const ai_conception_rate = totalBreedings > 0 ? (totalCalves / totalBreedings) * 100 : 0;
+  // Overall AI Conception Rate: cows with preg_stage 'AI' or 'Second AI' / total with ai_date_1
+  const withAiDate1 = cowRecords.filter(r => r.ai_date_1 != null);
+  const aiConceived = cowRecords.filter(r => r.preg_stage?.toLowerCase() === 'ai' || r.preg_stage?.toLowerCase() === 'second ai');
+  const ai_conception_rate = withAiDate1.length > 0 ? (aiConceived.length / withAiDate1.length) * 100 : 0;
 
   const bornAlive = withCalves.filter(r => r.calf_status?.toLowerCase() === 'alive').length;
   const calf_survival_rate = totalCalves > 0 ? (bornAlive / totalCalves) * 100 : 0;
