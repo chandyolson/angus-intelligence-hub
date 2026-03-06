@@ -152,10 +152,19 @@ export function computeSireStats(records: BreedingCalvingRecord[]): SireStats[] 
     else if (conceptionRate >= 88) badge = 'STRONG';
     else if (conceptionRate < 80) badge = 'BELOW AVG';
 
+    // First/Second service rates for this sire
+    const firstServiceConceived = recs.filter(r => r.preg_stage?.toLowerCase() === 'ai');
+    const firstServiceRate = withAiDate1.length > 0 ? (firstServiceConceived.length / withAiDate1.length) * 100 : 0;
+    const withAiDate2 = recs.filter(r => r.ai_date_2 != null);
+    const secondServiceConceived = recs.filter(r => r.preg_stage?.toLowerCase() === 'second ai');
+    const secondServiceRate = withAiDate2.length > 0 ? (secondServiceConceived.length / withAiDate2.length) * 100 : 0;
+
     stats.push({
       sire,
       total_calves: totalCalves,
       ai_conception_rate: Math.round(conceptionRate * 10) / 10,
+      first_service_rate: Math.round(firstServiceRate * 10) / 10,
+      second_service_rate: Math.round(secondServiceRate * 10) / 10,
       avg_gestation_days: Math.round(avgGest * 10) / 10,
       avg_calf_bw: Math.round(avgBW),
       calf_survival_rate: Math.round(survival * 10) / 10,
