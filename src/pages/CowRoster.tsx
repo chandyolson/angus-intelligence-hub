@@ -277,9 +277,9 @@ export default function CowRoster() {
           </TableHeader>
           <TableBody>
             {(la || lr) ? (
-              <ShimmerTableRows rows={10} cols={11} />
+              <ShimmerTableRows rows={10} cols={13} />
             ) : sorted.length === 0 ? (
-              <tr><td colSpan={11}><EmptyState message="No cows match your filters." /></td></tr>
+              <tr><td colSpan={13}><EmptyState message="No cows match your filters." /></td></tr>
             ) : (
               sorted.map((cow, i) => (
                 <TableRow
