@@ -93,6 +93,8 @@ export interface CowStats {
   total_calves: number;
   avg_bw: number;
   ai_conception_rate: number;
+  first_service_rate: number;
+  second_service_rate: number;
   calf_survival_rate: number;
   composite_score: number;
 }
