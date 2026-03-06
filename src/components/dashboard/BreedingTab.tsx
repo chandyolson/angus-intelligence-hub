@@ -207,7 +207,6 @@ export default function BreedingTab() {
                               >
                                 {pct}%
                               </span>
-                              </span>
                             ) : (
                               <span className="text-muted-foreground/40">–</span>
                             )}
