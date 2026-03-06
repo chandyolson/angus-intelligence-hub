@@ -51,6 +51,7 @@ export interface BreedingCalvingRecord {
   group: string | null;
   memo: string | null;
   ultrasound_notes: string | null;
+  gestation_days: number | null;
 }
 
 export interface BreedingRecord {
