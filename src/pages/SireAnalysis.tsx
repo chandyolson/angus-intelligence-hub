@@ -3,19 +3,20 @@ import { useBreedingCalvingRecords } from '@/hooks/useCattleData';
 import { computeSireStats } from '@/lib/calculations';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ResponsiveContainer, Cell, ScatterChart, Scatter, ZAxis } from 'recharts';
 import { Button } from '@/components/ui/button';
-import { ShimmerSkeleton, ShimmerCard, ShimmerTableRows } from '@/components/ui/shimmer-skeleton';
+import { ShimmerSkeleton } from '@/components/ui/shimmer-skeleton';
 import { ErrorBox } from '@/components/ui/error-box';
 import { EmptyState } from '@/components/ui/empty-state';
 
-type SortKey = 'ai_conception_rate' | 'total_calves' | 'avg_calf_bw' | 'avg_gestation_days';
+type SortKey = 'overall_ai_rate' | 'first_service_rate' | 'total_calves' | 'avg_calf_bw' | 'avg_gestation_days';
 
 const SORT_OPTIONS: { key: SortKey; label: string }[] = [
-  { key: 'ai_conception_rate', label: 'Sort by Conception Rate' },
-  { key: 'total_calves', label: 'Sort by Usage' },
-  { key: 'avg_calf_bw', label: 'Sort by Birth Weight' },
-  { key: 'avg_gestation_days', label: 'Sort by Gestation' },
+  { key: 'overall_ai_rate', label: 'Overall AI Rate' },
+  { key: 'first_service_rate', label: '1st Service Rate' },
+  { key: 'total_calves', label: 'Total Calves' },
+  { key: 'avg_calf_bw', label: 'Birth Weight' },
+  { key: 'avg_gestation_days', label: 'Gestation' },
 ];
 
 const badgeStyle = (badge: string) => {
@@ -27,8 +28,8 @@ const badgeStyle = (badge: string) => {
   }
 };
 
-const conceptionColor = (rate: number) => rate >= 95 ? 'hsl(142, 69%, 58%)' : rate >= 80 ? 'hsl(40, 63%, 49%)' : 'hsl(0, 86%, 71%)';
-const conceptionBarColor = (rate: number) => rate >= 95 ? 'hsl(142, 69%, 58%)' : rate >= 88 ? 'hsl(100, 50%, 50%)' : rate >= 80 ? 'hsl(40, 63%, 49%)' : 'hsl(0, 86%, 71%)';
+const rateColor = (rate: number) => rate >= 70 ? 'hsl(142, 69%, 58%)' : rate >= 55 ? 'hsl(40, 63%, 49%)' : 'hsl(0, 86%, 71%)';
+const rateBarColor = (rate: number) => rate >= 70 ? 'hsl(142, 69%, 58%)' : rate >= 60 ? 'hsl(100, 50%, 50%)' : rate >= 50 ? 'hsl(40, 63%, 49%)' : 'hsl(0, 86%, 71%)';
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload) return null;
@@ -42,8 +43,8 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 export default function SireAnalysis() {
   const { data: records, isLoading, error } = useBreedingCalvingRecords();
-  const [sortKey, setSortKey] = useState<SortKey>('ai_conception_rate');
-  const [tableSortKey, setTableSortKey] = useState<string>('ai_conception_rate');
+  const [sortKey, setSortKey] = useState<SortKey>('overall_ai_rate');
+  const [tableSortKey, setTableSortKey] = useState<string>('overall_ai_rate');
   const [tableSortAsc, setTableSortAsc] = useState(false);
 
   const sireStats = useMemo(() => records ? computeSireStats(records) : [], [records]);
@@ -59,30 +60,40 @@ export default function SireAnalysis() {
     return vals.length > 0 ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length * 10) / 10 : 0;
   }, [sireStats]);
 
-  const conceptionData = useMemo(() => [...sireStats].sort((a, b) => b.ai_conception_rate - a.ai_conception_rate).map(s => ({ name: s.sire, value: s.ai_conception_rate })), [sireStats]);
-  const gestationData = useMemo(() => [...sireStats].filter(s => s.avg_gestation_days > 0).sort((a, b) => a.avg_gestation_days - b.avg_gestation_days).map(s => ({ name: s.sire, value: s.avg_gestation_days })), [sireStats]);
+  // Chart data
+  const conceptionData = useMemo(() =>
+    [...sireStats].filter(s => s.units_used_1st > 0).sort((a, b) => b.first_service_rate - a.first_service_rate)
+      .map(s => ({ name: s.sire, '1st Service': s.first_service_rate, '2nd Service': s.second_service_rate, 'Overall AI': s.overall_ai_rate })),
+    [sireStats]
+  );
+
+  const gestationData = useMemo(() =>
+    [...sireStats].filter(s => s.avg_gestation_days > 0).sort((a, b) => a.avg_gestation_days - b.avg_gestation_days)
+      .map(s => ({ name: s.sire, value: s.avg_gestation_days })),
+    [sireStats]
+  );
+
+  const gestVsBwData = useMemo(() =>
+    sireStats.filter(s => s.avg_gestation_days > 0 && s.avg_calf_bw > 0)
+      .map(s => ({ name: s.sire, gestation: s.avg_gestation_days, bw: s.avg_calf_bw, calves: s.total_calves })),
+    [sireStats]
+  );
 
   const bullPctData = useMemo(() => {
-    if (!records) return [];
-    const bySire = new Map<string, { bull: number; total: number }>();
-    records.forEach(r => {
-      const sire = r.calf_sire || r.ai_sire_1;
-      if (!sire || !r.calf_sex || r.calf_sex.trim() === '') return;
-      const entry = bySire.get(sire) || { bull: 0, total: 0 };
-      entry.total++;
-      if (['bull', 'male', 'b', 'm', 'steer'].some(s => r.calf_sex!.toLowerCase().includes(s))) entry.bull++;
-      bySire.set(sire, entry);
-    });
-    return Array.from(bySire.entries()).filter(([_, v]) => v.total >= 30)
-      .map(([name, v]) => ({ name, value: Math.round((v.bull / v.total) * 1000) / 10 })).sort((a, b) => b.value - a.value);
-  }, [records]);
-
-  const topSire = useMemo(() => {
-    const eligible = sireStats.filter(s => s.total_calves >= 25);
-    return eligible.length > 0 ? eligible.reduce((best, s) => s.ai_conception_rate > best.ai_conception_rate ? s : best, eligible[0]) : null;
+    return sireStats.filter(s => s.total_calves >= 30)
+      .sort((a, b) => b.bull_calf_pct - a.bull_calf_pct)
+      .map(s => ({ name: s.sire, value: s.bull_calf_pct }));
   }, [sireStats]);
 
-  const mostUsed = useMemo(() => sireStats.length > 0 ? [...sireStats].sort((a, b) => b.total_calves - a.total_calves)[0] : null, [sireStats]);
+  const topSire = useMemo(() => {
+    const eligible = sireStats.filter(s => s.units_used_1st >= 25);
+    return eligible.length > 0 ? eligible.reduce((best, s) => s.first_service_rate > best.first_service_rate ? s : best, eligible[0]) : null;
+  }, [sireStats]);
+
+  const mostUsed = useMemo(() => {
+    const withUnits = sireStats.filter(s => s.units_used_1st > 0);
+    return withUnits.length > 0 ? [...withUnits].sort((a, b) => b.units_used_1st - a.units_used_1st)[0] : null;
+  }, [sireStats]);
 
   const handleTableSort = (key: string) => {
     if (tableSortKey === key) setTableSortAsc(!tableSortAsc);
@@ -93,7 +104,7 @@ export default function SireAnalysis() {
   if (isLoading) return (
     <div className="space-y-6">
       <ShimmerSkeleton className="h-8 w-48" />
-      <div className="flex gap-2">{Array.from({ length: 4 }).map((_, i) => <ShimmerSkeleton key={i} className="h-9 w-40" />)}</div>
+      <div className="flex gap-2">{Array.from({ length: 5 }).map((_, i) => <ShimmerSkeleton key={i} className="h-9 w-36" />)}</div>
       <ShimmerSkeleton className="h-96" />
     </div>
   );
@@ -102,9 +113,24 @@ export default function SireAnalysis() {
   if (sireStats.length === 0) return (
     <div className="space-y-4">
       <h1 className="text-[20px] font-semibold text-foreground">Sire Analysis</h1>
-      <EmptyState message="No sires with 20+ calves on record." />
+      <EmptyState message="No sires with sufficient records found." />
     </div>
   );
+
+  const TABLE_COLS = [
+    { key: 'sire', label: 'Sire' },
+    { key: 'units_used_1st', label: 'Units (1st)' },
+    { key: 'units_used_2nd', label: 'Units (2nd)' },
+    { key: 'first_service_rate', label: '1st Svc %' },
+    { key: 'second_service_rate', label: '2nd Svc %' },
+    { key: 'overall_ai_rate', label: 'Overall AI %' },
+    { key: 'total_calves', label: 'Calves Born' },
+    { key: 'avg_gestation_days', label: 'Avg Gest (d)' },
+    { key: 'avg_calf_bw', label: 'Avg BW (lbs)' },
+    { key: 'calf_survival_rate', label: 'Survival %' },
+    { key: 'bull_calf_pct', label: 'Bull %' },
+    { key: 'performance_badge', label: 'Grade' },
+  ];
 
   return (
     <div className="space-y-6">
@@ -120,21 +146,18 @@ export default function SireAnalysis() {
         ))}
       </div>
 
-      {/* Main table */}
+      {/* Sire Summary Table */}
       <Card className="bg-card border-border">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">Sire Summary</CardTitle>
+        </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-auto">
             <Table>
               <TableHeader>
                 <TableRow className="bg-sidebar border-border hover:bg-sidebar">
-                  {[
-                    { key: 'sire', label: 'Sire' }, { key: 'total_calves', label: 'Total Calves' },
-                    { key: 'ai_conception_rate', label: 'Overall AI %' }, { key: 'first_service_rate', label: '1st Service %' },
-                    { key: 'second_service_rate', label: '2nd Service %' }, { key: 'avg_gestation_days', label: 'Avg Gestation (days)' },
-                    { key: 'avg_calf_bw', label: 'Avg BW (lbs)' }, { key: 'calf_survival_rate', label: 'Survival %' },
-                    { key: 'bull_calf_pct', label: 'Bull Calf %' }, { key: 'performance_badge', label: 'Performance' },
-                  ].map(col => (
-                    <TableHead key={col.key} className="cursor-pointer select-none hover:text-foreground text-[12px] transition-colors" onClick={() => handleTableSort(col.key)}>
+                  {TABLE_COLS.map(col => (
+                    <TableHead key={col.key} className="cursor-pointer select-none hover:text-foreground text-[12px] transition-colors whitespace-nowrap" onClick={() => handleTableSort(col.key)}>
                       {col.label}{sortArrow(col.key)}
                     </TableHead>
                   ))}
@@ -143,20 +166,28 @@ export default function SireAnalysis() {
               <TableBody>
                 {sorted.map((s, i) => (
                   <TableRow key={s.sire} className="border-border text-[13px]" style={{ backgroundColor: i % 2 === 1 ? '#0E1528' : undefined }}>
-                    <TableCell className="font-medium text-foreground">{s.sire}</TableCell>
-                    <TableCell>{s.total_calves}</TableCell>
+                    <TableCell className="font-medium text-foreground whitespace-nowrap">{s.sire}</TableCell>
+                    <TableCell>{s.units_used_1st}</TableCell>
+                    <TableCell>{s.units_used_2nd}</TableCell>
+                    <TableCell>
+                      <span style={{ color: rateColor(s.first_service_rate) }}>{s.first_service_rate}%</span>
+                    </TableCell>
+                    <TableCell>
+                      <span style={{ color: s.units_used_2nd > 0 ? rateColor(s.second_service_rate) : undefined }}>
+                        {s.units_used_2nd > 0 ? `${s.second_service_rate}%` : '—'}
+                      </span>
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <div className="relative w-16 h-3 rounded-full bg-muted overflow-hidden">
-                          <div className="absolute inset-y-0 left-0 rounded-full" style={{ width: `${Math.min(s.ai_conception_rate, 100)}%`, backgroundColor: conceptionColor(s.ai_conception_rate) }} />
+                        <div className="relative w-14 h-3 rounded-full bg-muted overflow-hidden">
+                          <div className="absolute inset-y-0 left-0 rounded-full" style={{ width: `${Math.min(s.overall_ai_rate, 100)}%`, backgroundColor: rateColor(s.overall_ai_rate) }} />
                         </div>
-                        <span style={{ color: conceptionColor(s.ai_conception_rate) }}>{s.ai_conception_rate}%</span>
+                        <span style={{ color: rateColor(s.overall_ai_rate) }}>{s.overall_ai_rate}%</span>
                       </div>
                     </TableCell>
-                    <TableCell>{s.first_service_rate}%</TableCell>
-                    <TableCell>{s.second_service_rate}%</TableCell>
-                    <TableCell>{s.avg_gestation_days > 0 ? `${s.avg_gestation_days} d` : '—'}</TableCell>
-                    <TableCell>{s.avg_calf_bw > 0 ? `${s.avg_calf_bw} lbs` : '—'}</TableCell>
+                    <TableCell>{s.total_calves}</TableCell>
+                    <TableCell>{s.avg_gestation_days > 0 ? `${s.avg_gestation_days}` : '—'}</TableCell>
+                    <TableCell>{s.avg_calf_bw > 0 ? `${s.avg_calf_bw}` : '—'}</TableCell>
                     <TableCell>{s.calf_survival_rate}%</TableCell>
                     <TableCell>{s.bull_calf_pct}%</TableCell>
                     <TableCell>
@@ -171,50 +202,91 @@ export default function SireAnalysis() {
       </Card>
 
       {/* Charts */}
-      <div className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* 1st Service AI Rate */}
         <Card className="bg-card border-border">
-          <CardHeader className="pb-2"><CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">AI Conception Rate by Sire</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">1st Service AI Rate by Sire</CardTitle></CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={Math.max(conceptionData.length * 35, 200)}>
+            <ResponsiveContainer width="100%" height={Math.max(conceptionData.length * 32, 200)}>
               <BarChart layout="vertical" data={conceptionData} margin={{ left: 100 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(218, 42%, 20%)" />
-                <XAxis type="number" tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 11 }} />
+                <XAxis type="number" domain={[0, 100]} tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 11 }} />
                 <YAxis dataKey="name" type="category" tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 11 }} width={95} />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="value" radius={[0, 4, 4, 0]}>{conceptionData.map((d, i) => <Cell key={i} fill={conceptionBarColor(d.value)} />)}</Bar>
+                <Bar dataKey="1st Service" radius={[0, 4, 4, 0]}>
+                  {conceptionData.map((d, i) => <Cell key={i} fill={rateBarColor(d['1st Service'])} />)}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
+        {/* Avg Gestation by Sire */}
         <Card className="bg-card border-border">
           <CardHeader className="pb-2"><CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">Avg Gestation Days by Sire</CardTitle></CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={Math.max(gestationData.length * 35, 200)}>
-              <BarChart layout="vertical" data={gestationData} margin={{ left: 100 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(218, 42%, 20%)" />
-                <XAxis type="number" tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 11 }} />
-                <YAxis dataKey="name" type="category" tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 11 }} width={95} />
-                <Tooltip content={<CustomTooltip />} />
-                <ReferenceLine x={herdAvgGestation} stroke="hsl(0, 86%, 71%)" strokeDasharray="5 5" label={{ value: `Avg: ${herdAvgGestation}`, fill: 'hsl(0, 86%, 71%)', fontSize: 10 }} />
-                <Bar dataKey="value" radius={[0, 4, 4, 0]}>{gestationData.map((d, i) => <Cell key={i} fill={d.value > herdAvgGestation + 2 ? 'hsl(0, 86%, 71%)' : 'hsl(40, 63%, 49%)'} />)}</Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            {gestationData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={Math.max(gestationData.length * 32, 200)}>
+                <BarChart layout="vertical" data={gestationData} margin={{ left: 100 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(218, 42%, 20%)" />
+                  <XAxis type="number" tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 11 }} />
+                  <YAxis dataKey="name" type="category" tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 11 }} width={95} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <ReferenceLine x={herdAvgGestation} stroke="hsl(0, 86%, 71%)" strokeDasharray="5 5" label={{ value: `Avg: ${herdAvgGestation}`, fill: 'hsl(0, 86%, 71%)', fontSize: 10 }} />
+                  <Bar dataKey="value" name="Gestation" radius={[0, 4, 4, 0]}>
+                    {gestationData.map((d, i) => <Cell key={i} fill={d.value > herdAvgGestation + 2 ? 'hsl(0, 86%, 71%)' : 'hsl(40, 63%, 49%)'} />)}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : <EmptyState message="No gestation data available." />}
           </CardContent>
         </Card>
 
+        {/* Gestation vs Birth Weight Scatter */}
+        <Card className="bg-card border-border">
+          <CardHeader className="pb-2"><CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">Gestation vs Birth Weight by Sire</CardTitle></CardHeader>
+          <CardContent>
+            {gestVsBwData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <ScatterChart margin={{ left: 10, right: 20, bottom: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(218, 42%, 20%)" />
+                  <XAxis dataKey="gestation" name="Gestation (d)" type="number" tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 11 }} label={{ value: 'Avg Gestation (days)', position: 'bottom', fill: 'hsl(219, 23%, 53%)', fontSize: 11 }} />
+                  <YAxis dataKey="bw" name="Birth Weight (lbs)" type="number" tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 11 }} label={{ value: 'Avg BW (lbs)', angle: -90, position: 'insideLeft', fill: 'hsl(219, 23%, 53%)', fontSize: 11 }} />
+                  <ZAxis dataKey="calves" range={[40, 400]} name="Calves" />
+                  <Tooltip content={({ active, payload }) => {
+                    if (!active || !payload?.[0]) return null;
+                    const d = payload[0].payload;
+                    return (
+                      <div className="bg-card border border-border rounded-md px-3 py-2 text-xs">
+                        <p className="text-primary font-medium">{d.name}</p>
+                        <p className="text-muted-foreground">Gestation: {d.gestation}d</p>
+                        <p className="text-muted-foreground">Avg BW: {d.bw} lbs</p>
+                        <p className="text-muted-foreground">Calves: {d.calves}</p>
+                      </div>
+                    );
+                  }} />
+                  <Scatter data={gestVsBwData} fill="hsl(40, 63%, 49%)" />
+                </ScatterChart>
+              </ResponsiveContainer>
+            ) : <EmptyState message="Insufficient data for scatter plot." />}
+          </CardContent>
+        </Card>
+
+        {/* Bull Calf % */}
         <Card className="bg-card border-border">
           <CardHeader className="pb-2"><CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">Bull Calf % by Sire (30+ calves)</CardTitle></CardHeader>
           <CardContent>
             {bullPctData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={Math.max(bullPctData.length * 35, 200)}>
+              <ResponsiveContainer width="100%" height={Math.max(bullPctData.length * 32, 200)}>
                 <BarChart layout="vertical" data={bullPctData} margin={{ left: 100 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(218, 42%, 20%)" />
                   <XAxis type="number" tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 11 }} />
                   <YAxis dataKey="name" type="category" tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 11 }} width={95} />
                   <Tooltip content={<CustomTooltip />} />
-                  <ReferenceLine x={50} stroke="hsl(0, 86%, 71%)" strokeDasharray="5 5" label={{ value: 'Expected 50/50', fill: 'hsl(0, 86%, 71%)', fontSize: 10 }} />
-                  <Bar dataKey="value" radius={[0, 4, 4, 0]}>{bullPctData.map((d, i) => <Cell key={i} fill={d.value > 60 ? '#60a5fa' : 'hsl(142, 69%, 58%)'} />)}</Bar>
+                  <ReferenceLine x={50} stroke="hsl(0, 86%, 71%)" strokeDasharray="5 5" label={{ value: '50/50', fill: 'hsl(0, 86%, 71%)', fontSize: 10 }} />
+                  <Bar dataKey="value" name="Bull %" radius={[0, 4, 4, 0]}>
+                    {bullPctData.map((d, i) => <Cell key={i} fill={d.value > 60 ? '#60a5fa' : 'hsl(142, 69%, 58%)'} />)}
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             ) : <EmptyState message="Not enough data for bull calf % chart." />}
@@ -227,31 +299,32 @@ export default function SireAnalysis() {
         {topSire && (
           <Card className="bg-card border-success/40">
             <CardContent className="p-5">
-              <p className="text-[10px] text-success font-medium uppercase tracking-wider mb-1">🏆 Top Performer</p>
+              <p className="text-[10px] text-success font-medium uppercase tracking-wider mb-1">🏆 Top AI Performer (25+ units)</p>
               <p className="text-xl font-bold text-foreground">{topSire.sire}</p>
-              <p className="text-[28px] font-bold text-success mt-1">{topSire.ai_conception_rate}%</p>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">AI Conception Rate</p>
-              <p className="text-sm text-muted-foreground mt-3">{topSire.total_calves} calves · {topSire.calf_survival_rate}% survival · {topSire.avg_calf_bw} lbs avg BW</p>
-              {topSire.total_calves < 50 && <p className="text-primary text-xs mt-2 italic">Small sample — monitor with additional breedings before drawing firm conclusions.</p>}
+              <p className="text-[28px] font-bold text-success mt-1">{topSire.first_service_rate}%</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">1st Service AI Rate</p>
+              <p className="text-sm text-muted-foreground mt-3">
+                {topSire.units_used_1st} units used · {topSire.total_calves} calves · {topSire.calf_survival_rate}% survival · {topSire.avg_calf_bw > 0 ? `${topSire.avg_calf_bw} lbs avg BW` : ''}
+              </p>
             </CardContent>
           </Card>
         )}
         {mostUsed && (
-          <Card className={`bg-card ${mostUsed.ai_conception_rate < 88 ? 'border-primary/40' : 'border-success/40'}`}>
+          <Card className={`bg-card ${mostUsed.first_service_rate < 55 ? 'border-primary/40' : 'border-success/40'}`}>
             <CardContent className="p-5">
-              {mostUsed.ai_conception_rate < 88 ? (<>
+              {mostUsed.first_service_rate < 55 ? (<>
                 <p className="text-[10px] text-primary font-medium uppercase tracking-wider mb-1">⚠ Most Used · Below Average</p>
                 <p className="text-xl font-bold text-foreground">{mostUsed.sire}</p>
-                <p className="text-[28px] font-bold text-destructive mt-1">{mostUsed.ai_conception_rate}%</p>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">AI Conception Rate</p>
-                <p className="text-sm text-muted-foreground mt-3">{mostUsed.total_calves} calves recorded</p>
-                <p className="text-primary text-xs mt-2 italic">Highest usage sire with below-average conception rate. This sire represents the single highest-impact sire change opportunity.</p>
+                <p className="text-[28px] font-bold text-destructive mt-1">{mostUsed.first_service_rate}%</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">1st Service AI Rate</p>
+                <p className="text-sm text-muted-foreground mt-3">{mostUsed.units_used_1st} units pulled · {mostUsed.total_calves} calves</p>
+                <p className="text-primary text-xs mt-2 italic">Highest usage sire with below-average 1st service rate — highest-impact sire change opportunity.</p>
               </>) : (<>
                 <p className="text-[10px] text-success font-medium uppercase tracking-wider mb-1">✓ Most Used · Strong Performer</p>
                 <p className="text-xl font-bold text-foreground">{mostUsed.sire}</p>
-                <p className="text-[28px] font-bold text-success mt-1">{mostUsed.ai_conception_rate}%</p>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">AI Conception Rate</p>
-                <p className="text-sm text-muted-foreground mt-3">{mostUsed.total_calves} calves · {mostUsed.calf_survival_rate}% survival</p>
+                <p className="text-[28px] font-bold text-success mt-1">{mostUsed.first_service_rate}%</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">1st Service AI Rate</p>
+                <p className="text-sm text-muted-foreground mt-3">{mostUsed.units_used_1st} units pulled · {mostUsed.total_calves} calves · {mostUsed.calf_survival_rate}% survival</p>
               </>)}
             </CardContent>
           </Card>

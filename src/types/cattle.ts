@@ -101,10 +101,12 @@ export interface CowStats {
 
 export interface SireStats {
   sire: string;
+  units_used_1st: number;
+  units_used_2nd: number;
   total_calves: number;
-  ai_conception_rate: number;
   first_service_rate: number;
   second_service_rate: number;
+  overall_ai_rate: number;
   avg_gestation_days: number;
   avg_calf_bw: number;
   calf_survival_rate: number;

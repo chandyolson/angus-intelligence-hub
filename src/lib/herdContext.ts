@@ -81,7 +81,7 @@ export async function buildHerdContext(): Promise<string> {
   // Sire stats
   const sireStats = computeSireStats(blairRecords);
   const sireLines = sireStats.slice(0, 15).map(s =>
-    `${s.sire} | Calves: ${s.total_calves} | Conception: ${s.ai_conception_rate}% | Avg Gest: ${s.avg_gestation_days}d | Avg BW: ${s.avg_calf_bw}lbs | Survival: ${s.calf_survival_rate}%`
+    `${s.sire} | Calves: ${s.total_calves} | 1st Svc: ${s.first_service_rate}% | 2nd Svc: ${s.second_service_rate}% | Overall AI: ${s.overall_ai_rate}% | Avg Gest: ${s.avg_gestation_days}d | Avg BW: ${s.avg_calf_bw}lbs | Survival: ${s.calf_survival_rate}%`
   ).join('\n');
 
   // Composite scores
