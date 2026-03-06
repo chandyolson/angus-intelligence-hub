@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useAnimals, useBlairCombined } from '@/hooks/useCattleData';
 import { computeCompositeFromRecords } from '@/lib/calculations';
-import { BlairCombinedRecord } from '@/types/cattle';
+import { BlairCombinedRecord, BreedingCalvingRecord } from '@/types/cattle';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
