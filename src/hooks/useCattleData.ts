@@ -95,8 +95,8 @@ export function useRecordCounts() {
     queryFn: async () => {
       const [animals, bcr, ultrasound] = await Promise.all([
         supabase.from('animals').select('*', { count: 'exact', head: true }),
-        supabase.from('blair_breeding_calving').select('*', { count: 'exact', head: true }),
-        supabase.from('ultrasound').select('*', { count: 'exact', head: true }),
+        supabase.from('blair_combined').select('*', { count: 'exact', head: true }),
+        (supabase.from as any)('ultrasound').select('*', { count: 'exact', head: true }),
       ]);
       return {
         animals: animals.count ?? 0,
