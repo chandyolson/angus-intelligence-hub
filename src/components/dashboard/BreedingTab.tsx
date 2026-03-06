@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Cell, Legend,
+  ResponsiveContainer, Cell,
 } from 'recharts';
 import { ShimmerSkeleton } from '@/components/ui/shimmer-skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -61,7 +61,7 @@ export default function BreedingTab() {
 
   const [selectedYear, setSelectedYear] = useState<string>('all');
 
-  // ─── Section 1: Preg Stage by Project & Year ───
+  // ─── Section 1: Preg Stage by Project & Year (heatmap) ───
   const pregByProject = useMemo(() => {
     const filtered = selectedYear === 'all' ? records : records.filter(r => String(r.breeding_year) === selectedYear);
     const byProject = new Map<string, Record<string, number>>();
@@ -78,11 +78,18 @@ export default function BreedingTab() {
     });
 
     const stages = Array.from(allStages).sort();
-    const data = Array.from(byProject.entries()).map(([project, counts]) => ({
-      project,
-      ...counts,
-    }));
-    return { data, stages };
+    const data = Array.from(byProject.entries())
+      .map(([project, counts]) => {
+        const total = Object.values(counts).reduce((s, v) => s + v, 0);
+        return { project, total, ...counts };
+      })
+      .sort((a, b) => b.total - a.total);
+
+    // Find max count for intensity scaling
+    let maxCount = 0;
+    data.forEach(row => stages.forEach(s => { if ((row as any)[s] > maxCount) maxCount = (row as any)[s]; }));
+
+    return { data, stages, maxCount };
   }, [records, selectedYear]);
 
   // ─── Section 2: AI Conception Rate by AI Sire (ai_sire_1) ───
@@ -137,7 +144,7 @@ export default function BreedingTab() {
 
   return (
     <div className="space-y-6">
-      {/* Section 1: Preg Stage by Project & Year */}
+      {/* Section 1: Preg Stage by Project & Year — Heatmap */}
       <Card className="bg-card border-border">
         <CardHeader className="pb-2 flex flex-row items-center justify-between">
           <CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">
@@ -157,24 +164,60 @@ export default function BreedingTab() {
         </CardHeader>
         <CardContent>
           {pregByProject.data.length > 0 ? (
-            <ResponsiveContainer width="100%" height={Math.max(pregByProject.data.length * 45, 250)}>
-              <BarChart data={pregByProject.data} layout="vertical" margin={{ left: 120 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(218, 42%, 20%)" />
-                <XAxis type="number" tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 11 }} />
-                <YAxis dataKey="project" type="category" tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 10 }} width={115} />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend wrapperStyle={{ fontSize: 11, color: 'hsl(219, 23%, 53%)' }} />
+            <div className="overflow-x-auto">
+              {/* Legend */}
+              <div className="flex flex-wrap gap-3 mb-4">
                 {pregByProject.stages.map(stage => (
-                  <Bar
-                    key={stage}
-                    dataKey={stage}
-                    name={stage}
-                    stackId="preg"
-                    fill={STAGE_COLORS[stage] || 'hsl(219, 23%, 53%)'}
-                  />
+                  <div key={stage} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <span className="w-3 h-3 rounded-sm" style={{ background: STAGE_COLORS[stage] || 'hsl(219, 23%, 53%)' }} />
+                    {stage}
+                  </div>
                 ))}
-              </BarChart>
-            </ResponsiveContainer>
+              </div>
+              {/* Heatmap grid */}
+              <table className="w-full text-xs border-collapse">
+                <thead>
+                  <tr>
+                    <th className="text-left py-2 px-3 text-muted-foreground font-medium border-b border-border sticky left-0 bg-card">Project</th>
+                    {pregByProject.stages.map(stage => (
+                      <th key={stage} className="py-2 px-3 text-center text-muted-foreground font-medium border-b border-border min-w-[70px]">{stage}</th>
+                    ))}
+                    <th className="py-2 px-3 text-center text-muted-foreground font-medium border-b border-border min-w-[60px]">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pregByProject.data.map((row) => (
+                    <tr key={row.project} className="border-b border-border/50 hover:bg-secondary/30 transition-colors">
+                      <td className="py-2 px-3 text-foreground font-medium sticky left-0 bg-card">{row.project}</td>
+                      {pregByProject.stages.map(stage => {
+                        const count = (row as any)[stage] || 0;
+                        const intensity = pregByProject.maxCount > 0 ? count / pregByProject.maxCount : 0;
+                        const baseColor = STAGE_COLORS[stage] || 'hsl(219, 23%, 53%)';
+                        return (
+                          <td key={stage} className="py-2 px-3 text-center">
+                            {count > 0 ? (
+                              <span
+                                className="inline-flex items-center justify-center rounded-md px-2.5 py-1 font-semibold text-xs min-w-[36px]"
+                                style={{
+                                  background: baseColor,
+                                  opacity: 0.3 + intensity * 0.7,
+                                  color: 'hsl(var(--card))',
+                                }}
+                              >
+                                {count}
+                              </span>
+                            ) : (
+                              <span className="text-muted-foreground/40">–</span>
+                            )}
+                          </td>
+                        );
+                      })}
+                      <td className="py-2 px-3 text-center text-foreground font-semibold">{row.total}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           ) : (
             <EmptyState message="No preg stage data with project records found." />
           )}
