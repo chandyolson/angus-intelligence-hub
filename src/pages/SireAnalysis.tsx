@@ -66,7 +66,7 @@ export default function SireAnalysis() {
     if (!records) return [];
     const bySire = new Map<string, { bull: number; total: number }>();
     records.forEach(r => {
-      const sire = r.calf_sire || r.sire;
+      const sire = r.calf_sire || r.ai_sire_1;
       if (!sire || !r.calf_sex || r.calf_sex.trim() === '') return;
       const entry = bySire.get(sire) || { bull: 0, total: 0 };
       entry.total++;

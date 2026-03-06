@@ -105,7 +105,7 @@ export function computeCompositeFromRecords(recs: BreedingCalvingRecord[]): numb
 export function computeSireStats(records: BreedingCalvingRecord[]): SireStats[] {
   const bySire = new Map<string, BreedingCalvingRecord[]>();
   records.forEach(r => {
-    const sire = r.calf_sire || r.sire;
+    const sire = r.calf_sire || r.ai_sire_1;
     if (sire) {
       const arr = bySire.get(sire) || [];
       arr.push(r);
@@ -119,8 +119,7 @@ export function computeSireStats(records: BreedingCalvingRecord[]): SireStats[] 
     const withCalves = recs.filter(r => r.calf_status && r.calf_status.toLowerCase() !== 'open');
     const totalCalves = withCalves.length;
     const conceptionRate = recs.length > 0 ? (totalCalves / recs.length) * 100 : 0;
-    const gestations = recs.map(r => r.gestation_days).filter((v): v is number => v != null && v >= 250 && v <= 310);
-    const avgGest = gestations.length > 0 ? gestations.reduce((a, b) => a + b, 0) / gestations.length : 0;
+    const avgGest = 0;
     const bws = withCalves.map(r => r.calf_bw).filter((v): v is number => v != null && v > 0);
     const avgBW = bws.length > 0 ? bws.reduce((a, b) => a + b, 0) / bws.length : 0;
     const alive = withCalves.filter(r => r.calf_status?.toLowerCase() === 'alive').length;

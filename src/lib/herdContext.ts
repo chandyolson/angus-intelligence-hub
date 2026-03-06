@@ -39,8 +39,7 @@ export async function buildHerdContext(): Promise<string> {
   const conceptionRate = totalBreedings > 0 ? (withCalves.length / totalBreedings) * 100 : 0;
   const liveCalves = withCalves.filter(r => r.calf_status?.toLowerCase() === 'alive');
   const survivalRate = withCalves.length > 0 ? (liveCalves.length / withCalves.length) * 100 : 0;
-  const gestations = blairRecords.map(r => r.gestation_days).filter((v): v is number => v != null && v >= 250 && v <= 310);
-  const avgGestation = gestations.length > 0 ? gestations.reduce((a, b) => a + b, 0) / gestations.length : 0;
+  const avgGestation = 0;
 
   // Year-over-year open rate
   const byYear = new Map<number, { total: number; open: number }>();
@@ -157,10 +156,10 @@ export async function fetchCowContext(tagNumber: string): Promise<string | null>
   const lid = (animal as any).lifetime_id;
   if (!lid) return `Found cow with tag ${tagNumber} but no lifetime_id linked.`;
 
-  const records = await fetchAllRows<BreedingCalvingRecord>('blair_breeding_calving', { column: 'lifetime_id', value: lid });
+  const records = await fetchAllRows<BreedingCalvingRecord>('blair_combined', { column: 'lifetime_id', value: lid });
 
   const lines = records.map(r =>
-    `Year: ${r.breeding_year} | AI Date: ${r.ai_date_1 || '—'} | Sire: ${r.sire || '—'} | Preg: ${r.preg_stage || '—'} | Calving: ${r.calving_date || '—'} | Calf Status: ${r.calf_status || '—'} | Calf BW: ${r.calf_bw ?? '—'} | Gestation: ${r.gestation_days ?? '—'}d`
+    `Year: ${r.breeding_year} | AI Date: ${r.ai_date_1 || '—'} | Sire: ${r.ai_sire_1 || '—'} | Preg: ${r.preg_stage || '—'} | Calving: ${r.calving_date || '—'} | Calf Status: ${r.calf_status || '—'} | Calf BW: ${r.calf_bw ?? '—'}`
   ).join('\n');
 
   return `\nSPECIFIC COW DATA REQUESTED — Tag: ${tagNumber}, Lifetime ID: ${lid}
