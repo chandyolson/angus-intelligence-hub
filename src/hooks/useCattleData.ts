@@ -53,7 +53,7 @@ export function useActiveAnimals(operation?: string) {
 
 export function useBreedingCalvingRecords() {
   return useQuery({
-    queryKey: ['breeding_calving_records'],
+    queryKey: ['blair_combined'],
     queryFn: () => fetchAllRows<BreedingCalvingRecord>('blair_combined'),
   });
 }
