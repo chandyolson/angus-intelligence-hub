@@ -1,8 +1,9 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useAnimals, useBlairCombined } from '@/hooks/useCattleData';
 import { computeCompositeFromRecords } from '@/lib/calculations';
 import { BlairCombinedRecord } from '@/types/cattle';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   LineChart, Line, ReferenceLine, ResponsiveContainer, Cell, PieChart, Pie, Legend,
@@ -11,6 +12,7 @@ import { AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ShimmerSkeleton, ShimmerCard } from '@/components/ui/shimmer-skeleton';
 import { ErrorBox } from '@/components/ui/error-box';
+import BreedingTab from '@/components/dashboard/BreedingTab';
 
 const QUARTILE_COLORS = ['#134e4a', '#0d9488', '#2dd4bf', '#5eead4'];
 const SIRE_COLORS = ['hsl(40, 63%, 49%)', 'hsl(190, 60%, 45%)', 'hsl(0, 86%, 71%)', 'hsl(142, 69%, 58%)', 'hsl(270, 50%, 60%)', 'hsl(30, 80%, 55%)', 'hsl(200, 70%, 50%)', 'hsl(340, 60%, 55%)'];
