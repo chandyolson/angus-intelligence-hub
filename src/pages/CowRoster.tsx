@@ -124,14 +124,28 @@ export default function CowRoster() {
   const { data: filterOptions } = useQuery({
     queryKey: ['animal_filter_options', operationFilter],
     queryFn: async () => {
-      const [siresRes, yearsRes, statusesRes] = await Promise.all([
-        supabase.from('animals').select('sire').eq('operation', operationFilter !== 'all' ? operationFilter : 'Blair'),
-        supabase.from('animals').select('year_born').eq('operation', operationFilter !== 'all' ? operationFilter : 'Blair'),
-        supabase.from('animals').select('status').eq('operation', operationFilter !== 'all' ? operationFilter : 'Blair'),
-      ]);
-      const sires = [...new Set((siresRes.data ?? []).map(r => r.sire).filter(Boolean))].sort();
-      const years = [...new Set((yearsRes.data ?? []).map(r => r.year_born).filter(Boolean))].sort((a, b) => b - a);
-      const statuses = [...new Set((statusesRes.data ?? []).map(r => r.status).filter(Boolean))].sort();
+      const PAGE_SIZE = 1000;
+      const allRows: { sire: string | null; year_born: number | null; status: string | null }[] = [];
+      let from = 0;
+      let done = false;
+
+      while (!done) {
+        let q = supabase.from('animals').select('sire, year_born, status').range(from, from + PAGE_SIZE - 1);
+        if (operationFilter !== 'all') q = q.eq('operation', operationFilter);
+        const { data, error } = await q;
+        if (error) throw error;
+        if (!data || data.length < PAGE_SIZE) {
+          allRows.push(...(data ?? []));
+          done = true;
+        } else {
+          allRows.push(...data);
+          from += PAGE_SIZE;
+        }
+      }
+
+      const sires = [...new Set(allRows.map(r => r.sire).filter(Boolean))].sort() as string[];
+      const years = [...new Set(allRows.map(r => r.year_born).filter(Boolean))].sort((a, b) => b - a) as number[];
+      const statuses = [...new Set(allRows.map(r => r.status).filter(Boolean))].sort() as string[];
       return { sires, years, statuses };
     },
   });
