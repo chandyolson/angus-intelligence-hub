@@ -72,6 +72,8 @@ function buildCowRows(animals: Animal[], records: BreedingCalvingRecord[]): CowR
       total_calves: totalCalves,
       avg_bw: avgBw,
       ai_conception_rate: Math.round(conceptionRate * 10) / 10,
+      first_service_rate: Math.round(firstServiceRate * 10) / 10,
+      second_service_rate: Math.round(secondServiceRate * 10) / 10,
       calf_survival_rate: Math.round(survivalRate * 10) / 10,
       composite_score: composite,
     };
