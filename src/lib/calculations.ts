@@ -118,8 +118,13 @@ export function computeCompositeFromRecords(recs: BreedingCalvingRecord[]): numb
   return Math.round(((conceptionRate + survivalRate + consistency) / 3) * 10) / 10;
 }
 
-/** Compute gestation in days from AI date to calving date based on preg_stage */
-function computeGestation(r: BreedingCalvingRecord): number | null {
+/** Get gestation days — use the actual column, fall back to date calculation */
+function getGestation(r: BreedingCalvingRecord): number | null {
+  // Prefer the actual gestation_days column from the database
+  if (r.gestation_days != null && r.gestation_days >= 250 && r.gestation_days <= 310) {
+    return r.gestation_days;
+  }
+  // Fallback: derive from dates
   if (!r.calving_date) return null;
   const calvingDate = new Date(r.calving_date);
   let aiDate: Date | null = null;
