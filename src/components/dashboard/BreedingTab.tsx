@@ -191,6 +191,7 @@ export default function BreedingTab() {
                       <td className="py-2 px-3 text-foreground font-medium sticky left-0 bg-card">{row.project}</td>
                       {pregByProject.stages.map(stage => {
                         const count = (row as any)[stage] || 0;
+                        const pct = row.total > 0 ? Math.round((count / row.total) * 1000) / 10 : 0;
                         const intensity = pregByProject.maxCount > 0 ? count / pregByProject.maxCount : 0;
                         const baseColor = STAGE_COLORS[stage] || 'hsl(219, 23%, 53%)';
                         return (
@@ -204,7 +205,8 @@ export default function BreedingTab() {
                                   color: 'hsl(var(--card))',
                                 }}
                               >
-                                {count}
+                                {pct}%
+                              </span>
                               </span>
                             ) : (
                               <span className="text-muted-foreground/40">–</span>
