@@ -176,11 +176,81 @@ export type Database = {
         }
         Relationships: []
       }
+      blair_combined: {
+        Row: {
+          ai_date_1: string | null
+          ai_date_2: string | null
+          ai_sire_1: string | null
+          ai_sire_2: string | null
+          breeding_year: number | null
+          calf_bw: number | null
+          calf_sex: string | null
+          calf_sire: string | null
+          calf_status: string | null
+          calving_date: string | null
+          cow_sire: string | null
+          dog: number | null
+          fetal_sex: string | null
+          group: string | null
+          lifetime_id: string | null
+          memo: string | null
+          preg_stage: string | null
+          project_record_id: string | null
+          ultrasound_date: string | null
+          ultrasound_notes: string | null
+        }
+        Insert: {
+          ai_date_1?: string | null
+          ai_date_2?: string | null
+          ai_sire_1?: string | null
+          ai_sire_2?: string | null
+          breeding_year?: number | null
+          calf_bw?: number | null
+          calf_sex?: string | null
+          calf_sire?: string | null
+          calf_status?: string | null
+          calving_date?: string | null
+          cow_sire?: string | null
+          dog?: number | null
+          fetal_sex?: string | null
+          group?: string | null
+          lifetime_id?: string | null
+          memo?: string | null
+          preg_stage?: string | null
+          project_record_id?: string | null
+          ultrasound_date?: string | null
+          ultrasound_notes?: string | null
+        }
+        Update: {
+          ai_date_1?: string | null
+          ai_date_2?: string | null
+          ai_sire_1?: string | null
+          ai_sire_2?: string | null
+          breeding_year?: number | null
+          calf_bw?: number | null
+          calf_sex?: string | null
+          calf_sire?: string | null
+          calf_status?: string | null
+          calving_date?: string | null
+          cow_sire?: string | null
+          dog?: number | null
+          fetal_sex?: string | null
+          group?: string | null
+          lifetime_id?: string | null
+          memo?: string | null
+          preg_stage?: string | null
+          project_record_id?: string | null
+          ultrasound_date?: string | null
+          ultrasound_notes?: string | null
+        }
+        Relationships: []
+      }
       breeding: {
         Row: {
           ai_date: string
           ai_sire: string
           auto_number: number | null
+          breeding_year: number | null
           cow_lookup: string | null
           id: number
           lifetime_id: string | null
@@ -193,6 +263,7 @@ export type Database = {
           ai_date: string
           ai_sire: string
           auto_number?: number | null
+          breeding_year?: number | null
           cow_lookup?: string | null
           id?: number
           lifetime_id?: string | null
@@ -205,6 +276,7 @@ export type Database = {
           ai_date?: string
           ai_sire?: string
           auto_number?: number | null
+          breeding_year?: number | null
           cow_lookup?: string | null
           id?: number
           lifetime_id?: string | null
@@ -269,6 +341,7 @@ export type Database = {
       calving_records: {
         Row: {
           birth_weight: number | null
+          breeding_year: number | null
           calf_sex: string | null
           calf_sire: string | null
           calf_size: string | null
@@ -297,6 +370,7 @@ export type Database = {
         }
         Insert: {
           birth_weight?: number | null
+          breeding_year?: number | null
           calf_sex?: string | null
           calf_sire?: string | null
           calf_size?: string | null
@@ -325,6 +399,7 @@ export type Database = {
         }
         Update: {
           birth_weight?: number | null
+          breeding_year?: number | null
           calf_sex?: string | null
           calf_sire?: string | null
           calf_size?: string | null
@@ -356,6 +431,7 @@ export type Database = {
       ultrasound: {
         Row: {
           auto_number: number | null
+          breeding_year: number | null
           calf_sex: string | null
           cow_lookup: string | null
           cow_sire: string | null
@@ -371,6 +447,7 @@ export type Database = {
         }
         Insert: {
           auto_number?: number | null
+          breeding_year?: number | null
           calf_sex?: string | null
           cow_lookup?: string | null
           cow_sire?: string | null
@@ -386,6 +463,7 @@ export type Database = {
         }
         Update: {
           auto_number?: number | null
+          breeding_year?: number | null
           calf_sex?: string | null
           cow_lookup?: string | null
           cow_sire?: string | null
