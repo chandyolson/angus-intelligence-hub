@@ -129,7 +129,8 @@ export default function SireAnalysis() {
                 <TableRow className="bg-sidebar border-border hover:bg-sidebar">
                   {[
                     { key: 'sire', label: 'Sire' }, { key: 'total_calves', label: 'Total Calves' },
-                    { key: 'ai_conception_rate', label: 'AI Conception %' }, { key: 'avg_gestation_days', label: 'Avg Gestation (days)' },
+                    { key: 'ai_conception_rate', label: 'Overall AI %' }, { key: 'first_service_rate', label: '1st Service %' },
+                    { key: 'second_service_rate', label: '2nd Service %' }, { key: 'avg_gestation_days', label: 'Avg Gestation (days)' },
                     { key: 'avg_calf_bw', label: 'Avg BW (lbs)' }, { key: 'calf_survival_rate', label: 'Survival %' },
                     { key: 'bull_calf_pct', label: 'Bull Calf %' }, { key: 'performance_badge', label: 'Performance' },
                   ].map(col => (
