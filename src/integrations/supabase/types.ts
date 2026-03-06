@@ -122,6 +122,7 @@ export type Database = {
           calf_sire: string | null
           calf_status: string | null
           calving_date: string | null
+          cow_age: number | null
           cow_sire: string | null
           dog: number | null
           fetal_sex: string | null
@@ -145,6 +146,7 @@ export type Database = {
           calf_sire?: string | null
           calf_status?: string | null
           calving_date?: string | null
+          cow_age?: number | null
           cow_sire?: string | null
           dog?: number | null
           fetal_sex?: string | null
@@ -168,6 +170,7 @@ export type Database = {
           calf_sire?: string | null
           calf_status?: string | null
           calving_date?: string | null
+          cow_age?: number | null
           cow_sire?: string | null
           dog?: number | null
           fetal_sex?: string | null
