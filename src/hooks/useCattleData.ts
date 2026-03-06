@@ -54,8 +54,7 @@ export function useActiveAnimals(operation?: string) {
 export function useBreedingCalvingRecords() {
   return useQuery({
     queryKey: ['breeding_calving_records'],
-    queryFn: () => fetchAllRows<BreedingCalvingRecord>('blair_combined'),
-  });
+    queryFn: () => fetchAllRows<BreedingCalvingRecord>('blair_combined;
 }
 
 export function useUltrasoundRecords(lifetimeId?: string) {
@@ -84,7 +83,7 @@ export function useAnimal(lifetimeId: string) {
 export function useCowBreedingRecords(lifetimeId: string) {
   return useQuery({
     queryKey: ['breeding_calving_records', lifetimeId],
-    queryFn: () => fetchAllRows<BreedingCalvingRecord>('blair_breeding_calving', { column: 'lifetime_id', value: lifetimeId }),
+    queryFn: () => fetchAllRows<BreedingCalvingRecord>('blair_breedingcombinedumn: 'lifetime_id', value: lifetimeId }),
     enabled: !!lifetimeId,
   });
 }
