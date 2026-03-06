@@ -91,19 +91,19 @@ function computeScoreDistribution(records: BlairCombinedRecord[]) {
 
 /* ─── Year-over-Year Trends ─── */
 function computeYoY(records: BlairCombinedRecord[]) {
-  const byYear = new Map<number, { total: number; open: number; conceived: number }>();
+  const byYear = new Map<number, { totalWithAiDate1: number; open: number; aiConceived: number }>();
   records.forEach(r => {
     if (!r.breeding_year) return;
-    const y = byYear.get(r.breeding_year) || { total: 0, open: 0, conceived: 0 };
-    y.total++;
+    const y = byYear.get(r.breeding_year) || { totalWithAiDate1: 0, open: 0, aiConceived: 0 };
+    if (r.ai_date_1 != null) y.totalWithAiDate1++;
     if (r.preg_stage?.toLowerCase() === 'open') y.open++;
-    if (r.calf_status && r.calf_status.toLowerCase() !== 'open') y.conceived++;
+    if (r.preg_stage?.toLowerCase() === 'ai' || r.preg_stage?.toLowerCase() === 'second ai') y.aiConceived++;
     byYear.set(r.breeding_year, y);
   });
   return Array.from(byYear.entries()).sort(([a], [b]) => a - b).map(([year, d]) => ({
     year: String(year),
-    openRate: Math.round((d.open / d.total) * 1000) / 10,
-    conceptionRate: Math.round((d.conceived / d.total) * 1000) / 10,
+    openRate: d.totalWithAiDate1 > 0 ? Math.round((d.open / d.totalWithAiDate1) * 1000) / 10 : 0,
+    conceptionRate: d.totalWithAiDate1 > 0 ? Math.round((d.aiConceived / d.totalWithAiDate1) * 1000) / 10 : 0,
   }));
 }
 
