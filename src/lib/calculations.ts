@@ -28,7 +28,7 @@ export function computeCowStats(animal: Animal, records: BreedingCalvingRecord[]
   const calf_survival_rate = totalCalves > 0 ? (bornAlive / totalCalves) * 100 : 0;
 
   const consistency = computeConsistencyScore(bws);
-  const composite = totalBreedings > 0
+  const composite = withAiDate1.length > 0
     ? Math.round(((ai_conception_rate + calf_survival_rate + consistency) / 3) * 10) / 10
     : 0;
 
