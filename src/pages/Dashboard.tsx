@@ -72,6 +72,7 @@ function computeScoreDistribution(records: BlairCombinedRecord[]) {
       ai_sire_1: r.ai_sire_1, ai_sire_2: r.ai_sire_2, dog: r.dog,
       cow_sire: r.cow_sire, project_record_id: r.project_record_id,
       group: r.group, memo: r.memo, ultrasound_notes: r.ultrasound_notes,
+      gestation_days: r.gestation_days ?? null,
     }));
     const c = computeCompositeFromRecords(mapped);
     if (c > 0) scores.push(c);

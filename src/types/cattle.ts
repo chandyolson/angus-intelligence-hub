@@ -51,6 +51,7 @@ export interface BreedingCalvingRecord {
   group: string | null;
   memo: string | null;
   ultrasound_notes: string | null;
+  gestation_days: number | null;
 }
 
 export interface BreedingRecord {
@@ -142,6 +143,7 @@ export interface BlairCombinedRecord {
   memo: string | null;
   group: string | null;
   project_record_id: string | null;
+  gestation_days: number | null;
 }
 
 export interface CullCandidate {

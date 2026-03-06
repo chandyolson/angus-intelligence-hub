@@ -118,8 +118,13 @@ export function computeCompositeFromRecords(recs: BreedingCalvingRecord[]): numb
   return Math.round(((conceptionRate + survivalRate + consistency) / 3) * 10) / 10;
 }
 
-/** Compute gestation in days from AI date to calving date based on preg_stage */
-function computeGestation(r: BreedingCalvingRecord): number | null {
+/** Get gestation days — use the actual column, fall back to date calculation */
+function getGestation(r: BreedingCalvingRecord): number | null {
+  // Prefer the actual gestation_days column from the database
+  if (r.gestation_days != null && r.gestation_days >= 250 && r.gestation_days <= 310) {
+    return r.gestation_days;
+  }
+  // Fallback: derive from dates
   if (!r.calving_date) return null;
   const calvingDate = new Date(r.calving_date);
   let aiDate: Date | null = null;
@@ -174,7 +179,7 @@ export function computeSireStats(records: BreedingCalvingRecord[]): SireStats[] 
     const avg_calf_bw = bws.length > 0 ? bws.reduce((a, b) => a + b, 0) / bws.length : 0;
 
     // --- Gestation (from all records where this sire is calf_sire and conceived by AI) ---
-    const gestDays = calfRecs.map(computeGestation).filter((v): v is number => v != null);
+    const gestDays = calfRecs.map(getGestation).filter((v): v is number => v != null);
     const avg_gestation_days = gestDays.length > 0 ? gestDays.reduce((a, b) => a + b, 0) / gestDays.length : 0;
 
     // --- Bull calf % ---

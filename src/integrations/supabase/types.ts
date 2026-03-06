@@ -125,6 +125,7 @@ export type Database = {
           cow_sire: string | null
           dog: number | null
           fetal_sex: string | null
+          gestation_days: number | null
           group: string | null
           lifetime_id: string | null
           memo: string | null
@@ -147,6 +148,7 @@ export type Database = {
           cow_sire?: string | null
           dog?: number | null
           fetal_sex?: string | null
+          gestation_days?: number | null
           group?: string | null
           lifetime_id?: string | null
           memo?: string | null
@@ -169,6 +171,7 @@ export type Database = {
           cow_sire?: string | null
           dog?: number | null
           fetal_sex?: string | null
+          gestation_days?: number | null
           group?: string | null
           lifetime_id?: string | null
           memo?: string | null
