@@ -394,6 +394,13 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       )}
+      </TabsContent>
+
+      <TabsContent value="breeding" className="mt-0">
+        <BreedingTab />
+      </TabsContent>
+
+      </Tabs>
     </div>
   );
 }
