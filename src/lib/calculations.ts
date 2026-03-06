@@ -24,6 +24,15 @@ export function computeCowStats(animal: Animal, records: BreedingCalvingRecord[]
   const aiConceived = cowRecords.filter(r => r.preg_stage?.toLowerCase() === 'ai' || r.preg_stage?.toLowerCase() === 'second ai');
   const ai_conception_rate = withAiDate1.length > 0 ? (aiConceived.length / withAiDate1.length) * 100 : 0;
 
+  // First Service: preg_stage = 'AI' / total with ai_date_1
+  const firstServiceConceived = cowRecords.filter(r => r.preg_stage?.toLowerCase() === 'ai');
+  const first_service_rate = withAiDate1.length > 0 ? (firstServiceConceived.length / withAiDate1.length) * 100 : 0;
+
+  // Second Service: preg_stage = 'Second AI' / total with ai_date_2
+  const withAiDate2 = cowRecords.filter(r => r.ai_date_2 != null);
+  const secondServiceConceived = cowRecords.filter(r => r.preg_stage?.toLowerCase() === 'second ai');
+  const second_service_rate = withAiDate2.length > 0 ? (secondServiceConceived.length / withAiDate2.length) * 100 : 0;
+
   const bornAlive = withCalves.filter(r => r.calf_status?.toLowerCase() === 'alive').length;
   const calf_survival_rate = totalCalves > 0 ? (bornAlive / totalCalves) * 100 : 0;
 
