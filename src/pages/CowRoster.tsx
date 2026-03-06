@@ -125,22 +125,15 @@ export default function CowRoster() {
   const { data: filterOptions } = useQuery({
     queryKey: ['animal_filter_options', operationFilter],
     queryFn: async () => {
-      let q = supabase.from('animals').select('year_born, sire, status');
-      if (operationFilter !== 'all') q = q.eq('operation', operationFilter);
-      const { data } = await q;
-      const years = new Set<number>();
-      const sires = new Set<string>();
-      const statuses = new Set<string>();
-      (data ?? []).forEach(r => {
-        if (r.year_born) years.add(r.year_born);
-        if (r.sire) sires.add(r.sire);
-        if (r.status) statuses.add(r.status);
-      });
-      return {
-        years: [...years].sort((a, b) => b - a),
-        sires: [...sires].sort(),
-        statuses: [...statuses].sort(),
-      };
+      const [siresRes, yearsRes, statusesRes] = await Promise.all([
+        supabase.from('animals').select('sire').eq('operation', operationFilter !== 'all' ? operationFilter : 'Blair'),
+        supabase.from('animals').select('year_born').eq('operation', operationFilter !== 'all' ? operationFilter : 'Blair'),
+        supabase.from('animals').select('status').eq('operation', operationFilter !== 'all' ? operationFilter : 'Blair'),
+      ]);
+      const sires = [...new Set((siresRes.data ?? []).map(r => r.sire).filter(Boolean))].sort();
+      const years = [...new Set((yearsRes.data ?? []).map(r => r.year_born).filter(Boolean))].sort((a, b) => b - a);
+      const statuses = [...new Set((statusesRes.data ?? []).map(r => r.status).filter(Boolean))].sort();
+      return { sires, years, statuses };
     },
   });
 
