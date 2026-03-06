@@ -52,6 +52,8 @@ export function computeCowStats(animal: Animal, records: BreedingCalvingRecord[]
     total_calves: totalCalves,
     avg_bw: Math.round(avg_bw),
     ai_conception_rate: Math.round(ai_conception_rate * 10) / 10,
+    first_service_rate: Math.round(first_service_rate * 10) / 10,
+    second_service_rate: Math.round(second_service_rate * 10) / 10,
     calf_survival_rate: Math.round(calf_survival_rate * 10) / 10,
     composite_score: composite,
   };
