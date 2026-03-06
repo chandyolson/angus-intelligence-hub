@@ -149,12 +149,12 @@ function computeSireGestation(records: BlairCombinedRecord[]) {
 
 /* ─── Sire AI Conception Chart: GROUP BY ai_sire_1, conception rate ─── */
 function computeSireConception(records: BlairCombinedRecord[]) {
-  const bySire = new Map<string, { total: number; conceived: number }>();
+  const bySire = new Map<string, { totalWithAiDate1: number; aiConceived: number }>();
   records.forEach(r => {
-    if (!r.ai_sire_1) return;
-    const entry = bySire.get(r.ai_sire_1) || { total: 0, conceived: 0 };
-    entry.total++;
-    if (r.preg_stage && r.preg_stage.toLowerCase() !== 'open') entry.conceived++;
+    if (!r.ai_sire_1 || r.ai_date_1 == null) return;
+    const entry = bySire.get(r.ai_sire_1) || { totalWithAiDate1: 0, aiConceived: 0 };
+    entry.totalWithAiDate1++;
+    if (r.preg_stage?.toLowerCase() === 'ai' || r.preg_stage?.toLowerCase() === 'second ai') entry.aiConceived++;
     bySire.set(r.ai_sire_1, entry);
   });
   return Array.from(bySire.entries())
