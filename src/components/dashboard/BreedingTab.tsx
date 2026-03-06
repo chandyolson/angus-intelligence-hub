@@ -61,7 +61,7 @@ export default function BreedingTab() {
 
   const [selectedYear, setSelectedYear] = useState<string>('all');
 
-  // ─── Section 1: Preg Stage by Project & Year ───
+  // ─── Section 1: Preg Stage by Project & Year (heatmap) ───
   const pregByProject = useMemo(() => {
     const filtered = selectedYear === 'all' ? records : records.filter(r => String(r.breeding_year) === selectedYear);
     const byProject = new Map<string, Record<string, number>>();
@@ -78,11 +78,18 @@ export default function BreedingTab() {
     });
 
     const stages = Array.from(allStages).sort();
-    const data = Array.from(byProject.entries()).map(([project, counts]) => ({
-      project,
-      ...counts,
-    }));
-    return { data, stages };
+    const data = Array.from(byProject.entries())
+      .map(([project, counts]) => {
+        const total = Object.values(counts).reduce((s, v) => s + v, 0);
+        return { project, total, ...counts };
+      })
+      .sort((a, b) => b.total - a.total);
+
+    // Find max count for intensity scaling
+    let maxCount = 0;
+    data.forEach(row => stages.forEach(s => { if ((row as any)[s] > maxCount) maxCount = (row as any)[s]; }));
+
+    return { data, stages, maxCount };
   }, [records, selectedYear]);
 
   // ─── Section 2: AI Conception Rate by AI Sire (ai_sire_1) ───
