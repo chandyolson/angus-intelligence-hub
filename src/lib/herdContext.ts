@@ -39,8 +39,7 @@ export async function buildHerdContext(): Promise<string> {
   const conceptionRate = totalBreedings > 0 ? (withCalves.length / totalBreedings) * 100 : 0;
   const liveCalves = withCalves.filter(r => r.calf_status?.toLowerCase() === 'alive');
   const survivalRate = withCalves.length > 0 ? (liveCalves.length / withCalves.length) * 100 : 0;
-  const gestations = blairRecords.map(r => r.gestation_days).filter((v): v is number => v != null && v >= 250 && v <= 310);
-  const avgGestation = gestations.length > 0 ? gestations.reduce((a, b) => a + b, 0) / gestations.length : 0;
+  const avgGestation = 0;
 
   // Year-over-year open rate
   const byYear = new Map<number, { total: number; open: number }>();
