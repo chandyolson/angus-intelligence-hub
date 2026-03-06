@@ -220,14 +220,13 @@ export default function Dashboard() {
   if (animalsError || combinedError) return <ErrorBox />;
 
   return (
-    <div className="space-y-6">
+    <Tabs defaultValue="overview" className="space-y-6">
       <div className="-mx-6 -mt-6 lg:-mt-6 px-6 pt-6 pb-4 mb-2" style={{ background: 'linear-gradient(180deg, hsl(224, 52%, 14%) 0%, hsl(224, 48%, 11%) 100%)' }}>
         <h1 className="text-[20px] font-semibold text-foreground mb-4">Dashboard</h1>
-        <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="bg-sidebar border border-border">
-            <TabsTrigger value="overview" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs">Overview</TabsTrigger>
-            <TabsTrigger value="breeding" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs">Breeding</TabsTrigger>
-          </TabsList>
+        <TabsList className="bg-sidebar border border-border">
+          <TabsTrigger value="overview" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs">Overview</TabsTrigger>
+          <TabsTrigger value="breeding" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs">Breeding</TabsTrigger>
+        </TabsList>
       </div>
 
       <TabsContent value="overview" className="mt-0 space-y-6">
