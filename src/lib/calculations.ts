@@ -118,62 +118,96 @@ export function computeCompositeFromRecords(recs: BreedingCalvingRecord[]): numb
   return Math.round(((conceptionRate + survivalRate + consistency) / 3) * 10) / 10;
 }
 
+/** Compute gestation in days from AI date to calving date based on preg_stage */
+function computeGestation(r: BreedingCalvingRecord): number | null {
+  if (!r.calving_date) return null;
+  const calvingDate = new Date(r.calving_date);
+  let aiDate: Date | null = null;
+  if (r.preg_stage?.toLowerCase() === 'ai' && r.ai_date_1) {
+    aiDate = new Date(r.ai_date_1);
+  } else if (r.preg_stage?.toLowerCase() === 'second ai' && r.ai_date_2) {
+    aiDate = new Date(r.ai_date_2);
+  }
+  if (!aiDate) return null;
+  const days = Math.round((calvingDate.getTime() - aiDate.getTime()) / (1000 * 60 * 60 * 24));
+  return (days >= 250 && days <= 310) ? days : null;
+}
+
+const isCleanup = (sire: string) => sire.toLowerCase().includes('cleanup');
+
 export function computeSireStats(records: BreedingCalvingRecord[]): SireStats[] {
-  const bySire = new Map<string, BreedingCalvingRecord[]>();
+  // Collect all unique sire names (from ai_sire_1, ai_sire_2, and calf_sire)
+  const allSires = new Set<string>();
   records.forEach(r => {
-    const sire = r.calf_sire || r.ai_sire_1;
-    if (sire) {
-      const arr = bySire.get(sire) || [];
-      arr.push(r);
-      bySire.set(sire, arr);
-    }
+    if (r.ai_sire_1 && !isCleanup(r.ai_sire_1)) allSires.add(r.ai_sire_1);
+    if (r.ai_sire_2 && !isCleanup(r.ai_sire_2)) allSires.add(r.ai_sire_2);
+    if (r.calf_sire && !isCleanup(r.calf_sire)) allSires.add(r.calf_sire);
   });
 
   const stats: SireStats[] = [];
-  bySire.forEach((recs, sire) => {
-    if (recs.length < 20) return;
-    const withCalves = recs.filter(r => r.calf_status && r.calf_status.toLowerCase() !== 'open');
-    const totalCalves = withCalves.length;
-    // AI Conception Rate: preg_stage 'AI' or 'Second AI' / total with ai_date_1
-    const withAiDate1 = recs.filter(r => r.ai_date_1 != null);
-    const aiConceived = recs.filter(r => r.preg_stage?.toLowerCase() === 'ai' || r.preg_stage?.toLowerCase() === 'second ai');
-    const conceptionRate = withAiDate1.length > 0 ? (aiConceived.length / withAiDate1.length) * 100 : 0;
-    const avgGest = 0;
-    const bws = withCalves.map(r => r.calf_bw).filter((v): v is number => v != null && v > 0);
-    const avgBW = bws.length > 0 ? bws.reduce((a, b) => a + b, 0) / bws.length : 0;
-    const alive = withCalves.filter(r => r.calf_status?.toLowerCase() === 'alive').length;
-    const survival = totalCalves > 0 ? (alive / totalCalves) * 100 : 0;
-    const knownSex = withCalves.filter(r => r.calf_sex && ['bull', 'male', 'b', 'm', 'steer'].some(s => r.calf_sex!.toLowerCase().includes(s)));
-    const totalKnownSex = withCalves.filter(r => r.calf_sex && r.calf_sex.trim() !== '').length;
-    const bullPct = totalKnownSex > 0 ? (knownSex.length / totalKnownSex) * 100 : 50;
+
+  allSires.forEach(sire => {
+    // --- AI Sire metrics (1st service) ---
+    const as1Records = records.filter(r => r.ai_sire_1 === sire && r.ai_date_1 != null);
+    const units_used_1st = as1Records.length;
+    const firstServiceConceived = as1Records.filter(r => r.preg_stage?.toLowerCase() === 'ai').length;
+    const first_service_rate = units_used_1st > 0 ? (firstServiceConceived / units_used_1st) * 100 : 0;
+
+    // --- AI Sire metrics (2nd service) ---
+    const as2Records = records.filter(r => r.ai_sire_2 === sire && r.ai_date_2 != null);
+    const units_used_2nd = as2Records.length;
+    const secondServiceConceived = as2Records.filter(r => r.preg_stage?.toLowerCase() === 'second ai').length;
+    const second_service_rate = units_used_2nd > 0 ? (secondServiceConceived / units_used_2nd) * 100 : 0;
+
+    // --- Overall AI rate: (1st conceived + 2nd conceived) / units_used_1st ---
+    const overall_ai_rate = units_used_1st > 0
+      ? ((firstServiceConceived + secondServiceConceived) / units_used_1st) * 100
+      : 0;
+
+    // --- Calf Sire metrics ---
+    const calfRecs = records.filter(r => r.calf_sire === sire && r.calving_date != null);
+    const total_calves = calfRecs.length;
+    const withStatus = calfRecs.filter(r => r.calf_status && r.calf_status.toLowerCase() !== 'open');
+    const alive = withStatus.filter(r => r.calf_status?.toLowerCase() === 'alive').length;
+    const calf_survival_rate = withStatus.length > 0 ? (alive / withStatus.length) * 100 : 0;
+    const bws = calfRecs.map(r => r.calf_bw).filter((v): v is number => v != null && v > 0);
+    const avg_calf_bw = bws.length > 0 ? bws.reduce((a, b) => a + b, 0) / bws.length : 0;
+
+    // --- Gestation (from all records where this sire is calf_sire and conceived by AI) ---
+    const gestDays = calfRecs.map(computeGestation).filter((v): v is number => v != null);
+    const avg_gestation_days = gestDays.length > 0 ? gestDays.reduce((a, b) => a + b, 0) / gestDays.length : 0;
+
+    // --- Bull calf % ---
+    const knownSex = calfRecs.filter(r => r.calf_sex && r.calf_sex.trim() !== '');
+    const bulls = knownSex.filter(r => ['bull', 'male', 'b', 'm', 'steer'].some(s => r.calf_sex!.toLowerCase().includes(s)));
+    const bull_calf_pct = knownSex.length > 0 ? (bulls.length / knownSex.length) * 100 : 50;
+
+    // Minimum threshold: must have at least 20 records across any metric
+    if (units_used_1st + units_used_2nd + total_calves < 20) return;
 
     let badge: SireStats['performance_badge'] = 'AVERAGE';
-    if (conceptionRate >= 95) badge = 'ELITE';
-    else if (conceptionRate >= 88) badge = 'STRONG';
-    else if (conceptionRate < 80) badge = 'BELOW AVG';
-
-    // First/Second service rates for this sire
-    const firstServiceConceived = recs.filter(r => r.preg_stage?.toLowerCase() === 'ai');
-    const firstServiceRate = withAiDate1.length > 0 ? (firstServiceConceived.length / withAiDate1.length) * 100 : 0;
-    const withAiDate2 = recs.filter(r => r.ai_date_2 != null);
-    const secondServiceConceived = recs.filter(r => r.preg_stage?.toLowerCase() === 'second ai');
-    const secondServiceRate = withAiDate2.length > 0 ? (secondServiceConceived.length / withAiDate2.length) * 100 : 0;
+    const rateForBadge = units_used_1st > 0 ? first_service_rate : overall_ai_rate;
+    if (rateForBadge >= 70) badge = 'ELITE';
+    else if (rateForBadge >= 60) badge = 'STRONG';
+    else if (rateForBadge < 50 && units_used_1st > 0) badge = 'BELOW AVG';
 
     stats.push({
       sire,
-      total_calves: totalCalves,
-      ai_conception_rate: Math.round(conceptionRate * 10) / 10,
-      first_service_rate: Math.round(firstServiceRate * 10) / 10,
-      second_service_rate: Math.round(secondServiceRate * 10) / 10,
-      avg_gestation_days: Math.round(avgGest * 10) / 10,
-      avg_calf_bw: Math.round(avgBW),
-      calf_survival_rate: Math.round(survival * 10) / 10,
-      bull_calf_pct: Math.round(bullPct * 10) / 10,
+      units_used_1st,
+      units_used_2nd,
+      total_calves,
+      first_service_rate: Math.round(first_service_rate * 10) / 10,
+      second_service_rate: Math.round(second_service_rate * 10) / 10,
+      overall_ai_rate: Math.round(overall_ai_rate * 10) / 10,
+      avg_gestation_days: Math.round(avg_gestation_days * 10) / 10,
+      avg_calf_bw: Math.round(avg_calf_bw),
+      calf_survival_rate: Math.round(calf_survival_rate * 10) / 10,
+      bull_calf_pct: Math.round(bull_calf_pct * 10) / 10,
       performance_badge: badge,
     });
   });
 
-  return stats.sort((a, b) => b.ai_conception_rate - a.ai_conception_rate);
+  return stats.sort((a, b) => b.overall_ai_rate - a.overall_ai_rate);
 }
 
 export function generateCullList(
