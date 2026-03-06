@@ -142,6 +142,7 @@ export interface BlairCombinedRecord {
   memo: string | null;
   group: string | null;
   project_record_id: string | null;
+  gestation_days: number | null;
 }
 
 export interface CullCandidate {
