@@ -222,6 +222,7 @@ export default function Dashboard() {
   const { data: animals, isLoading: loadingAnimals, error: animalsError } = useAnimals();
   const { data: combined, isLoading: loadingCombined, error: combinedError } = useBlairCombined();
   const loading = loadingAnimals || loadingCombined;
+  const [selectedGestationSire, setSelectedGestationSire] = useState<string | null>(null);
 
   const blairAnimals = useMemo(() => animals?.filter(a => a.operation === 'Blair') ?? [], [animals]);
   const activeBlairAnimals = useMemo(() => blairAnimals.filter(a => a.status?.toLowerCase() === 'active'), [blairAnimals]);
