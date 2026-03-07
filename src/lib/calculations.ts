@@ -129,7 +129,7 @@ export function computeCompositeFromRecords(recs: BreedingCalvingRecord[]): numb
     !(r.calf_sire && r.calf_sire.toLowerCase().includes('cleanup'))
   );
   const liveCalves = validCalves.filter(r => r.calf_status?.toLowerCase() === 'alive').length;
-  const survivalRate = validCalves.length > 0 ? (liveCalves / validCalves.length) * 100 : 0;
+  const survivalRate = validCalves.length > 0 ? (liveCalves / validCalves.length) * 100 : null;
 
   // Birth Weight Consistency from non-cleanup calves
   const bws = validCalves.map(r => r.calf_bw).filter((v): v is number => v != null && v > 0);
