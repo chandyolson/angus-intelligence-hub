@@ -45,8 +45,12 @@ export function computeCowStats(animal: Animal, records: BreedingCalvingRecord[]
   const avg_bw = bws.length > 0 ? bws.reduce((a, b) => a + b, 0) / bws.length : 0;
   const consistency = computeConsistencyScore(bws);
 
-  // Composite: average of 3 scores, only when cow has >= 2 breeding records
-  const composite = cowRecords.length >= 2
+  // Young cows (born in last 2.5 years) haven't had a chance to calve — exclude from scoring
+  const cutoffYear = new Date().getFullYear() - 2.5;
+  const isTooYoung = animal.year_born != null && animal.year_born >= cutoffYear;
+
+  // Composite: average of 3 scores, only when cow has >= 2 breeding records and isn't too young
+  const composite = (!isTooYoung && cowRecords.length >= 2)
     ? Math.round(((ai_conception_rate + (calf_survival_rate ?? 0) + consistency) / 3) * 10) / 10
     : 0;
 
