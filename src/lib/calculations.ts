@@ -38,7 +38,7 @@ export function computeCowStats(animal: Animal, records: BreedingCalvingRecord[]
 
   // Calf Survival Rate: calf_status === 'Alive' / total calves
   const alive = validCalves.filter(r => r.calf_status?.toLowerCase() === 'alive').length;
-  const calf_survival_rate = totalCalves > 0 ? (alive / totalCalves) * 100 : 0;
+  const calf_survival_rate = totalCalves > 0 ? (alive / totalCalves) * 100 : null;
 
   // Birth Weight Consistency: CV of calf_bw across non-cleanup calves with recorded BW
   const bws = validCalves.map(r => r.calf_bw).filter((v): v is number => v != null && v > 0);
