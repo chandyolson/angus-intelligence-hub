@@ -110,42 +110,6 @@ export type Database = {
         }
         Relationships: []
       }
-      blair_breeding: {
-        Row: {
-          ai_date: string | null
-          ai_sire: string | null
-          auto_number: number | null
-          cow_lookup: string | null
-          lifetime_id: string | null
-          master_eid: number | null
-          record_number: string | null
-          status: string | null
-          tag: string | null
-        }
-        Insert: {
-          ai_date?: string | null
-          ai_sire?: string | null
-          auto_number?: number | null
-          cow_lookup?: string | null
-          lifetime_id?: string | null
-          master_eid?: number | null
-          record_number?: string | null
-          status?: string | null
-          tag?: string | null
-        }
-        Update: {
-          ai_date?: string | null
-          ai_sire?: string | null
-          auto_number?: number | null
-          cow_lookup?: string | null
-          lifetime_id?: string | null
-          master_eid?: number | null
-          record_number?: string | null
-          status?: string | null
-          tag?: string | null
-        }
-        Relationships: []
-      }
       blair_combined: {
         Row: {
           ai_date_1: string | null
@@ -158,17 +122,17 @@ export type Database = {
           calf_sire: string | null
           calf_status: string | null
           calving_date: string | null
+          calving_group: string | null
           cow_age: number | null
           cow_sire: string | null
           dog: number | null
           fetal_sex: string | null
           gestation_days: number | null
-          group: string | null
           lifetime_id: string | null
           memo: string | null
           preg_stage: string | null
-          project_record_id: string | null
           ultrasound_date: string | null
+          ultrasound_group: string | null
           ultrasound_notes: string | null
         }
         Insert: {
@@ -182,17 +146,17 @@ export type Database = {
           calf_sire?: string | null
           calf_status?: string | null
           calving_date?: string | null
+          calving_group?: string | null
           cow_age?: number | null
           cow_sire?: string | null
           dog?: number | null
           fetal_sex?: string | null
           gestation_days?: number | null
-          group?: string | null
           lifetime_id?: string | null
           memo?: string | null
           preg_stage?: string | null
-          project_record_id?: string | null
           ultrasound_date?: string | null
+          ultrasound_group?: string | null
           ultrasound_notes?: string | null
         }
         Update: {
@@ -206,17 +170,17 @@ export type Database = {
           calf_sire?: string | null
           calf_status?: string | null
           calving_date?: string | null
+          calving_group?: string | null
           cow_age?: number | null
           cow_sire?: string | null
           dog?: number | null
           fetal_sex?: string | null
           gestation_days?: number | null
-          group?: string | null
           lifetime_id?: string | null
           memo?: string | null
           preg_stage?: string | null
-          project_record_id?: string | null
           ultrasound_date?: string | null
+          ultrasound_group?: string | null
           ultrasound_notes?: string | null
         }
         Relationships: []
@@ -285,12 +249,12 @@ export type Database = {
           calf_vigor: string | null
           calving_assistance: string | null
           calving_date: string
+          calving_group: string | null
           cow_lifetime_id: string | null
           cow_sire: string | null
           cow_tag: string | null
           cow_tag_color: string | null
           death_explanation: string | null
-          group: string | null
           id: number
           location: string | null
           memo: string | null
@@ -314,12 +278,12 @@ export type Database = {
           calf_vigor?: string | null
           calving_assistance?: string | null
           calving_date: string
+          calving_group?: string | null
           cow_lifetime_id?: string | null
           cow_sire?: string | null
           cow_tag?: string | null
           cow_tag_color?: string | null
           death_explanation?: string | null
-          group?: string | null
           id?: number
           location?: string | null
           memo?: string | null
@@ -343,12 +307,12 @@ export type Database = {
           calf_vigor?: string | null
           calving_assistance?: string | null
           calving_date?: string
+          calving_group?: string | null
           cow_lifetime_id?: string | null
           cow_sire?: string | null
           cow_tag?: string | null
           cow_tag_color?: string | null
           death_explanation?: string | null
-          group?: string | null
           id?: number
           location?: string | null
           memo?: string | null
