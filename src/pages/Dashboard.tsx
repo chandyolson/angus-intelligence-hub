@@ -327,6 +327,33 @@ export default function Dashboard() {
         );
       })()}
 
+      {/* Calving Interval */}
+      {calvingIntervals && (
+        <Card className="bg-card border-border">
+          <CardHeader className="pb-2"><CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">Calving Interval</CardTitle></CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                { label: 'Average', value: `${calvingIntervals.average} days`, alert: calvingIntervals.average > 370 },
+                { label: 'Median', value: `${calvingIntervals.median} days` },
+                { label: 'Best (Shortest)', value: `${calvingIntervals.best} days`, success: true },
+                { label: 'Longest', value: `${calvingIntervals.longest} days`, alert: calvingIntervals.longest > 370 },
+              ].map(s => (
+                <div key={s.label}>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{s.label}</p>
+                  <p className={`text-[22px] font-bold ${'alert' in s && s.alert ? 'text-destructive' : 'success' in s ? 'text-success' : 'text-primary'}`}>{s.value}</p>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground mt-3">
+              {calvingIntervals.average > 365
+                ? `Each extra day beyond 365 is one lost production day. At ${calvingIntervals.average} days average, that's ${calvingIntervals.average - 365} days × ${calvingIntervals.cowCount} cows = ${(calvingIntervals.average - 365) * calvingIntervals.cowCount} lost production days annually.`
+                : `Your herd average of ${calvingIntervals.average} days is within the optimal range.`}
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Row 1: Score Distribution + Year-over-Year */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="bg-card border-border">
@@ -424,33 +451,6 @@ export default function Dashboard() {
           )}
         </CardContent>
       </Card>
-
-      {/* Calving Interval */}
-      {calvingIntervals && (
-        <Card className="bg-card border-border">
-          <CardHeader className="pb-2"><CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">Calving Interval</CardTitle></CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[
-                { label: 'Average', value: `${calvingIntervals.average} days`, alert: calvingIntervals.average > 370 },
-                { label: 'Median', value: `${calvingIntervals.median} days` },
-                { label: 'Best (Shortest)', value: `${calvingIntervals.best} days`, success: true },
-                { label: 'Longest', value: `${calvingIntervals.longest} days`, alert: calvingIntervals.longest > 370 },
-              ].map(s => (
-                <div key={s.label}>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{s.label}</p>
-                  <p className={`text-[22px] font-bold ${'alert' in s && s.alert ? 'text-destructive' : 'success' in s ? 'text-success' : 'text-primary'}`}>{s.value}</p>
-                </div>
-              ))}
-            </div>
-            <p className="text-xs text-muted-foreground mt-3">
-              {calvingIntervals.average > 365
-                ? `Each extra day beyond 365 is one lost production day. At ${calvingIntervals.average} days average, that's ${calvingIntervals.average - 365} days × ${calvingIntervals.cowCount} cows = ${(calvingIntervals.average - 365) * calvingIntervals.cowCount} lost production days annually.`
-                : `Your herd average of ${calvingIntervals.average} days is within the optimal range.`}
-            </p>
-          </CardContent>
-        </Card>
-      )}
       </TabsContent>
 
       <TabsContent value="breeding" className="mt-0">
