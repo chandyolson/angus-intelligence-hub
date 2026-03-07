@@ -38,7 +38,7 @@ export function computeCowStats(animal: Animal, records: BreedingCalvingRecord[]
 
   // Calf Survival Rate: calf_status === 'Alive' / total calves
   const alive = validCalves.filter(r => r.calf_status?.toLowerCase() === 'alive').length;
-  const calf_survival_rate = totalCalves > 0 ? (alive / totalCalves) * 100 : 0;
+  const calf_survival_rate = totalCalves > 0 ? (alive / totalCalves) * 100 : null;
 
   // Birth Weight Consistency: CV of calf_bw across non-cleanup calves with recorded BW
   const bws = validCalves.map(r => r.calf_bw).filter((v): v is number => v != null && v > 0);
@@ -47,7 +47,7 @@ export function computeCowStats(animal: Animal, records: BreedingCalvingRecord[]
 
   // Composite: average of 3 scores, only when cow has >= 2 breeding records
   const composite = cowRecords.length >= 2
-    ? Math.round(((ai_conception_rate + calf_survival_rate + consistency) / 3) * 10) / 10
+    ? Math.round(((ai_conception_rate + (calf_survival_rate ?? 0) + consistency) / 3) * 10) / 10
     : 0;
 
   return {
@@ -63,7 +63,7 @@ export function computeCowStats(animal: Animal, records: BreedingCalvingRecord[]
     ai_conception_rate: Math.round(ai_conception_rate * 10) / 10,
     first_service_rate: Math.round(first_service_rate * 10) / 10,
     second_service_rate: Math.round(second_service_rate * 10) / 10,
-    calf_survival_rate: Math.round(calf_survival_rate * 10) / 10,
+    calf_survival_rate: calf_survival_rate != null ? Math.round(calf_survival_rate * 10) / 10 : null,
     composite_score: composite,
   };
 }
@@ -129,13 +129,13 @@ export function computeCompositeFromRecords(recs: BreedingCalvingRecord[]): numb
     !(r.calf_sire && r.calf_sire.toLowerCase().includes('cleanup'))
   );
   const liveCalves = validCalves.filter(r => r.calf_status?.toLowerCase() === 'alive').length;
-  const survivalRate = validCalves.length > 0 ? (liveCalves / validCalves.length) * 100 : 0;
+  const survivalRate = validCalves.length > 0 ? (liveCalves / validCalves.length) * 100 : null;
 
   // Birth Weight Consistency from non-cleanup calves
   const bws = validCalves.map(r => r.calf_bw).filter((v): v is number => v != null && v > 0);
   const consistency = computeConsistencyScore(bws);
 
-  return Math.round(((conceptionRate + survivalRate + consistency) / 3) * 10) / 10;
+  return Math.round(((conceptionRate + (survivalRate ?? 0) + consistency) / 3) * 10) / 10;
 }
 
 /** Get gestation days — use the actual column, fall back to date calculation */
@@ -261,7 +261,7 @@ export function generateCullList(
       reasons.push('Bottom 25% composite score & 5+ years old');
     }
 
-    if (cow.total_calves >= 3 && cow.calf_survival_rate < 85) {
+    if (cow.total_calves >= 3 && cow.calf_survival_rate != null && cow.calf_survival_rate < 85) {
       reasons.push(`Low calf survival rate (${cow.calf_survival_rate}%)`);
     }
 
@@ -295,7 +295,7 @@ export function generatePerformanceNotes(
   const cowRecords = records.filter(r => r.lifetime_id === cow.lifetime_id);
 
   if (cow.total_calves > 0) {
-    notes.push(`This cow has calved ${cow.total_calves} time${cow.total_calves > 1 ? 's' : ''} with ${cow.calf_survival_rate}% calf survival.`);
+    notes.push(`This cow has calved ${cow.total_calves} time${cow.total_calves > 1 ? 's' : ''} with ${cow.calf_survival_rate ?? 0}% calf survival.`);
   }
 
   if (cow.ai_conception_rate === 100 && cow.total_calves >= 3) {

@@ -71,7 +71,7 @@ function computeCullFlags(ranked: RankedCow[], records: BreedingCalvingRecord[])
     if (openYears.length >= 2) flags.push({ ...cow, reason: 'REPEATED OPEN', reasonType: 'REPEATED OPEN', details: `Open in ${openYears.sort().join(' and ')}` });
     const age = cow.year_born ? currentYear - cow.year_born : 0;
     if (cow.composite_score > 0 && cow.composite_score <= q25Score && age >= 5) flags.push({ ...cow, reason: 'LOW SCORE + AGE', reasonType: 'LOW SCORE + AGE', details: `Score ${cow.composite_score}, born ${cow.year_born}` });
-    if (cow.total_calves >= 3 && cow.calf_survival_rate < 85) flags.push({ ...cow, reason: 'POOR SURVIVAL', reasonType: 'POOR SURVIVAL', details: `${cow.calf_survival_rate}% survival over ${cow.total_calves} calvings` });
+    if (cow.total_calves >= 3 && cow.calf_survival_rate != null && cow.calf_survival_rate != null && cow.calf_survival_rate < 85) flags.push({ ...cow, reason: 'POOR SURVIVAL', reasonType: 'POOR SURVIVAL', details: `${cow.calf_survival_rate}% survival over ${cow.total_calves} calvings` });
     const recentCalving = recs.some(r => r.breeding_year && r.breeding_year >= currentYear - 1 && r.calving_date);
     if (!recentCalving && recs.length > 0) flags.push({ ...cow, reason: 'MISSING RECORDS', reasonType: 'MISSING RECORDS', details: 'No calving in last 2 breeding years' });
   });
@@ -198,7 +198,7 @@ export default function Rankings() {
       <TableCell>{cow.sire || '—'}</TableCell>
       <TableCell>{cow.total_calves}</TableCell>
       <TableCell>{cow.ai_conception_rate}%</TableCell>
-      <TableCell>{cow.calf_survival_rate}%</TableCell>
+       <TableCell>{cow.calf_survival_rate != null ? `${cow.calf_survival_rate}%` : '—'}</TableCell>
       <TableCell>{cow.avg_bw || '—'}</TableCell>
       <TableCell><span className={`px-2 py-0.5 rounded text-xs font-semibold ${scoreColor(cow.composite_score)}`}>{cow.composite_score}</span></TableCell>
       <TableCell><Badge variant="outline" className={`text-xs ${quartileStyle(cow.quartile)}`}>{cow.quartile}</Badge></TableCell>
