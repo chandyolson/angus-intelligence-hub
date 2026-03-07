@@ -4,7 +4,7 @@ import { computeSireStats } from '@/lib/calculations';
 import { SireStats } from '@/types/cattle';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ResponsiveContainer, Cell, ScatterChart, Scatter, ZAxis } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ResponsiveContainer, Cell, ScatterChart, Scatter, ZAxis, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Legend } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { ShimmerSkeleton } from '@/components/ui/shimmer-skeleton';
 import { ErrorBox } from '@/components/ui/error-box';
@@ -293,22 +293,33 @@ export default function SireAnalysis() {
           </CardContent>
         </Card>
 
-        {/* Avg Gestation by Sire */}
+        {/* Avg Gestation by Sire — Radar Chart */}
         <Card className="bg-card border-border">
           <CardHeader className="pb-2"><CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">Avg Gestation Days by Sire</CardTitle></CardHeader>
           <CardContent>
             {gestationData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={Math.max(gestationData.length * 32, 200)}>
-                <BarChart layout="vertical" data={gestationData} margin={{ left: 100 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(218, 42%, 20%)" />
-                  <XAxis type="number" tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 11 }} />
-                  <YAxis dataKey="name" type="category" tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 11 }} width={95} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <ReferenceLine x={herdAvgGestation} stroke="hsl(0, 86%, 71%)" strokeDasharray="5 5" label={{ value: `Avg: ${herdAvgGestation}`, fill: 'hsl(0, 86%, 71%)', fontSize: 10 }} />
-                  <Bar dataKey="value" name="Gestation" radius={[0, 4, 4, 0]}>
-                    {gestationData.map((d, i) => <Cell key={i} fill={d.value > herdAvgGestation + 2 ? 'hsl(0, 86%, 71%)' : 'hsl(40, 63%, 49%)'} />)}
-                  </Bar>
-                </BarChart>
+              <ResponsiveContainer width="100%" height={380}>
+                <RadarChart data={gestationData} cx="50%" cy="50%" outerRadius="70%">
+                  <PolarGrid stroke="hsl(218, 42%, 25%)" />
+                  <PolarAngleAxis dataKey="name" tick={{ fill: 'hsl(219, 23%, 63%)', fontSize: 10 }} />
+                  <PolarRadiusAxis angle={90} domain={[Math.min(...gestationData.map(d => d.value)) - 3, Math.max(...gestationData.map(d => d.value)) + 1]} tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 9 }} />
+                  <Radar name="Gestation (d)" dataKey="value" stroke="hsl(40, 63%, 49%)" fill="hsl(40, 63%, 49%)" fillOpacity={0.25} strokeWidth={2} />
+                  <Tooltip content={({ active, payload }) => {
+                    if (!active || !payload?.[0]) return null;
+                    const d = payload[0].payload;
+                    const diff = Math.round((d.value - herdAvgGestation) * 10) / 10;
+                    return (
+                      <div className="bg-card border border-border rounded-md px-3 py-2 text-xs">
+                        <p className="text-primary font-medium">{d.name}</p>
+                        <p className="text-muted-foreground">Avg Gestation: {d.value} days</p>
+                        <p style={{ color: diff > 0 ? 'hsl(0, 86%, 71%)' : 'hsl(142, 69%, 58%)' }}>
+                          {diff > 0 ? '+' : ''}{diff}d vs herd avg ({herdAvgGestation}d)
+                        </p>
+                      </div>
+                    );
+                  }} />
+                  <Legend wrapperStyle={{ fontSize: 11, color: 'hsl(219, 23%, 53%)' }} />
+                </RadarChart>
               </ResponsiveContainer>
             ) : <EmptyState message="No gestation data available." />}
           </CardContent>
