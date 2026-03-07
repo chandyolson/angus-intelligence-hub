@@ -50,9 +50,22 @@ export default function SireAnalysis() {
 
   const sireStats = useMemo(() => records ? computeSireStats(records) : [], [records]);
 
+  const getCompositeScore = (s: SireStats) => {
+    const c = (s.first_service_rate / 100) * 33.3;
+    const sv = (s.calf_survival_rate / 100) * 33.3;
+    const g = s.avg_gestation_days > 0 ? Math.max(0, Math.min(33.3, ((285 - s.avg_gestation_days) / 15) * 33.3)) : 0;
+    return c + sv + g;
+  };
+
   const sorted = useMemo(() => {
     const s = [...sireStats];
-    s.sort((a, b) => { const aV = (a as any)[tableSortKey] ?? 0; const bV = (b as any)[tableSortKey] ?? 0; return tableSortAsc ? aV - bV : bV - aV; });
+    s.sort((a, b) => {
+      if (tableSortKey === 'composite_bar') {
+        const aV = getCompositeScore(a); const bV = getCompositeScore(b);
+        return tableSortAsc ? aV - bV : bV - aV;
+      }
+      const aV = (a as any)[tableSortKey] ?? 0; const bV = (b as any)[tableSortKey] ?? 0; return tableSortAsc ? aV - bV : bV - aV;
+    });
     return s;
   }, [sireStats, tableSortKey, tableSortAsc]);
 
@@ -185,6 +198,7 @@ export default function SireAnalysis() {
     { key: 'calf_survival_rate', label: 'Survival %' },
     { key: 'bull_calf_pct', label: 'Bull %' },
     { key: 'performance_badge', label: 'Grade' },
+    { key: 'composite_bar', label: 'Score' },
   ];
 
   return (
@@ -264,6 +278,35 @@ export default function SireAnalysis() {
                     <TableCell>{s.bull_calf_pct}%</TableCell>
                     <TableCell>
                       <span className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${badgeStyle(s.performance_badge)}`}>{s.performance_badge}</span>
+                    </TableCell>
+                    <TableCell>
+                      {(() => {
+                        const conception = (s.first_service_rate / 100) * 33.3;
+                        const survival = (s.calf_survival_rate / 100) * 33.3;
+                        const gestation = s.avg_gestation_days > 0 ? Math.max(0, Math.min(33.3, ((285 - s.avg_gestation_days) / 15) * 33.3)) : 0;
+                        const total = Math.round((conception + survival + gestation) * 10) / 10;
+                        return (
+                          <div className="flex items-center gap-2 group relative">
+                            <div className="relative w-24 h-4 rounded bg-muted overflow-hidden flex">
+                              <div style={{ width: `${(conception / 100) * 100}%`, backgroundColor: 'hsl(200, 60%, 45%)' }} />
+                              <div style={{ width: `${(survival / 100) * 100}%`, backgroundColor: 'hsl(142, 55%, 42%)' }} />
+                              <div style={{ width: `${(gestation / 100) * 100}%`, backgroundColor: 'hsl(40, 63%, 49%)' }} />
+                            </div>
+                            <span className="text-xs font-semibold text-foreground tabular-nums">{total}</span>
+                            <div className="absolute bottom-full left-0 mb-1 hidden group-hover:block z-50">
+                              <div className="bg-card border border-border rounded-md px-3 py-2 text-xs whitespace-nowrap shadow-lg">
+                                <span style={{ color: 'hsl(200, 60%, 55%)' }}>Conception: {conception.toFixed(1)}</span>
+                                <span className="text-muted-foreground"> | </span>
+                                <span style={{ color: 'hsl(142, 55%, 52%)' }}>Survival: {survival.toFixed(1)}</span>
+                                <span className="text-muted-foreground"> | </span>
+                                <span style={{ color: 'hsl(40, 63%, 55%)' }}>Gestation: {gestation.toFixed(1)}</span>
+                                <span className="text-muted-foreground"> | </span>
+                                <span className="text-foreground font-semibold">Total: {total}</span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </TableCell>
                   </TableRow>
                 ))}
