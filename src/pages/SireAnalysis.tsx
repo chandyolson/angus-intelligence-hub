@@ -266,6 +266,35 @@ export default function SireAnalysis() {
                     <TableCell>
                       <span className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${badgeStyle(s.performance_badge)}`}>{s.performance_badge}</span>
                     </TableCell>
+                    <TableCell>
+                      {(() => {
+                        const conception = (s.first_service_rate / 100) * 33.3;
+                        const survival = (s.calf_survival_rate / 100) * 33.3;
+                        const gestation = s.avg_gestation_days > 0 ? Math.max(0, Math.min(33.3, ((285 - s.avg_gestation_days) / 15) * 33.3)) : 0;
+                        const total = Math.round((conception + survival + gestation) * 10) / 10;
+                        return (
+                          <div className="flex items-center gap-2 group relative">
+                            <div className="relative w-24 h-4 rounded bg-muted overflow-hidden flex">
+                              <div style={{ width: `${(conception / 100) * 100}%`, backgroundColor: 'hsl(200, 60%, 45%)' }} />
+                              <div style={{ width: `${(survival / 100) * 100}%`, backgroundColor: 'hsl(142, 55%, 42%)' }} />
+                              <div style={{ width: `${(gestation / 100) * 100}%`, backgroundColor: 'hsl(40, 63%, 49%)' }} />
+                            </div>
+                            <span className="text-xs font-semibold text-foreground tabular-nums">{total}</span>
+                            <div className="absolute bottom-full left-0 mb-1 hidden group-hover:block z-50">
+                              <div className="bg-card border border-border rounded-md px-3 py-2 text-xs whitespace-nowrap shadow-lg">
+                                <span style={{ color: 'hsl(200, 60%, 55%)' }}>Conception: {conception.toFixed(1)}</span>
+                                <span className="text-muted-foreground"> | </span>
+                                <span style={{ color: 'hsl(142, 55%, 52%)' }}>Survival: {survival.toFixed(1)}</span>
+                                <span className="text-muted-foreground"> | </span>
+                                <span style={{ color: 'hsl(40, 63%, 55%)' }}>Gestation: {gestation.toFixed(1)}</span>
+                                <span className="text-muted-foreground"> | </span>
+                                <span className="text-foreground font-semibold">Total: {total}</span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
