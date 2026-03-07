@@ -199,6 +199,19 @@ export default function CowRoster() {
   const totalAll = animalPage?.totalCount ?? 0;
   const totalPages = Math.ceil(totalAll / PER_PAGE);
 
+  const alerts = useMemo(() => {
+    const items: { label: string; count: number; severity: 'warning' | 'info' }[] = [];
+    const tooYoung = sorted.filter(c => c.year_born != null && c.year_born >= 2024);
+    if (tooYoung.length > 0) items.push({ label: 'Too young to score (born ≥ 2024)', count: tooYoung.length, severity: 'info' });
+    const noCalves = sorted.filter(c => c.total_calves === 0 && (c.year_born == null || c.year_born < 2024));
+    if (noCalves.length > 0) items.push({ label: 'No calving records found', count: noCalves.length, severity: 'warning' });
+    const missingSire = sorted.filter(c => !c.sire);
+    if (missingSire.length > 0) items.push({ label: 'Missing sire data', count: missingSire.length, severity: 'warning' });
+    const lowScore = sorted.filter(c => c.composite_score > 0 && c.composite_score < 25);
+    if (lowScore.length > 0) items.push({ label: 'Low composite score (< 25)', count: lowScore.length, severity: 'warning' });
+    return items;
+  }, [sorted]);
+
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
     else { setSortKey(key); setSortDir('desc'); }
@@ -258,6 +271,30 @@ export default function CowRoster() {
         </div>
       )}
 
+      {/* Alerts / Flags Bar */}
+      {alerts.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {alerts.map((alert, i) => (
+            <div
+              key={i}
+              className={`flex items-center gap-2 px-3 py-2 rounded-md border text-[13px] ${
+                alert.severity === 'warning'
+                  ? 'bg-destructive/10 border-destructive/30 text-destructive'
+                  : 'bg-primary/10 border-primary/30 text-primary'
+              }`}
+            >
+              {alert.severity === 'warning' ? (
+                <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+              ) : (
+                <Info className="h-3.5 w-3.5 shrink-0" />
+              )}
+              <span className="font-semibold">{alert.count}</span>
+              <span>{alert.label}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
       {(animalsError || recordsError) && <ErrorBox />}
 
       {/* Filters */}
@@ -298,98 +335,109 @@ export default function CowRoster() {
         <span className="text-[12px] text-muted-foreground ml-auto">Showing {sorted.length} of {totalAll} cows</span>
       </div>
 
-      {/* Table */}
-      <div className="rounded-lg border border-border overflow-auto">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-sidebar border-border hover:bg-sidebar">
-              <SortHeader label="Tag #" field="tag" />
-              <SortHeader label="Lifetime ID" field="lifetime_id" />
-              <SortHeader label="Year Born" field="year_born" />
-              <SortHeader label="Sire" field="sire" />
-              <SortHeader label="Dam Sire" field="dam_sire" />
-              <SortHeader label="Total Calves" field="total_calves" />
-              <SortHeader label="Avg Birth Wt" field="avg_bw" />
-              <SortHeader label="Overall AI %" field="ai_conception_rate" />
-              <SortHeader label="1st Service %" field="first_service_rate" />
-              <SortHeader label="2nd Service %" field="second_service_rate" />
-              <SortHeader label="Calf Survival %" field="calf_survival_rate" />
-              <SortHeader label="Composite Score" field="composite_score" />
-              <SortHeader label="Status" field="status" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {(la || lr) ? (
-              <ShimmerTableRows rows={10} cols={13} />
-            ) : sorted.length === 0 ? (
-              <tr><td colSpan={13}><EmptyState message="No cows match your filters." /></td></tr>
-            ) : (
-              sorted.map((cow, i) => (
-                <TableRow
-                  key={cow.lifetime_id}
-                  className="cursor-pointer border-border text-[13px]"
-                  style={{ backgroundColor: i % 2 === 0 ? undefined : '#0E1528' }}
-                  onClick={() => navigate(`/cow/${encodeURIComponent(cow.lifetime_id)}`)}
-                  onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#1A2A45')}
-                  onMouseLeave={e => (e.currentTarget.style.backgroundColor = i % 2 === 0 ? '' : '#0E1528')}
-                >
-                  <TableCell className="font-medium text-foreground">{cow.tag || '—'}</TableCell>
-                  <TableCell className="text-muted-foreground text-xs">{cow.lifetime_id}</TableCell>
-                  <TableCell>{cow.year_born || '—'}</TableCell>
-                  <TableCell>{cow.sire || '—'}</TableCell>
-                  <TableCell>{cow.dam_sire || '—'}</TableCell>
-                  <TableCell>{cow.total_calves}</TableCell>
-                  <TableCell>{cow.avg_bw || '—'}</TableCell>
-                  <TableCell>{cow.ai_conception_rate}%</TableCell>
-                  <TableCell>{cow.first_service_rate}%</TableCell>
-                  <TableCell>{cow.second_service_rate}%</TableCell>
-                  <TableCell>
-                    {cow.total_calves === 0 || cow.calf_survival_rate === null
-                      ? '—'
-                      : `${cow.calf_survival_rate}%`}
-                  </TableCell>
-                  <TableCell>
-                    <span className={`px-2 py-0.5 rounded text-xs font-semibold ${scoreStyle(cow.composite_score)}`}>
-                      {cow.composite_score}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      className={`text-xs ${cow.status?.toLowerCase() === 'active'
-                        ? 'bg-success/20 text-success border-success/30'
-                        : 'bg-muted text-muted-foreground border-border'}`}
-                      variant="outline"
-                    >
-                      {cow.status || '—'}
-                    </Badge>
-                  </TableCell>
+      {/* Collapsible Table */}
+      <Collapsible open={tableOpen} onOpenChange={setTableOpen}>
+        <CollapsibleTrigger asChild>
+          <button className="flex items-center gap-2 w-full px-4 py-2.5 rounded-t-lg bg-sidebar border border-border text-[13px] font-semibold text-foreground hover:bg-secondary transition-colors">
+            {tableOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+            Cow Roster Table
+            <span className="text-muted-foreground font-normal ml-1">({totalAll} total)</span>
+          </button>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="rounded-b-lg border border-t-0 border-border overflow-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-sidebar border-border hover:bg-sidebar">
+                  <SortHeader label="Tag #" field="tag" />
+                  <SortHeader label="Lifetime ID" field="lifetime_id" />
+                  <SortHeader label="Year Born" field="year_born" />
+                  <SortHeader label="Sire" field="sire" />
+                  <SortHeader label="Dam Sire" field="dam_sire" />
+                  <SortHeader label="Total Calves" field="total_calves" />
+                  <SortHeader label="Avg Birth Wt" field="avg_bw" />
+                  <SortHeader label="Overall AI %" field="ai_conception_rate" />
+                  <SortHeader label="1st Service %" field="first_service_rate" />
+                  <SortHeader label="2nd Service %" field="second_service_rate" />
+                  <SortHeader label="Calf Survival %" field="calf_survival_rate" />
+                  <SortHeader label="Composite Score" field="composite_score" />
+                  <SortHeader label="Status" field="status" />
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              </TableHeader>
+              <TableBody>
+                {(la || lr) ? (
+                  <ShimmerTableRows rows={10} cols={13} />
+                ) : sorted.length === 0 ? (
+                  <tr><td colSpan={13}><EmptyState message="No cows match your filters." /></td></tr>
+                ) : (
+                  sorted.map((cow, i) => (
+                    <TableRow
+                      key={cow.lifetime_id}
+                      className="cursor-pointer border-border text-[13px]"
+                      style={{ backgroundColor: i % 2 === 0 ? undefined : '#0E1528' }}
+                      onClick={() => navigate(`/cow/${encodeURIComponent(cow.lifetime_id)}`)}
+                      onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#1A2A45')}
+                      onMouseLeave={e => (e.currentTarget.style.backgroundColor = i % 2 === 0 ? '' : '#0E1528')}
+                    >
+                      <TableCell className="font-medium text-foreground">{cow.tag || '—'}</TableCell>
+                      <TableCell className="text-muted-foreground text-xs">{cow.lifetime_id}</TableCell>
+                      <TableCell>{cow.year_born || '—'}</TableCell>
+                      <TableCell>{cow.sire || '—'}</TableCell>
+                      <TableCell>{cow.dam_sire || '—'}</TableCell>
+                      <TableCell>{cow.total_calves}</TableCell>
+                      <TableCell>{cow.avg_bw || '—'}</TableCell>
+                      <TableCell>{cow.ai_conception_rate}%</TableCell>
+                      <TableCell>{cow.first_service_rate}%</TableCell>
+                      <TableCell>{cow.second_service_rate}%</TableCell>
+                      <TableCell>
+                        {cow.total_calves === 0 || cow.calf_survival_rate === null
+                          ? '—'
+                          : `${cow.calf_survival_rate}%`}
+                      </TableCell>
+                      <TableCell>
+                        <span className={`px-2 py-0.5 rounded text-xs font-semibold ${scoreStyle(cow.composite_score)}`}>
+                          {cow.composite_score}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          className={`text-xs ${cow.status?.toLowerCase() === 'active'
+                            ? 'bg-success/20 text-success border-success/30'
+                            : 'bg-muted text-muted-foreground border-border'}`}
+                          variant="outline"
+                        >
+                          {cow.status || '—'}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-3">
-          <button
-            onClick={() => setPage(p => Math.max(0, p - 1))}
-            disabled={page === 0}
-            className="px-3 py-1.5 text-sm rounded bg-card border border-border text-foreground disabled:opacity-40 hover:bg-secondary transition-colors"
-          >
-            Previous
-          </button>
-          <span className="text-sm text-muted-foreground">Page {page + 1} of {totalPages}</span>
-          <button
-            onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
-            disabled={page >= totalPages - 1}
-            className="px-3 py-1.5 text-sm rounded bg-card border border-border text-foreground disabled:opacity-40 hover:bg-secondary transition-colors"
-          >
-            Next
-          </button>
-        </div>
-      )}
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-3 mt-4">
+              <button
+                onClick={() => setPage(p => Math.max(0, p - 1))}
+                disabled={page === 0}
+                className="px-3 py-1.5 text-sm rounded bg-card border border-border text-foreground disabled:opacity-40 hover:bg-secondary transition-colors"
+              >
+                Previous
+              </button>
+              <span className="text-sm text-muted-foreground">Page {page + 1} of {totalPages}</span>
+              <button
+                onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+                disabled={page >= totalPages - 1}
+                className="px-3 py-1.5 text-sm rounded bg-card border border-border text-foreground disabled:opacity-40 hover:bg-secondary transition-colors"
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </CollapsibleContent>
+      </Collapsible>
     </div>
   );
 }
