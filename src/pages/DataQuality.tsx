@@ -128,7 +128,7 @@ export default function DataQuality() {
       {
         id: 'never-bred',
         label: 'Active Cows Never Bred',
-        description: 'Active cows with no record in breeding data',
+        description: 'Active cows with no breeding record in last 18 months',
         count: neverBred.length,
         severity: neverBred.length > 5 ? 'red' : 'amber',
         records: neverBred.map(a => ({ lifetime_id: a.lifetime_id!, detail: `Born ${a.year_born ?? '?'}, Tag: ${a.tag ?? '—'}` })),
