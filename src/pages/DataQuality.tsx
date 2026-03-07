@@ -290,9 +290,6 @@ export default function DataQuality() {
                               </TableCell>
                             </TableRow>
                           )}
-                              </TableCell>
-                            </TableRow>
-                          )}
                         </TableBody>
                       </Table>
                     </div>
