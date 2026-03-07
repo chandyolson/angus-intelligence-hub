@@ -135,7 +135,7 @@ export function computeCompositeFromRecords(recs: BreedingCalvingRecord[]): numb
   const bws = validCalves.map(r => r.calf_bw).filter((v): v is number => v != null && v > 0);
   const consistency = computeConsistencyScore(bws);
 
-  return Math.round(((conceptionRate + survivalRate + consistency) / 3) * 10) / 10;
+  return Math.round(((conceptionRate + (survivalRate ?? 0) + consistency) / 3) * 10) / 10;
 }
 
 /** Get gestation days — use the actual column, fall back to date calculation */
