@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useBreedingCalvingRecords } from '@/hooks/useCattleData';
 import { computeSireStats } from '@/lib/calculations';
+import { SireStats } from '@/types/cattle';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ResponsiveContainer, Cell, ScatterChart, Scatter, ZAxis } from 'recharts';
