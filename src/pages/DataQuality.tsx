@@ -31,25 +31,35 @@ export default function DataQuality() {
   const cards: QualityCard[] = useMemo(() => {
     if (!animals || !combined) return [];
 
-    const blairActive = animals.filter(a => a.operation === 'Blair' && a.status?.toLowerCase() === 'active');
-    const blairActiveLids = new Set(blairActive.map(a => a.lifetime_id).filter(Boolean) as string[]);
+    // 18-month cutoff
+    const cutoff = new Date();
+    cutoff.setMonth(cutoff.getMonth() - 18);
+    const cutoffStr = cutoff.toISOString().slice(0, 10);
 
-    // Index blair_combined by lifetime_id
+    // Recent records: any record with a date-bearing field in the last 18 months
+    const recent = combined.filter(r => {
+      const latestDate = r.calving_date ?? r.ai_date_1 ?? r.ultrasound_date;
+      return latestDate != null && latestDate >= cutoffStr;
+    });
+
+    const blairActive = animals.filter(a => a.operation === 'Blair' && a.status?.toLowerCase() === 'active');
+
+    // Index recent blair_combined by lifetime_id
     const combinedByLid = new Map<string, typeof combined>();
-    combined.forEach(r => {
+    recent.forEach(r => {
       if (!r.lifetime_id) return;
       const arr = combinedByLid.get(r.lifetime_id) || [];
       arr.push(r);
       combinedByLid.set(r.lifetime_id, arr);
     });
 
-    // Lids that have at least one calving_date
+    // Lids that have at least one calving_date in last 18 months
     const lidsWithCalving = new Set<string>();
-    combined.forEach(r => { if (r.lifetime_id && r.calving_date) lidsWithCalving.add(r.lifetime_id); });
+    recent.forEach(r => { if (r.lifetime_id && r.calving_date) lidsWithCalving.add(r.lifetime_id); });
 
-    // Lids that appear in combined at all
+    // Lids that appear in recent combined at all
     const lidsInCombined = new Set<string>();
-    combined.forEach(r => { if (r.lifetime_id) lidsInCombined.add(r.lifetime_id); });
+    recent.forEach(r => { if (r.lifetime_id) lidsInCombined.add(r.lifetime_id); });
 
     // Card 1: Active Cows Never Calved (Age 2+)
     const neverCalved = blairActive.filter(a =>
