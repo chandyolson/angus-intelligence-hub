@@ -185,6 +185,7 @@ export default function SireAnalysis() {
     { key: 'calf_survival_rate', label: 'Survival %' },
     { key: 'bull_calf_pct', label: 'Bull %' },
     { key: 'performance_badge', label: 'Grade' },
+    { key: 'composite_bar', label: 'Score' },
   ];
 
   return (
