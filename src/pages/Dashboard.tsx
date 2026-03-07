@@ -205,7 +205,8 @@ export default function Dashboard() {
   }, [animals, combined, records, activeBlairAnimals.length]);
 
   const activeLids = useMemo(() => new Set(activeBlairAnimals.map(a => a.lifetime_id).filter(Boolean) as string[]), [activeBlairAnimals]);
-  const scoreDistribution = useMemo(() => records.length > 0 ? computeScoreDistribution(records, activeLids) : [], [records, activeLids]);
+  const animalYearBorn = useMemo(() => new Map(activeBlairAnimals.map(a => [a.lifetime_id ?? '', a.year_born ?? null] as [string, number | null])), [activeBlairAnimals]);
+  const scoreDistribution = useMemo(() => records.length > 0 ? computeScoreDistribution(records, activeLids, animalYearBorn) : [], [records, activeLids, animalYearBorn]);
   const yoyData = useMemo(() => records.length > 0 ? computeYoY(records) : [], [records]);
   const calvingIntervals = useMemo(() => records.length > 0 ? computeCalvingIntervalsFull(records) : null, [records]);
   const sireGestation = useMemo(() => records.length > 0 ? computeSireGestation(records) : [], [records]);
