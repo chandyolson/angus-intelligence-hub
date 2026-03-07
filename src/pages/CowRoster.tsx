@@ -58,7 +58,7 @@ function buildCowRows(animals: Animal[], records: BreedingCalvingRecord[]): CowR
     const secondServiceRate = withAiDate2.length > 0 ? (secondServiceConceived.length / withAiDate2.length) * 100 : 0;
     const liveCalves = withCalf.filter(r => r.calf_status?.toLowerCase() === 'alive').length;
     const survivalRate = withCalf.length > 0 ? (liveCalves / withCalf.length) * 100 : 0;
-    const composite = computeCompositeFromRecords(recs);
+    const composite = computeCompositeFromRecords(recs, a.year_born);
 
     const sire = a.sire || null;
     const damSire = a.dam_sire || null;

@@ -84,7 +84,7 @@ export default function CowDetail() {
   const { data: allRecords } = useBreedingCalvingRecords();
   const { data: activeAnimals } = useActiveAnimals('Blair');
 
-  const kpis = useMemo(() => calvingRecords ? computeCowKPIs(calvingRecords) : null, [calvingRecords]);
+  const kpis = useMemo(() => calvingRecords ? computeCowKPIs(calvingRecords, animal?.year_born) : null, [calvingRecords, animal]);
 
   const activeLids = useMemo(() => new Set((activeAnimals ?? []).map(a => a.lifetime_id).filter(Boolean) as string[]), [activeAnimals]);
 
