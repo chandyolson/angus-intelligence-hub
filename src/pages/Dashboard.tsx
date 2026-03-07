@@ -130,6 +130,16 @@ function computeCalvingIntervalsFull(records: BlairCombinedRecord[]) {
 }
 
 /* ─── Sire Gestation Chart: GROUP BY calf_sire, AVG gestation ─── */
+interface GestationDetail {
+  lifetime_id: string;
+  calf_sire: string;
+  ai_date_1: string;
+  calving_date: string;
+  gestation_days: number;
+  breeding_year: number | null;
+  calf_bw: number | null;
+}
+
 function computeSireGestation(records: BlairCombinedRecord[]) {
   const bySire = new Map<string, number[]>();
   records.forEach(r => {
@@ -145,6 +155,25 @@ function computeSireGestation(records: BlairCombinedRecord[]) {
     .map(([sire, vals]) => ({ sire, avgGestation: Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10, count: vals.length }))
     .sort((a, b) => a.avgGestation - b.avgGestation)
     .slice(0, 15);
+}
+
+function getGestationDetails(records: BlairCombinedRecord[], sire: string): GestationDetail[] {
+  return records
+    .filter(r => {
+      if (r.calf_sire !== sire || !r.ai_date_1 || !r.calving_date) return false;
+      const days = Math.round((new Date(r.calving_date).getTime() - new Date(r.ai_date_1).getTime()) / 86400000);
+      return days >= 250 && days <= 310;
+    })
+    .map(r => ({
+      lifetime_id: r.lifetime_id ?? '—',
+      calf_sire: r.calf_sire!,
+      ai_date_1: r.ai_date_1!,
+      calving_date: r.calving_date!,
+      gestation_days: Math.round((new Date(r.calving_date!).getTime() - new Date(r.ai_date_1!).getTime()) / 86400000),
+      breeding_year: r.breeding_year,
+      calf_bw: r.calf_bw,
+    }))
+    .sort((a, b) => a.gestation_days - b.gestation_days);
 }
 
 /* ─── Sire AI Conception Chart: GROUP BY ai_sire_1, conception rate ─── */
