@@ -113,17 +113,28 @@ export function computeCalvingIntervals(records: BreedingCalvingRecord[]): Calvi
 
 /** Canonical composite score from raw records (for use in pages that don't have Animal objects) */
 export function computeCompositeFromRecords(recs: BreedingCalvingRecord[]): number {
-  if (recs.length === 0) return 0;
-  // Overall AI Conception Rate: preg_stage 'AI' or 'Second AI' / total with ai_date_1
+  // Require at least 2 breeding records
+  if (recs.length < 2) return 0;
+
+  // AI Conception Rate: preg_stage === 'AI' / rows with ai_date_1, excluding cleanup
   const withAiDate1 = recs.filter(r => r.ai_date_1 != null);
   if (withAiDate1.length === 0) return 0;
-  const aiConceived = recs.filter(r => r.preg_stage?.toLowerCase() === 'ai' || r.preg_stage?.toLowerCase() === 'second ai');
+  const aiConceived = withAiDate1.filter(r => r.preg_stage?.toLowerCase() === 'ai' && !(r.calf_sire && r.calf_sire.toLowerCase().includes('cleanup')));
   const conceptionRate = (aiConceived.length / withAiDate1.length) * 100;
-  const withCalves = recs.filter(r => r.calf_status && r.calf_status.toLowerCase() !== 'open');
-  const liveCalves = withCalves.filter(r => r.calf_status?.toLowerCase() === 'alive').length;
-  const survivalRate = withCalves.length > 0 ? (liveCalves / withCalves.length) * 100 : 0;
-  const bws = withCalves.map(r => r.calf_bw).filter((v): v is number => v != null && v > 0);
+
+  // Total Calves: calving_date not null AND calf_sire !== 'CLEANUP' AND calf_status not null
+  const validCalves = recs.filter(r =>
+    r.calving_date != null &&
+    r.calf_status != null &&
+    !(r.calf_sire && r.calf_sire.toLowerCase().includes('cleanup'))
+  );
+  const liveCalves = validCalves.filter(r => r.calf_status?.toLowerCase() === 'alive').length;
+  const survivalRate = validCalves.length > 0 ? (liveCalves / validCalves.length) * 100 : 0;
+
+  // Birth Weight Consistency from non-cleanup calves
+  const bws = validCalves.map(r => r.calf_bw).filter((v): v is number => v != null && v > 0);
   const consistency = computeConsistencyScore(bws);
+
   return Math.round(((conceptionRate + survivalRate + consistency) / 3) * 10) / 10;
 }
 
