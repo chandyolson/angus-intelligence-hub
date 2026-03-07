@@ -187,42 +187,22 @@ export default function SireAnalysis() {
     <div className="space-y-6">
       <h1 className="text-[20px] font-semibold text-foreground">Sire Analysis</h1>
 
-      {/* Callout cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {topSire && (
-          <Card className="bg-card border-success/40">
-            <CardContent className="p-5">
-              <p className="text-[10px] text-success font-medium uppercase tracking-wider mb-1">🏆 Top AI Performer (25+ units)</p>
-              <p className="text-xl font-bold text-foreground">{topSire.sire}</p>
-              <p className="text-[28px] font-bold text-success mt-1">{topSire.first_service_rate}%</p>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">1st Service AI Rate</p>
-              <p className="text-sm text-muted-foreground mt-3">
-                {topSire.units_used_1st} units used · {topSire.total_calves} calves · {topSire.calf_survival_rate}% survival · {topSire.avg_calf_bw > 0 ? `${topSire.avg_calf_bw} lbs avg BW` : ''}
-              </p>
-            </CardContent>
-          </Card>
-        )}
-        {mostUsed && (
-          <Card className={`bg-card ${mostUsed.first_service_rate < 55 ? 'border-primary/40' : 'border-success/40'}`}>
-            <CardContent className="p-5">
-              {mostUsed.first_service_rate < 55 ? (<>
-                <p className="text-[10px] text-primary font-medium uppercase tracking-wider mb-1">⚠ Most Used · Below Average</p>
-                <p className="text-xl font-bold text-foreground">{mostUsed.sire}</p>
-                <p className="text-[28px] font-bold text-destructive mt-1">{mostUsed.first_service_rate}%</p>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">1st Service AI Rate</p>
-                <p className="text-sm text-muted-foreground mt-3">{mostUsed.units_used_1st} units pulled · {mostUsed.total_calves} calves</p>
-                <p className="text-primary text-xs mt-2 italic">Highest usage sire with below-average 1st service rate — highest-impact sire change opportunity.</p>
-              </>) : (<>
-                <p className="text-[10px] text-success font-medium uppercase tracking-wider mb-1">✓ Most Used · Strong Performer</p>
-                <p className="text-xl font-bold text-foreground">{mostUsed.sire}</p>
-                <p className="text-[28px] font-bold text-success mt-1">{mostUsed.first_service_rate}%</p>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">1st Service AI Rate</p>
-                <p className="text-sm text-muted-foreground mt-3">{mostUsed.units_used_1st} units pulled · {mostUsed.total_calves} calves · {mostUsed.calf_survival_rate}% survival</p>
-              </>)}
-            </CardContent>
-          </Card>
-        )}
-      </div>
+      {/* Dynamic callout cards */}
+      {leaderCards.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {leaderCards.map((card, i) => (
+            <Card key={i} className={`bg-card ${card.borderClass}`}>
+              <CardContent className="p-5">
+                <p className="text-[10px] font-medium uppercase tracking-wider mb-1 text-muted-foreground">{card.emoji} {card.label}</p>
+                <p className="text-xl font-bold text-foreground">{card.sire.sire}</p>
+                <p className="text-[28px] font-bold mt-1" style={{ color: card.borderClass.includes('success') ? 'hsl(142, 69%, 58%)' : card.borderClass.includes('destructive') ? 'hsl(0, 86%, 71%)' : 'hsl(var(--primary))' }}>{card.value}</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">{card.sublabel}</p>
+                <p className="text-sm text-muted-foreground mt-3">{card.detail}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       <div className="flex flex-wrap gap-2">
         {SORT_OPTIONS.map(opt => (
