@@ -261,7 +261,7 @@ export function generateCullList(
       reasons.push('Bottom 25% composite score & 5+ years old');
     }
 
-    if (cow.total_calves >= 3 && cow.calf_survival_rate < 85) {
+    if (cow.total_calves >= 3 && cow.calf_survival_rate != null && cow.calf_survival_rate < 85) {
       reasons.push(`Low calf survival rate (${cow.calf_survival_rate}%)`);
     }
 
