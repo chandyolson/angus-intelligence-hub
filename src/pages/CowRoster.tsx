@@ -158,7 +158,19 @@ export default function CowRoster() {
       const sires = [...new Set(allRows.map(r => r.sire).filter(Boolean))].sort() as string[];
       const years = [...new Set(allRows.map(r => r.year_born).filter(Boolean))].sort((a, b) => b - a) as number[];
       const statuses = [...new Set(allRows.map(r => r.status).filter(Boolean))].sort() as string[];
-      return { sires, years, statuses };
+
+      // Compute card stats
+      const activeRows = allRows.filter(r => r.status?.toLowerCase() === 'active');
+      const sireCounts = new Map<string, number>();
+      activeRows.forEach(r => { if (r.sire) sireCounts.set(r.sire, (sireCounts.get(r.sire) || 0) + 1); });
+      let topSire: { name: string; count: number } | null = null;
+      sireCounts.forEach((count, name) => { if (!topSire || count > topSire.count) topSire = { name, count }; });
+
+      const currentYear = new Date().getFullYear();
+      const ages = activeRows.map(r => r.year_born ? currentYear - r.year_born : null).filter((v): v is number => v != null && v >= 0);
+      const avgAge = ages.length > 0 ? Math.round((ages.reduce((a, b) => a + b, 0) / ages.length) * 10) / 10 : 0;
+
+      return { sires, years, statuses, topSire, avgAge, activeCowCount: activeRows.length };
     },
   });
 
