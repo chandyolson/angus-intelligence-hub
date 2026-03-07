@@ -117,9 +117,8 @@ export function computeCalvingIntervals(records: BreedingCalvingRecord[]): Calvi
 /** Canonical composite score from raw records (for use in pages that don't have Animal objects).
  *  Pass yearBorn to exclude young cows (born within last 2.5 years) who haven't had a chance to calve. */
 export function computeCompositeFromRecords(recs: BreedingCalvingRecord[], yearBorn?: number | null): number {
-  // Young cows (born in last 2.5 years) haven't had a chance to calve — exclude from scoring
-  const cutoffYear = new Date().getFullYear() - 2.5;
-  if (yearBorn != null && yearBorn >= cutoffYear) return 0;
+  // Cows born in 2024 or later haven't had a chance to calve — exclude from scoring
+  if (yearBorn != null && yearBorn >= 2024) return 0;
   // Require at least 2 breeding records
   if (recs.length < 2) return 0;
 
