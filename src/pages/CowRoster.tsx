@@ -341,7 +341,11 @@ export default function CowRoster() {
                   <TableCell>{cow.ai_conception_rate}%</TableCell>
                   <TableCell>{cow.first_service_rate}%</TableCell>
                   <TableCell>{cow.second_service_rate}%</TableCell>
-                  <TableCell>{cow.calf_survival_rate}%</TableCell>
+                  <TableCell>
+                    {cow.total_calves === 0 || cow.calf_survival_rate === null
+                      ? '—'
+                      : `${cow.calf_survival_rate}%`}
+                  </TableCell>
                   <TableCell>
                     <span className={`px-2 py-0.5 rounded text-xs font-semibold ${scoreStyle(cow.composite_score)}`}>
                       {cow.composite_score}
