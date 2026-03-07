@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useAnimal, useCowBreedingRecords, useUltrasoundRecords, useBreedingCalvingRecords } from '@/hooks/useCattleData';
+import { useAnimal, useCowBreedingRecords, useUltrasoundRecords, useBreedingCalvingRecords, useActiveAnimals } from '@/hooks/useCattleData';
 import { BreedingCalvingRecord } from '@/types/cattle';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -82,17 +82,20 @@ export default function CowDetail() {
   const { data: calvingRecords, isLoading: lr, error: calvingError } = useCowBreedingRecords(decodedId);
   const { data: ultrasoundRecords, isLoading: lu, error: ultraError } = useUltrasoundRecords(decodedId);
   const { data: allRecords } = useBreedingCalvingRecords();
+  const { data: activeAnimals } = useActiveAnimals('Blair');
 
   const kpis = useMemo(() => calvingRecords ? computeCowKPIs(calvingRecords) : null, [calvingRecords]);
 
+  const activeLids = useMemo(() => new Set((activeAnimals ?? []).map(a => a.lifetime_id).filter(Boolean) as string[]), [activeAnimals]);
+
   const allCompositeScores = useMemo(() => {
-    if (!allRecords) return [];
+    if (!allRecords || activeLids.size === 0) return [];
     const byCow = new Map<string, BreedingCalvingRecord[]>();
-    allRecords.forEach(r => { if (r.lifetime_id) { const a = byCow.get(r.lifetime_id) || []; a.push(r); byCow.set(r.lifetime_id, a); } });
+    allRecords.forEach(r => { if (r.lifetime_id && activeLids.has(r.lifetime_id)) { const a = byCow.get(r.lifetime_id) || []; a.push(r); byCow.set(r.lifetime_id, a); } });
     const scores: number[] = [];
     byCow.forEach(recs => { const c = computeCompositeFromRecords(recs); if (c > 0) scores.push(c); });
     return scores;
-  }, [allRecords]);
+  }, [allRecords, activeLids]);
 
   const notes = useMemo(() => {
     if (!calvingRecords || !kpis) return [];

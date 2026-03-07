@@ -58,9 +58,9 @@ function computeKPIs(records: BlairCombinedRecord[], activeCowCount: number) {
 }
 
 /* ─── Score distribution (uses blair_combined as BreedingCalvingRecord-like) ─── */
-function computeScoreDistribution(records: BlairCombinedRecord[]) {
+function computeScoreDistribution(records: BlairCombinedRecord[], activeLids: Set<string>) {
   const byCow = new Map<string, BlairCombinedRecord[]>();
-  records.forEach(r => { if (r.lifetime_id) { const a = byCow.get(r.lifetime_id) || []; a.push(r); byCow.set(r.lifetime_id, a); } });
+  records.forEach(r => { if (r.lifetime_id && activeLids.has(r.lifetime_id)) { const a = byCow.get(r.lifetime_id) || []; a.push(r); byCow.set(r.lifetime_id, a); } });
   const scores: number[] = [];
   byCow.forEach(recs => {
     // Map to BreedingCalvingRecord shape for computeCompositeFromRecords
@@ -205,7 +205,8 @@ export default function Dashboard() {
     return computeKPIs(records, activeBlairAnimals.length);
   }, [animals, combined, records, activeBlairAnimals.length]);
 
-  const scoreDistribution = useMemo(() => records.length > 0 ? computeScoreDistribution(records) : [], [records]);
+  const activeLids = useMemo(() => new Set(activeBlairAnimals.map(a => a.lifetime_id).filter(Boolean) as string[]), [activeBlairAnimals]);
+  const scoreDistribution = useMemo(() => records.length > 0 ? computeScoreDistribution(records, activeLids) : [], [records, activeLids]);
   const yoyData = useMemo(() => records.length > 0 ? computeYoY(records) : [], [records]);
   const calvingIntervals = useMemo(() => records.length > 0 ? computeCalvingIntervalsFull(records) : null, [records]);
   const sireGestation = useMemo(() => records.length > 0 ? computeSireGestation(records) : [], [records]);
