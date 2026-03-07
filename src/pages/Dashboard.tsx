@@ -8,7 +8,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   LineChart, Line, ReferenceLine, ResponsiveContainer, Cell, PieChart, Pie, Legend,
 } from 'recharts';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ShimmerSkeleton, ShimmerCard } from '@/components/ui/shimmer-skeleton';
 import { ErrorBox } from '@/components/ui/error-box';
