@@ -90,15 +90,19 @@ export default function SireAnalysis() {
   const leaderCards = useMemo(() => {
     if (sireStats.length === 0) return [];
 
+    // Base pool: only sires with 10+ calves
+    const eligible = sireStats.filter(s => s.total_calves >= 10);
+    if (eligible.length === 0) return [];
+
     const cards: { emoji: string; label: string; sire: SireStats; value: string; sublabel: string; detail: string; borderClass: string }[] = [];
 
     const best = (key: keyof SireStats, min = 0, filter?: (s: SireStats) => boolean) => {
-      const pool = filter ? sireStats.filter(filter) : sireStats;
+      const pool = filter ? eligible.filter(filter) : eligible;
       const valid = pool.filter(s => (s[key] as number) > min);
       return valid.length > 0 ? valid.reduce((a, b) => (a[key] as number) > (b[key] as number) ? a : b, valid[0]) : null;
     };
     const worst = (key: keyof SireStats, filter?: (s: SireStats) => boolean) => {
-      const pool = filter ? sireStats.filter(filter) : sireStats;
+      const pool = filter ? eligible.filter(filter) : eligible;
       const valid = pool.filter(s => (s[key] as number) > 0);
       return valid.length > 0 ? valid.reduce((a, b) => (a[key] as number) < (b[key] as number) ? a : b, valid[0]) : null;
     };
@@ -129,17 +133,17 @@ export default function SireAnalysis() {
         break;
       }
       case 'avg_calf_bw': {
-        const lightest = worst('avg_calf_bw', s => s.total_calves >= 10);
-        const heaviest = best('avg_calf_bw', 0, s => s.total_calves >= 10);
+        const lightest = worst('avg_calf_bw');
+        const heaviest = best('avg_calf_bw');
         if (lightest) cards.push({ emoji: '🪶', label: 'Lightest Avg Birth Weight (10+ calves)', sire: lightest, value: `${lightest.avg_calf_bw} lbs`, sublabel: 'Avg Birth Weight', detail: `${lightest.total_calves} calves · ${lightest.calf_survival_rate}% survival`, borderClass: 'border-success/40' });
         if (heaviest && heaviest.sire !== lightest?.sire) cards.push({ emoji: '🐂', label: 'Heaviest Avg Birth Weight (10+ calves)', sire: heaviest, value: `${heaviest.avg_calf_bw} lbs`, sublabel: 'Avg Birth Weight', detail: `${heaviest.total_calves} calves · ${heaviest.calf_survival_rate}% survival`, borderClass: 'border-primary/40' });
         break;
       }
       case 'avg_gestation_days': {
-        const shortest = worst('avg_gestation_days', s => s.avg_gestation_days > 0);
-        const longest = best('avg_gestation_days', 0, s => s.avg_gestation_days > 0);
-        if (shortest) cards.push({ emoji: '⚡', label: 'Shortest Avg Gestation', sire: shortest, value: `${shortest.avg_gestation_days} d`, sublabel: 'Avg Gestation Length', detail: `${shortest.total_calves} calves · ${shortest.avg_calf_bw > 0 ? `${shortest.avg_calf_bw} lbs avg BW` : ''}`, borderClass: 'border-success/40' });
-        if (longest && longest.sire !== shortest?.sire) cards.push({ emoji: '🐢', label: 'Longest Avg Gestation', sire: longest, value: `${longest.avg_gestation_days} d`, sublabel: 'Avg Gestation Length', detail: `${longest.total_calves} calves · ${longest.avg_calf_bw > 0 ? `${longest.avg_calf_bw} lbs avg BW` : ''}`, borderClass: 'border-primary/40' });
+        const shortest = worst('avg_gestation_days');
+        const longest = best('avg_gestation_days');
+        if (shortest) cards.push({ emoji: '⚡', label: 'Shortest Avg Gestation (10+ calves)', sire: shortest, value: `${shortest.avg_gestation_days} d`, sublabel: 'Avg Gestation Length', detail: `${shortest.total_calves} calves · ${shortest.avg_calf_bw > 0 ? `${shortest.avg_calf_bw} lbs avg BW` : ''}`, borderClass: 'border-success/40' });
+        if (longest && longest.sire !== shortest?.sire) cards.push({ emoji: '🐢', label: 'Longest Avg Gestation (10+ calves)', sire: longest, value: `${longest.avg_gestation_days} d`, sublabel: 'Avg Gestation Length', detail: `${longest.total_calves} calves · ${longest.avg_calf_bw > 0 ? `${longest.avg_calf_bw} lbs avg BW` : ''}`, borderClass: 'border-primary/40' });
         break;
       }
     }
