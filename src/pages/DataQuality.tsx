@@ -9,6 +9,7 @@ import { ErrorBox } from '@/components/ui/error-box';
 interface FlaggedRecord {
   lifetime_id: string;
   detail: string;
+  extraColumns?: Record<string, string>;
 }
 
 interface QualityCard {
@@ -18,6 +19,7 @@ interface QualityCard {
   count: number;
   severity: 'red' | 'amber';
   records: FlaggedRecord[];
+  customHeaders?: string[];
 }
 
 export default function DataQuality() {
@@ -116,6 +118,16 @@ export default function DataQuality() {
       }
     });
 
+    // Card 7: Contradictory AI/Cleanup Records
+    const contradictoryAICleanup = combined.filter(r =>
+      r.calf_sire === 'CLEANUP' &&
+      (r.preg_stage === 'AI' || r.preg_stage === 'Second AI')
+    ).sort((a, b) => (b.breeding_year ?? 0) - (a.breeding_year ?? 0));
+
+    // Look up tags from animals
+    const animalTagMap = new Map<string, string>();
+    animals.forEach(a => { if (a.lifetime_id) animalTagMap.set(a.lifetime_id, a.tag ?? '—'); });
+
     return [
       {
         id: 'never-calved',
@@ -164,6 +176,26 @@ export default function DataQuality() {
         count: abnormalIntervals.length,
         severity: abnormalIntervals.length > 5 ? 'red' : 'amber',
         records: abnormalIntervals,
+      },
+      {
+        id: 'contradictory-ai-cleanup',
+        label: 'Contradictory AI/Cleanup Records',
+        description: 'Calf sire is CLEANUP but preg stage indicates AI conception — logically impossible',
+        count: contradictoryAICleanup.length,
+        severity: 'red',
+        customHeaders: ['Lifetime ID', 'Tag', 'Breeding Year', 'Preg Stage', 'Calf Sire', 'AI Sire 1', 'AI Date 1'],
+        records: contradictoryAICleanup.map(r => ({
+          lifetime_id: r.lifetime_id ?? '?',
+          detail: '',
+          extraColumns: {
+            'Tag': animalTagMap.get(r.lifetime_id ?? '') ?? '—',
+            'Breeding Year': String(r.breeding_year ?? '?'),
+            'Preg Stage': r.preg_stage ?? '?',
+            'Calf Sire': r.calf_sire ?? '?',
+            'AI Sire 1': r.ai_sire_1 ?? '?',
+            'AI Date 1': r.ai_date_1 ?? '?',
+          },
+        })),
       },
     ];
   }, [animals, combined, currentYear]);
@@ -224,20 +256,36 @@ export default function DataQuality() {
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead className="text-xs">Lifetime ID</TableHead>
-                            <TableHead className="text-xs">Detail</TableHead>
+                            {card.customHeaders ? (
+                              card.customHeaders.map(h => <TableHead key={h} className="text-xs">{h}</TableHead>)
+                            ) : (
+                              <>
+                                <TableHead className="text-xs">Lifetime ID</TableHead>
+                                <TableHead className="text-xs">Detail</TableHead>
+                              </>
+                            )}
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {card.records.slice(0, 100).map((r, i) => (
                             <TableRow key={i}>
-                              <TableCell className="text-xs font-mono">{r.lifetime_id}</TableCell>
-                              <TableCell className="text-xs">{r.detail}</TableCell>
+                              {card.customHeaders ? (
+                                card.customHeaders.map(h => (
+                                  <TableCell key={h} className="text-xs font-mono">
+                                    {h === 'Lifetime ID' ? r.lifetime_id : r.extraColumns?.[h] ?? ''}
+                                  </TableCell>
+                                ))
+                              ) : (
+                                <>
+                                  <TableCell className="text-xs font-mono">{r.lifetime_id}</TableCell>
+                                  <TableCell className="text-xs">{r.detail}</TableCell>
+                                </>
+                              )}
                             </TableRow>
                           ))}
                           {card.records.length > 100 && (
                             <TableRow>
-                              <TableCell colSpan={2} className="text-xs text-muted-foreground text-center">
+                              <TableCell colSpan={card.customHeaders?.length ?? 2} className="text-xs text-muted-foreground text-center">
                                 Showing 100 of {card.records.length} records
                               </TableCell>
                             </TableRow>
