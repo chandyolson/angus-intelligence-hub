@@ -110,6 +110,42 @@ export type Database = {
         }
         Relationships: []
       }
+      blair_breeding: {
+        Row: {
+          ai_date: string | null
+          ai_sire: string | null
+          auto_number: number | null
+          cow_lookup: string | null
+          lifetime_id: string | null
+          master_eid: number | null
+          record_number: string | null
+          status: string | null
+          tag: string | null
+        }
+        Insert: {
+          ai_date?: string | null
+          ai_sire?: string | null
+          auto_number?: number | null
+          cow_lookup?: string | null
+          lifetime_id?: string | null
+          master_eid?: number | null
+          record_number?: string | null
+          status?: string | null
+          tag?: string | null
+        }
+        Update: {
+          ai_date?: string | null
+          ai_sire?: string | null
+          auto_number?: number | null
+          cow_lookup?: string | null
+          lifetime_id?: string | null
+          master_eid?: number | null
+          record_number?: string | null
+          status?: string | null
+          tag?: string | null
+        }
+        Relationships: []
+      }
       blair_combined: {
         Row: {
           ai_date_1: string | null

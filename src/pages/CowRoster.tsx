@@ -8,7 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { ArrowUp, ArrowDown, ArrowUpDown, Search } from 'lucide-react';
+import { ArrowUp, ArrowDown, ArrowUpDown, Search, Crown, Calendar } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import { ShimmerSkeleton, ShimmerTableRows } from '@/components/ui/shimmer-skeleton';
 import { ErrorBox } from '@/components/ui/error-box';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -157,7 +158,19 @@ export default function CowRoster() {
       const sires = [...new Set(allRows.map(r => r.sire).filter(Boolean))].sort() as string[];
       const years = [...new Set(allRows.map(r => r.year_born).filter(Boolean))].sort((a, b) => b - a) as number[];
       const statuses = [...new Set(allRows.map(r => r.status).filter(Boolean))].sort() as string[];
-      return { sires, years, statuses };
+
+      // Compute card stats
+      const activeRows = allRows.filter(r => r.status?.toLowerCase() === 'active');
+      const sireCounts = new Map<string, number>();
+      activeRows.forEach(r => { if (r.sire) sireCounts.set(r.sire, (sireCounts.get(r.sire) || 0) + 1); });
+      let topSire: { name: string; count: number } | null = null;
+      sireCounts.forEach((count, name) => { if (!topSire || count > topSire.count) topSire = { name, count }; });
+
+      const currentYear = new Date().getFullYear();
+      const ages = activeRows.map(r => r.year_born ? currentYear - r.year_born : null).filter((v): v is number => v != null && v >= 0);
+      const avgAge = ages.length > 0 ? Math.round((ages.reduce((a, b) => a + b, 0) / ages.length) * 10) / 10 : 0;
+
+      return { sires, years, statuses, topSire, avgAge, activeCowCount: activeRows.length };
     },
   });
 
@@ -214,6 +227,34 @@ export default function CowRoster() {
   return (
     <div className="space-y-4">
       <h1 className="text-[20px] font-semibold text-foreground">Cow Roster</h1>
+
+      {/* Summary Cards */}
+      {filterOptions && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filterOptions.topSire && (
+            <Card className="bg-card border-border" style={{ background: 'linear-gradient(135deg, hsl(224, 52%, 14%) 0%, hsl(40, 40%, 16%) 100%)' }}>
+              <CardContent className="p-4 flex items-start gap-3">
+                <Crown className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Sire with Most Active Dams</p>
+                  <p className="text-lg font-bold text-foreground">{filterOptions.topSire.name}</p>
+                  <p className="text-sm text-primary font-semibold">{filterOptions.topSire.count} active daughters</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          <Card className="bg-card border-border" style={{ background: 'linear-gradient(135deg, hsl(224, 52%, 14%) 0%, hsl(190, 40%, 18%) 100%)' }}>
+            <CardContent className="p-4 flex items-start gap-3">
+              <Calendar className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+              <div>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Avg Cow Age</p>
+                <p className="text-lg font-bold text-foreground">{filterOptions.avgAge} years</p>
+                <p className="text-sm text-muted-foreground">{filterOptions.activeCowCount} active cows</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {(animalsError || recordsError) && <ErrorBox />}
 
