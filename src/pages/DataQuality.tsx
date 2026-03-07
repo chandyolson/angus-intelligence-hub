@@ -31,25 +31,35 @@ export default function DataQuality() {
   const cards: QualityCard[] = useMemo(() => {
     if (!animals || !combined) return [];
 
-    const blairActive = animals.filter(a => a.operation === 'Blair' && a.status?.toLowerCase() === 'active');
-    const blairActiveLids = new Set(blairActive.map(a => a.lifetime_id).filter(Boolean) as string[]);
+    // 18-month cutoff
+    const cutoff = new Date();
+    cutoff.setMonth(cutoff.getMonth() - 18);
+    const cutoffStr = cutoff.toISOString().slice(0, 10);
 
-    // Index blair_combined by lifetime_id
+    // Recent records: any record with a date-bearing field in the last 18 months
+    const recent = combined.filter(r => {
+      const latestDate = r.calving_date ?? r.ai_date_1 ?? r.ultrasound_date;
+      return latestDate != null && latestDate >= cutoffStr;
+    });
+
+    const blairActive = animals.filter(a => a.operation === 'Blair' && a.status?.toLowerCase() === 'active');
+
+    // Index recent blair_combined by lifetime_id
     const combinedByLid = new Map<string, typeof combined>();
-    combined.forEach(r => {
+    recent.forEach(r => {
       if (!r.lifetime_id) return;
       const arr = combinedByLid.get(r.lifetime_id) || [];
       arr.push(r);
       combinedByLid.set(r.lifetime_id, arr);
     });
 
-    // Lids that have at least one calving_date
+    // Lids that have at least one calving_date in last 18 months
     const lidsWithCalving = new Set<string>();
-    combined.forEach(r => { if (r.lifetime_id && r.calving_date) lidsWithCalving.add(r.lifetime_id); });
+    recent.forEach(r => { if (r.lifetime_id && r.calving_date) lidsWithCalving.add(r.lifetime_id); });
 
-    // Lids that appear in combined at all
+    // Lids that appear in recent combined at all
     const lidsInCombined = new Set<string>();
-    combined.forEach(r => { if (r.lifetime_id) lidsInCombined.add(r.lifetime_id); });
+    recent.forEach(r => { if (r.lifetime_id) lidsInCombined.add(r.lifetime_id); });
 
     // Card 1: Active Cows Never Calved (Age 2+)
     const neverCalved = blairActive.filter(a =>
@@ -69,23 +79,23 @@ export default function DataQuality() {
         .map(a => a.lifetime_id!)
     );
     const soldDeadCurrentYear = new Map<string, string>();
-    combined.forEach(r => {
+    recent.forEach(r => {
       if (r.lifetime_id && r.breeding_year === currentYear && soldDeadLids.has(r.lifetime_id)) {
         const animal = animals.find(a => a.lifetime_id === r.lifetime_id);
         soldDeadCurrentYear.set(r.lifetime_id, `Status: ${animal?.status ?? '?'}, Breeding Year: ${r.breeding_year}`);
       }
     });
 
-    // Card 4: Alive calves missing birth weight
-    const missingBW = combined.filter(r =>
+    // Card 4: Alive calves missing birth weight (last 18 months)
+    const missingBW = recent.filter(r =>
       r.calving_date != null &&
       r.calf_status?.toLowerCase() === 'alive' &&
       !(r.calf_sire && r.calf_sire.toLowerCase().includes('cleanup')) &&
       r.calf_bw == null
     );
 
-    // Card 5: Breeding records missing ultrasound
-    const missingUS = combined.filter(r =>
+    // Card 5: Breeding records missing ultrasound (last 18 months)
+    const missingUS = recent.filter(r =>
       r.ai_date_1 != null &&
       r.ultrasound_date == null &&
       r.preg_stage == null
@@ -110,7 +120,7 @@ export default function DataQuality() {
       {
         id: 'never-calved',
         label: 'Active Cows Never Calved (Age 2+)',
-        description: 'Active cows with no calving record and born ≥ 2 years ago',
+        description: 'Active cows age 2+ with no calving record in last 18 months',
         count: neverCalved.length,
         severity: neverCalved.length > 10 ? 'red' : 'amber',
         records: neverCalved.map(a => ({ lifetime_id: a.lifetime_id!, detail: `Born ${a.year_born}, Tag: ${a.tag ?? '—'}` })),
@@ -118,7 +128,7 @@ export default function DataQuality() {
       {
         id: 'never-bred',
         label: 'Active Cows Never Bred',
-        description: 'Active cows with no record in breeding data',
+        description: 'Active cows with no breeding record in last 18 months',
         count: neverBred.length,
         severity: neverBred.length > 5 ? 'red' : 'amber',
         records: neverBred.map(a => ({ lifetime_id: a.lifetime_id!, detail: `Born ${a.year_born ?? '?'}, Tag: ${a.tag ?? '—'}` })),
