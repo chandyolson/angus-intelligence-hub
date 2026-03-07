@@ -228,6 +228,34 @@ export default function CowRoster() {
     <div className="space-y-4">
       <h1 className="text-[20px] font-semibold text-foreground">Cow Roster</h1>
 
+      {/* Summary Cards */}
+      {filterOptions && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filterOptions.topSire && (
+            <Card className="bg-card border-border" style={{ background: 'linear-gradient(135deg, hsl(224, 52%, 14%) 0%, hsl(40, 40%, 16%) 100%)' }}>
+              <CardContent className="p-4 flex items-start gap-3">
+                <Crown className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Sire with Most Active Dams</p>
+                  <p className="text-lg font-bold text-foreground">{filterOptions.topSire.name}</p>
+                  <p className="text-sm text-primary font-semibold">{filterOptions.topSire.count} active daughters</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          <Card className="bg-card border-border" style={{ background: 'linear-gradient(135deg, hsl(224, 52%, 14%) 0%, hsl(190, 40%, 18%) 100%)' }}>
+            <CardContent className="p-4 flex items-start gap-3">
+              <Calendar className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+              <div>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Avg Cow Age</p>
+                <p className="text-lg font-bold text-foreground">{filterOptions.avgAge} years</p>
+                <p className="text-sm text-muted-foreground">{filterOptions.activeCowCount} active cows</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {(animalsError || recordsError) && <ErrorBox />}
 
       {/* Filters */}
