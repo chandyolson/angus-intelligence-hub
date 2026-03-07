@@ -29,6 +29,7 @@ const App = () => (
             <Route path="/rankings" element={<Rankings />} />
             <Route path="/sires" element={<SireAnalysis />} />
             <Route path="/assistant" element={<AIAssistant />} />
+            <Route path="/data-quality" element={<DataQuality />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Layout>
