@@ -256,21 +256,40 @@ export default function DataQuality() {
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead className="text-xs">Lifetime ID</TableHead>
-                            <TableHead className="text-xs">Detail</TableHead>
+                            {card.customHeaders ? (
+                              card.customHeaders.map(h => <TableHead key={h} className="text-xs">{h}</TableHead>)
+                            ) : (
+                              <>
+                                <TableHead className="text-xs">Lifetime ID</TableHead>
+                                <TableHead className="text-xs">Detail</TableHead>
+                              </>
+                            )}
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {card.records.slice(0, 100).map((r, i) => (
                             <TableRow key={i}>
-                              <TableCell className="text-xs font-mono">{r.lifetime_id}</TableCell>
-                              <TableCell className="text-xs">{r.detail}</TableCell>
+                              {card.customHeaders ? (
+                                card.customHeaders.map(h => (
+                                  <TableCell key={h} className="text-xs font-mono">
+                                    {h === 'Lifetime ID' ? r.lifetime_id : r.extraColumns?.[h] ?? ''}
+                                  </TableCell>
+                                ))
+                              ) : (
+                                <>
+                                  <TableCell className="text-xs font-mono">{r.lifetime_id}</TableCell>
+                                  <TableCell className="text-xs">{r.detail}</TableCell>
+                                </>
+                              )}
                             </TableRow>
                           ))}
                           {card.records.length > 100 && (
                             <TableRow>
-                              <TableCell colSpan={2} className="text-xs text-muted-foreground text-center">
+                              <TableCell colSpan={card.customHeaders?.length ?? 2} className="text-xs text-muted-foreground text-center">
                                 Showing 100 of {card.records.length} records
+                              </TableCell>
+                            </TableRow>
+                          )}
                               </TableCell>
                             </TableRow>
                           )}
