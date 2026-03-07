@@ -116,6 +116,16 @@ export default function DataQuality() {
       }
     });
 
+    // Card 7: Contradictory AI/Cleanup Records
+    const contradictoryAICleanup = combined.filter(r =>
+      r.calf_sire === 'CLEANUP' &&
+      (r.preg_stage === 'AI' || r.preg_stage === 'Second AI')
+    ).sort((a, b) => (b.breeding_year ?? 0) - (a.breeding_year ?? 0));
+
+    // Look up tags from animals
+    const animalTagMap = new Map<string, string>();
+    animals.forEach(a => { if (a.lifetime_id) animalTagMap.set(a.lifetime_id, a.tag ?? '—'); });
+
     return [
       {
         id: 'never-calved',
