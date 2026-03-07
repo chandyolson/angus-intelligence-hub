@@ -79,23 +79,23 @@ export default function DataQuality() {
         .map(a => a.lifetime_id!)
     );
     const soldDeadCurrentYear = new Map<string, string>();
-    combined.forEach(r => {
+    recent.forEach(r => {
       if (r.lifetime_id && r.breeding_year === currentYear && soldDeadLids.has(r.lifetime_id)) {
         const animal = animals.find(a => a.lifetime_id === r.lifetime_id);
         soldDeadCurrentYear.set(r.lifetime_id, `Status: ${animal?.status ?? '?'}, Breeding Year: ${r.breeding_year}`);
       }
     });
 
-    // Card 4: Alive calves missing birth weight
-    const missingBW = combined.filter(r =>
+    // Card 4: Alive calves missing birth weight (last 18 months)
+    const missingBW = recent.filter(r =>
       r.calving_date != null &&
       r.calf_status?.toLowerCase() === 'alive' &&
       !(r.calf_sire && r.calf_sire.toLowerCase().includes('cleanup')) &&
       r.calf_bw == null
     );
 
-    // Card 5: Breeding records missing ultrasound
-    const missingUS = combined.filter(r =>
+    // Card 5: Breeding records missing ultrasound (last 18 months)
+    const missingUS = recent.filter(r =>
       r.ai_date_1 != null &&
       r.ultrasound_date == null &&
       r.preg_stage == null
