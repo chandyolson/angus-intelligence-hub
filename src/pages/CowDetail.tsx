@@ -24,7 +24,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   );
 };
 
-function computeCowKPIs(recs: BreedingCalvingRecord[]) {
+function computeCowKPIs(recs: BreedingCalvingRecord[], yearBorn?: number | null) {
   const withCalf = recs.filter(r => r.calf_status && r.calf_status.toLowerCase() !== 'open');
   const totalCalves = withCalf.length;
   const bws = withCalf.map(r => r.calf_bw).filter((v): v is number => v != null && v > 0);
@@ -34,7 +34,7 @@ function computeCowKPIs(recs: BreedingCalvingRecord[]) {
   const conceptionRate = withAiDate1.length > 0 ? Math.round((aiConceived.length / withAiDate1.length) * 1000) / 10 : 0;
   const liveCalves = withCalf.filter(r => r.calf_status!.toLowerCase() === 'alive').length;
   const survivalRate = withCalf.length > 0 ? Math.round((liveCalves / withCalf.length) * 1000) / 10 : 0;
-  const composite = computeCompositeFromRecords(recs);
+  const composite = computeCompositeFromRecords(recs, yearBorn);
   return { totalCalves, avgBw, conceptionRate, survivalRate, composite };
 }
 
