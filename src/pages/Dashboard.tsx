@@ -428,16 +428,57 @@ export default function Dashboard() {
       {/* Row 2: Sire Gestation + Sire AI Conception */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="bg-card border-border">
-          <CardHeader className="pb-2"><CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">Avg Gestation by Calf Sire</CardTitle></CardHeader>
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">Avg Gestation by Calf Sire</CardTitle>
+              {selectedGestationSire && (
+                <button onClick={() => setSelectedGestationSire(null)} className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+                  ← Back to chart
+                </button>
+              )}
+            </div>
+          </CardHeader>
           <CardContent>
-            {loading ? <ShimmerSkeleton className="h-64" /> : (
+            {loading ? <ShimmerSkeleton className="h-64" /> : selectedGestationSire ? (
+              <div className="space-y-2">
+                <p className="text-xs text-muted-foreground mb-3">
+                  Records for <span className="text-primary font-medium">{selectedGestationSire}</span>
+                </p>
+                <div className="overflow-x-auto max-h-[300px] overflow-y-auto">
+                  <table className="w-full text-xs border-collapse">
+                    <thead className="sticky top-0 bg-card">
+                      <tr className="border-b border-border">
+                        <th className="text-left py-2 px-2 text-muted-foreground font-medium">Lifetime ID</th>
+                        <th className="text-left py-2 px-2 text-muted-foreground font-medium">Year</th>
+                        <th className="text-left py-2 px-2 text-muted-foreground font-medium">AI Date</th>
+                        <th className="text-left py-2 px-2 text-muted-foreground font-medium">Calving Date</th>
+                        <th className="text-right py-2 px-2 text-muted-foreground font-medium">Gest Days</th>
+                        <th className="text-right py-2 px-2 text-muted-foreground font-medium">Calf BW</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {getGestationDetails(records, selectedGestationSire).map((d, i) => (
+                        <tr key={i} className="border-b border-border/50 hover:bg-secondary/30 transition-colors cursor-pointer" onClick={() => navigate(`/cow/${d.lifetime_id}`)}>
+                          <td className="py-1.5 px-2 text-foreground">{d.lifetime_id}</td>
+                          <td className="py-1.5 px-2 text-foreground">{d.breeding_year ?? '—'}</td>
+                          <td className="py-1.5 px-2 text-foreground">{d.ai_date_1}</td>
+                          <td className="py-1.5 px-2 text-foreground">{d.calving_date}</td>
+                          <td className="py-1.5 px-2 text-right text-foreground font-medium">{d.gestation_days}</td>
+                          <td className="py-1.5 px-2 text-right text-foreground">{d.calf_bw ?? '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ) : (
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={sireGestation} layout="vertical" margin={{ left: 80 }}>
+                <BarChart data={sireGestation} layout="vertical" margin={{ left: 80 }} onClick={(e: any) => { if (e?.activeLabel) setSelectedGestationSire(e.activeLabel); }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(218, 42%, 20%)" />
                   <XAxis type="number" domain={['dataMin - 2', 'dataMax + 2']} tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 11 }} unit=" d" />
                   <YAxis type="category" dataKey="sire" tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 10 }} width={75} />
                   <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="avgGestation" name="Avg Gestation" radius={[0, 4, 4, 0]} fill="hsl(190, 60%, 45%)" />
+                  <Bar dataKey="avgGestation" name="Avg Gestation" radius={[0, 4, 4, 0]} fill="hsl(190, 60%, 45%)" className="cursor-pointer" />
                 </BarChart>
               </ResponsiveContainer>
             )}
