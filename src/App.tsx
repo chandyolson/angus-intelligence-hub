@@ -10,6 +10,7 @@ import CowDetail from "@/pages/CowDetail";
 import Rankings from "@/pages/Rankings";
 import SireAnalysis from "@/pages/SireAnalysis";
 import AIAssistant from "@/pages/AIAssistant";
+import DataQuality from "@/pages/DataQuality";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
