@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LayoutDashboard, List, Trophy, FlaskConical, Menu, X, Bot } from 'lucide-react';
+import { LayoutDashboard, List, Trophy, FlaskConical, Menu, X, Bot, ShieldAlert } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useRecordCounts } from '@/hooks/useCattleData';
 
@@ -9,6 +9,7 @@ const navItems = [
   { title: 'Cow Roster', url: '/roster', icon: List },
   { title: 'Rankings & Culling', url: '/rankings', icon: Trophy },
   { title: 'Sire Analysis', url: '/sires', icon: FlaskConical },
+  { title: 'Data Quality', url: '/data-quality', icon: ShieldAlert },
   { title: 'AI Assistant', url: '/assistant', icon: Bot },
 ];
 

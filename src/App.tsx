@@ -10,6 +10,7 @@ import CowDetail from "@/pages/CowDetail";
 import Rankings from "@/pages/Rankings";
 import SireAnalysis from "@/pages/SireAnalysis";
 import AIAssistant from "@/pages/AIAssistant";
+import DataQuality from "@/pages/DataQuality";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/rankings" element={<Rankings />} />
             <Route path="/sires" element={<SireAnalysis />} />
             <Route path="/assistant" element={<AIAssistant />} />
+            <Route path="/data-quality" element={<DataQuality />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Layout>
