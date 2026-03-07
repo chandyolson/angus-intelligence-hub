@@ -120,7 +120,7 @@ export default function DataQuality() {
       {
         id: 'never-calved',
         label: 'Active Cows Never Calved (Age 2+)',
-        description: 'Active cows with no calving record and born ≥ 2 years ago',
+        description: 'Active cows age 2+ with no calving record in last 18 months',
         count: neverCalved.length,
         severity: neverCalved.length > 10 ? 'red' : 'amber',
         records: neverCalved.map(a => ({ lifetime_id: a.lifetime_id!, detail: `Born ${a.year_born}, Tag: ${a.tag ?? '—'}` })),
