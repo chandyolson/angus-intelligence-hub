@@ -50,9 +50,22 @@ export default function SireAnalysis() {
 
   const sireStats = useMemo(() => records ? computeSireStats(records) : [], [records]);
 
+  const getCompositeScore = (s: SireStats) => {
+    const c = (s.first_service_rate / 100) * 33.3;
+    const sv = (s.calf_survival_rate / 100) * 33.3;
+    const g = s.avg_gestation_days > 0 ? Math.max(0, Math.min(33.3, ((285 - s.avg_gestation_days) / 15) * 33.3)) : 0;
+    return c + sv + g;
+  };
+
   const sorted = useMemo(() => {
     const s = [...sireStats];
-    s.sort((a, b) => { const aV = (a as any)[tableSortKey] ?? 0; const bV = (b as any)[tableSortKey] ?? 0; return tableSortAsc ? aV - bV : bV - aV; });
+    s.sort((a, b) => {
+      if (tableSortKey === 'composite_bar') {
+        const aV = getCompositeScore(a); const bV = getCompositeScore(b);
+        return tableSortAsc ? aV - bV : bV - aV;
+      }
+      const aV = (a as any)[tableSortKey] ?? 0; const bV = (b as any)[tableSortKey] ?? 0; return tableSortAsc ? aV - bV : bV - aV;
+    });
     return s;
   }, [sireStats, tableSortKey, tableSortAsc]);
 
