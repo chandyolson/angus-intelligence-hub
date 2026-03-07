@@ -14,30 +14,39 @@ function computeConsistencyScore(bws: number[]): number {
 
 export function computeCowStats(animal: Animal, records: BreedingCalvingRecord[]): CowStats {
   const cowRecords = records.filter(r => r.lifetime_id === animal.lifetime_id);
-  const withCalves = cowRecords.filter(r => r.calf_status && !['open'].includes(r.calf_status.toLowerCase()));
-  const totalCalves = withCalves.length;
-  const bws = withCalves.map(r => r.calf_bw).filter((v): v is number => v != null && v > 0);
-  const avg_bw = bws.length > 0 ? bws.reduce((a, b) => a + b, 0) / bws.length : 0;
 
-  // Overall AI Conception Rate: cows with preg_stage 'AI' or 'Second AI' / total with ai_date_1
+  // AI Conception Rate: preg_stage === 'AI' / rows with ai_date_1, excluding cleanup
   const withAiDate1 = cowRecords.filter(r => r.ai_date_1 != null);
-  const aiConceived = cowRecords.filter(r => r.preg_stage?.toLowerCase() === 'ai' || r.preg_stage?.toLowerCase() === 'second ai');
+  const aiConceived = withAiDate1.filter(r => r.preg_stage?.toLowerCase() === 'ai' && !(r.calf_sire && r.calf_sire.toLowerCase().includes('cleanup')));
   const ai_conception_rate = withAiDate1.length > 0 ? (aiConceived.length / withAiDate1.length) * 100 : 0;
 
-  // First Service: preg_stage = 'AI' / total with ai_date_1
-  const firstServiceConceived = cowRecords.filter(r => r.preg_stage?.toLowerCase() === 'ai');
-  const first_service_rate = withAiDate1.length > 0 ? (firstServiceConceived.length / withAiDate1.length) * 100 : 0;
+  // First Service Rate (same as AI conception rate per spec)
+  const first_service_rate = ai_conception_rate;
 
-  // Second Service: preg_stage = 'Second AI' / total with ai_date_2
+  // Second Service Rate: preg_stage === 'Second AI' / rows with ai_date_2
   const withAiDate2 = cowRecords.filter(r => r.ai_date_2 != null);
-  const secondServiceConceived = cowRecords.filter(r => r.preg_stage?.toLowerCase() === 'second ai');
+  const secondServiceConceived = withAiDate2.filter(r => r.preg_stage?.toLowerCase() === 'second ai');
   const second_service_rate = withAiDate2.length > 0 ? (secondServiceConceived.length / withAiDate2.length) * 100 : 0;
 
-  const bornAlive = withCalves.filter(r => r.calf_status?.toLowerCase() === 'alive').length;
-  const calf_survival_rate = totalCalves > 0 ? (bornAlive / totalCalves) * 100 : 0;
+  // Total Calves: calving_date not null AND calf_sire !== 'CLEANUP' AND calf_status not null
+  const validCalves = cowRecords.filter(r =>
+    r.calving_date != null &&
+    r.calf_status != null &&
+    !(r.calf_sire && r.calf_sire.toLowerCase().includes('cleanup'))
+  );
+  const totalCalves = validCalves.length;
 
+  // Calf Survival Rate: calf_status === 'Alive' / total calves
+  const alive = validCalves.filter(r => r.calf_status?.toLowerCase() === 'alive').length;
+  const calf_survival_rate = totalCalves > 0 ? (alive / totalCalves) * 100 : 0;
+
+  // Birth Weight Consistency: CV of calf_bw across non-cleanup calves with recorded BW
+  const bws = validCalves.map(r => r.calf_bw).filter((v): v is number => v != null && v > 0);
+  const avg_bw = bws.length > 0 ? bws.reduce((a, b) => a + b, 0) / bws.length : 0;
   const consistency = computeConsistencyScore(bws);
-  const composite = withAiDate1.length > 0
+
+  // Composite: average of 3 scores, only when cow has >= 2 breeding records
+  const composite = cowRecords.length >= 2
     ? Math.round(((ai_conception_rate + calf_survival_rate + consistency) / 3) * 10) / 10
     : 0;
 
