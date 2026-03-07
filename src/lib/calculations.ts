@@ -47,7 +47,7 @@ export function computeCowStats(animal: Animal, records: BreedingCalvingRecord[]
 
   // Composite: average of 3 scores, only when cow has >= 2 breeding records
   const composite = cowRecords.length >= 2
-    ? Math.round(((ai_conception_rate + calf_survival_rate + consistency) / 3) * 10) / 10
+    ? Math.round(((ai_conception_rate + (calf_survival_rate ?? 0) + consistency) / 3) * 10) / 10
     : 0;
 
   return {
