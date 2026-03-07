@@ -295,7 +295,7 @@ export function generatePerformanceNotes(
   const cowRecords = records.filter(r => r.lifetime_id === cow.lifetime_id);
 
   if (cow.total_calves > 0) {
-    notes.push(`This cow has calved ${cow.total_calves} time${cow.total_calves > 1 ? 's' : ''} with ${cow.calf_survival_rate}% calf survival.`);
+    notes.push(`This cow has calved ${cow.total_calves} time${cow.total_calves > 1 ? 's' : ''} with ${cow.calf_survival_rate ?? 0}% calf survival.`);
   }
 
   if (cow.ai_conception_rate === 100 && cow.total_calves >= 3) {
