@@ -177,6 +177,26 @@ export default function DataQuality() {
         severity: abnormalIntervals.length > 5 ? 'red' : 'amber',
         records: abnormalIntervals,
       },
+      {
+        id: 'contradictory-ai-cleanup',
+        label: 'Contradictory AI/Cleanup Records',
+        description: 'Calf sire is CLEANUP but preg stage indicates AI conception — logically impossible',
+        count: contradictoryAICleanup.length,
+        severity: 'red',
+        customHeaders: ['Lifetime ID', 'Tag', 'Breeding Year', 'Preg Stage', 'Calf Sire', 'AI Sire 1', 'AI Date 1'],
+        records: contradictoryAICleanup.map(r => ({
+          lifetime_id: r.lifetime_id ?? '?',
+          detail: '',
+          extraColumns: {
+            'Tag': animalTagMap.get(r.lifetime_id ?? '') ?? '—',
+            'Breeding Year': String(r.breeding_year ?? '?'),
+            'Preg Stage': r.preg_stage ?? '?',
+            'Calf Sire': r.calf_sire ?? '?',
+            'AI Sire 1': r.ai_sire_1 ?? '?',
+            'AI Date 1': r.ai_date_1 ?? '?',
+          },
+        })),
+      },
     ];
   }, [animals, combined, currentYear]);
 
