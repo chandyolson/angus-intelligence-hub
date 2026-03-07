@@ -92,6 +92,7 @@ export default function CowRoster() {
   const [sortKey, setSortKey] = useState<SortKey>('composite_score');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [page, setPage] = useState(0);
+  const [tableOpen, setTableOpen] = useState(true);
   const PER_PAGE = 50;
 
   // Server-side paginated animal fetch with ALL filters applied server-side
