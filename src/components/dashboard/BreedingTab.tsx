@@ -61,31 +61,41 @@ export default function BreedingTab() {
 
   const [selectedYear, setSelectedYear] = useState<string>('all');
 
-  // ─── Section 1: Preg Stage by Project & Year (heatmap) ───
-  const pregByProject = useMemo(() => {
+  // ─── Helper: map project_record_id → location ───
+  const getLocation = (proj: string): string => {
+    const p = proj.toLowerCase();
+    if (p.includes('twotop') || p.includes('two top') || p.includes('celltower') || p.includes('cell tower') || p.includes('twotopcell')) return 'Two Top';
+    if (p.includes('midland')) return 'Midland';
+    // "cows", "heifers", "home", or anything else → Home
+    return 'Home';
+  };
+
+  // ─── Section 1: Preg Stage by Location & Year (heatmap) ───
+  const pregByLocation = useMemo(() => {
     const filtered = selectedYear === 'all' ? records : records.filter(r => String(r.breeding_year) === selectedYear);
-    const byProject = new Map<string, Record<string, number>>();
+    const byLocation = new Map<string, Record<string, number>>();
     const allStages = new Set<string>();
 
     filtered.forEach(r => {
       if (!r.project_record_id || !r.preg_stage) return;
-      const proj = r.project_record_id;
+      const loc = getLocation(r.project_record_id);
       const stage = r.preg_stage;
       allStages.add(stage);
-      const entry = byProject.get(proj) || {};
+      const entry = byLocation.get(loc) || {};
       entry[stage] = (entry[stage] || 0) + 1;
-      byProject.set(proj, entry);
+      byLocation.set(loc, entry);
     });
 
     const stages = Array.from(allStages).sort();
-    const data = Array.from(byProject.entries())
-      .map(([project, counts]) => {
+    const locationOrder = ['Home', 'Two Top', 'Midland'];
+    const data = locationOrder
+      .filter(loc => byLocation.has(loc))
+      .map(loc => {
+        const counts = byLocation.get(loc)!;
         const total = Object.values(counts).reduce((s, v) => s + v, 0);
-        return { project, total, ...counts };
-      })
-      .sort((a, b) => b.total - a.total);
+        return { project: loc, total, ...counts };
+      });
 
-    // Find max count for intensity scaling
     let maxCount = 0;
     data.forEach(row => stages.forEach(s => { if ((row as any)[s] > maxCount) maxCount = (row as any)[s]; }));
 
