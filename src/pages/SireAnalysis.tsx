@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react'; // v2
 import { useBreedingCalvingRecords } from '@/hooks/useCattleData';
 import { computeSireStats } from '@/lib/calculations';
 import { SireStats } from '@/types/cattle';
