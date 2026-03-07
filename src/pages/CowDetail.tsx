@@ -24,7 +24,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   );
 };
 
-function computeCowKPIs(recs: BreedingCalvingRecord[]) {
+function computeCowKPIs(recs: BreedingCalvingRecord[], yearBorn?: number | null) {
   const withCalf = recs.filter(r => r.calf_status && r.calf_status.toLowerCase() !== 'open');
   const totalCalves = withCalf.length;
   const bws = withCalf.map(r => r.calf_bw).filter((v): v is number => v != null && v > 0);
@@ -34,7 +34,7 @@ function computeCowKPIs(recs: BreedingCalvingRecord[]) {
   const conceptionRate = withAiDate1.length > 0 ? Math.round((aiConceived.length / withAiDate1.length) * 1000) / 10 : 0;
   const liveCalves = withCalf.filter(r => r.calf_status!.toLowerCase() === 'alive').length;
   const survivalRate = withCalf.length > 0 ? Math.round((liveCalves / withCalf.length) * 1000) / 10 : 0;
-  const composite = computeCompositeFromRecords(recs);
+  const composite = computeCompositeFromRecords(recs, yearBorn);
   return { totalCalves, avgBw, conceptionRate, survivalRate, composite };
 }
 
@@ -84,18 +84,20 @@ export default function CowDetail() {
   const { data: allRecords } = useBreedingCalvingRecords();
   const { data: activeAnimals } = useActiveAnimals('Blair');
 
-  const kpis = useMemo(() => calvingRecords ? computeCowKPIs(calvingRecords) : null, [calvingRecords]);
+  const kpis = useMemo(() => calvingRecords ? computeCowKPIs(calvingRecords, animal?.year_born) : null, [calvingRecords, animal]);
 
   const activeLids = useMemo(() => new Set((activeAnimals ?? []).map(a => a.lifetime_id).filter(Boolean) as string[]), [activeAnimals]);
+
+  const animalYearBorn = useMemo(() => new Map((activeAnimals ?? []).map(a => [a.lifetime_id ?? '', a.year_born ?? null] as [string, number | null])), [activeAnimals]);
 
   const allCompositeScores = useMemo(() => {
     if (!allRecords || activeLids.size === 0) return [];
     const byCow = new Map<string, BreedingCalvingRecord[]>();
     allRecords.forEach(r => { if (r.lifetime_id && activeLids.has(r.lifetime_id)) { const a = byCow.get(r.lifetime_id) || []; a.push(r); byCow.set(r.lifetime_id, a); } });
     const scores: number[] = [];
-    byCow.forEach(recs => { const c = computeCompositeFromRecords(recs); if (c > 0) scores.push(c); });
+    byCow.forEach((recs, lid) => { const c = computeCompositeFromRecords(recs, animalYearBorn.get(lid)); if (c > 0) scores.push(c); });
     return scores;
-  }, [allRecords, activeLids]);
+  }, [allRecords, activeLids, animalYearBorn]);
 
   const notes = useMemo(() => {
     if (!calvingRecords || !kpis) return [];

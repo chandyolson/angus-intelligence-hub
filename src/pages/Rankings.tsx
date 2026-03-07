@@ -40,7 +40,7 @@ function computeRankedCows(animals: Animal[], records: BreedingCalvingRecord[]):
     const conceptionRate = withAiDate1.length > 0 ? Math.round((aiConceived.length / withAiDate1.length) * 1000) / 10 : 0;
     const liveCalves = withCalf.filter(r => r.calf_status?.toLowerCase() === 'alive').length;
     const survivalRate = withCalf.length > 0 ? Math.round((liveCalves / withCalf.length) * 1000) / 10 : 0;
-    const composite = computeCompositeFromRecords(recs);
+    const composite = computeCompositeFromRecords(recs, a.year_born);
     return { lifetime_id: a.lifetime_id ?? '', tag: a.tag, year_born: a.year_born, sire: a.sire, total_calves: withCalf.length, ai_conception_rate: conceptionRate, calf_survival_rate: survivalRate, avg_bw: avgBw, composite_score: composite, rank: 0, quartile: 'AVERAGE' as const };
   });
 
