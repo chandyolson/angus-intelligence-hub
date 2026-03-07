@@ -192,9 +192,8 @@ export function computeSireStats(records: BreedingCalvingRecord[]): SireStats[] 
     // --- Calf Sire metrics ---
     const calfRecs = records.filter(r => r.calf_sire === sire && r.calving_date != null);
     const total_calves = calfRecs.length;
-    const withStatus = calfRecs.filter(r => r.calf_status && r.calf_status.toLowerCase() !== 'open');
-    const alive = withStatus.filter(r => r.calf_status?.toLowerCase() === 'alive').length;
-    const calf_survival_rate = withStatus.length > 0 ? (alive / withStatus.length) * 100 : 0;
+    const alive = calfRecs.filter(r => r.calf_status?.toLowerCase() === 'alive').length;
+    const calf_survival_rate = total_calves > 0 ? (alive / total_calves) * 100 : 0;
     const bws = calfRecs.map(r => r.calf_bw).filter((v): v is number => v != null && v > 0);
     const avg_calf_bw = bws.length > 0 ? bws.reduce((a, b) => a + b, 0) / bws.length : 0;
 
