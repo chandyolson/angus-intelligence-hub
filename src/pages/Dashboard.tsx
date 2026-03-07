@@ -8,7 +8,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   LineChart, Line, ReferenceLine, ResponsiveContainer, Cell, PieChart, Pie, Legend,
 } from 'recharts';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ShimmerSkeleton, ShimmerCard } from '@/components/ui/shimmer-skeleton';
 import { ErrorBox } from '@/components/ui/error-box';
@@ -263,6 +263,68 @@ export default function Dashboard() {
           <p className="text-sm text-foreground">⚠ Open rate is trending upward. Investigate nutrition, body condition score at breeding time, heat detection accuracy, and semen handling protocols.</p>
         </div>
       )}
+
+      {/* Insights Summary Bar */}
+      {kpis && !loading && (() => {
+        const insights: { icon: React.ReactNode; text: string; color: string }[] = [];
+
+        // YoY conception trend
+        if (yoyData.length >= 2) {
+          const latest = yoyData[yoyData.length - 1];
+          const prev = yoyData[yoyData.length - 2];
+          const diff = Math.round((latest.conceptionRate - prev.conceptionRate) * 10) / 10;
+          if (diff > 0) insights.push({ icon: <TrendingUp className="h-4 w-4" />, text: `AI conception rate up ${diff}% vs ${prev.year}`, color: 'text-success' });
+          else if (diff < 0) insights.push({ icon: <TrendingDown className="h-4 w-4" />, text: `AI conception rate down ${Math.abs(diff)}% vs ${prev.year}`, color: 'text-destructive' });
+          else insights.push({ icon: <Minus className="h-4 w-4" />, text: `AI conception rate unchanged vs ${prev.year}`, color: 'text-muted-foreground' });
+        }
+
+        // Top AI sire
+        if (sireConception.length > 0) {
+          const top = sireConception[0];
+          insights.push({ icon: <TrendingUp className="h-4 w-4" />, text: `Top AI sire: ${top.sire} at ${top.conceptionRate}% (n=${top.count})`, color: 'text-success' });
+        }
+
+        // Open rate flag
+        if (yoyData.length >= 2) {
+          const latest = yoyData[yoyData.length - 1];
+          const prev = yoyData[yoyData.length - 2];
+          const openDiff = Math.round((latest.openRate - prev.openRate) * 10) / 10;
+          if (openDiff > 2) insights.push({ icon: <TrendingDown className="h-4 w-4" />, text: `Open rate increased ${openDiff}% — review breeding protocols`, color: 'text-destructive' });
+          else if (openDiff < -2) insights.push({ icon: <TrendingUp className="h-4 w-4" />, text: `Open rate improved by ${Math.abs(openDiff)}%`, color: 'text-success' });
+        }
+
+        // Calving interval
+        if (calvingIntervals) {
+          insights.push({
+            icon: calvingIntervals.average <= 370 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />,
+            text: `Avg calving interval: ${calvingIntervals.average} days (${calvingIntervals.cowCount} cows)`,
+            color: calvingIntervals.average <= 370 ? 'text-success' : 'text-primary',
+          });
+        }
+
+        // Shortest gestation sire
+        if (sireGestation.length > 0) {
+          const shortest = sireGestation[0];
+          insights.push({ icon: <TrendingUp className="h-4 w-4" />, text: `Shortest gestation sire: ${shortest.sire} at ${shortest.avgGestation}d (n=${shortest.count})`, color: 'text-muted-foreground' });
+        }
+
+        if (insights.length === 0) return null;
+
+        return (
+          <Card className="bg-card border-border">
+            <CardContent className="py-3 px-4">
+              <div className="flex flex-wrap gap-x-6 gap-y-2">
+                {insights.map((ins, i) => (
+                  <div key={i} className={`flex items-center gap-2 text-sm ${ins.color}`}>
+                    {ins.icon}
+                    <span>{ins.text}</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       {/* Row 1: Score Distribution + Year-over-Year */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
