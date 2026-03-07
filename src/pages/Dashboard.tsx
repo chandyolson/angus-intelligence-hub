@@ -58,9 +58,9 @@ function computeKPIs(records: BlairCombinedRecord[], activeCowCount: number) {
 }
 
 /* ─── Score distribution (uses blair_combined as BreedingCalvingRecord-like) ─── */
-function computeScoreDistribution(records: BlairCombinedRecord[]) {
+function computeScoreDistribution(records: BlairCombinedRecord[], activeLids: Set<string>) {
   const byCow = new Map<string, BlairCombinedRecord[]>();
-  records.forEach(r => { if (r.lifetime_id) { const a = byCow.get(r.lifetime_id) || []; a.push(r); byCow.set(r.lifetime_id, a); } });
+  records.forEach(r => { if (r.lifetime_id && activeLids.has(r.lifetime_id)) { const a = byCow.get(r.lifetime_id) || []; a.push(r); byCow.set(r.lifetime_id, a); } });
   const scores: number[] = [];
   byCow.forEach(recs => {
     // Map to BreedingCalvingRecord shape for computeCompositeFromRecords
