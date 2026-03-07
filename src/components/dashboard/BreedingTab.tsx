@@ -154,11 +154,11 @@ export default function BreedingTab() {
 
   return (
     <div className="space-y-6">
-      {/* Section 1: Preg Stage by Project & Year — Heatmap */}
+      {/* Section 1: Preg Stage by Location & Year — Heatmap */}
       <Card className="bg-card border-border">
         <CardHeader className="pb-2 flex flex-row items-center justify-between">
           <CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">
-            Preg Stage by Project & Year
+            Preg Stage by Location & Year
           </CardTitle>
           <Select value={selectedYear} onValueChange={setSelectedYear}>
             <SelectTrigger className="w-[140px] h-8 text-xs bg-sidebar border-border">
@@ -173,11 +173,11 @@ export default function BreedingTab() {
           </Select>
         </CardHeader>
         <CardContent>
-          {pregByProject.data.length > 0 ? (
+          {pregByLocation.data.length > 0 ? (
             <div className="overflow-x-auto">
               {/* Legend */}
               <div className="flex flex-wrap gap-3 mb-4">
-                {pregByProject.stages.map(stage => (
+                {pregByLocation.stages.map(stage => (
                   <div key={stage} className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <span className="w-3 h-3 rounded-sm" style={{ background: STAGE_COLORS[stage] || 'hsl(219, 23%, 53%)' }} />
                     {stage}
@@ -188,21 +188,21 @@ export default function BreedingTab() {
               <table className="w-full text-xs border-collapse">
                 <thead>
                   <tr>
-                    <th className="text-left py-2 px-3 text-muted-foreground font-medium border-b border-border sticky left-0 bg-card">Project</th>
-                    {pregByProject.stages.map(stage => (
+                    <th className="text-left py-2 px-3 text-muted-foreground font-medium border-b border-border sticky left-0 bg-card">Location</th>
+                    {pregByLocation.stages.map(stage => (
                       <th key={stage} className="py-2 px-3 text-center text-muted-foreground font-medium border-b border-border min-w-[70px]">{stage}</th>
                     ))}
                     <th className="py-2 px-3 text-center text-muted-foreground font-medium border-b border-border min-w-[60px]">Total</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {pregByProject.data.map((row) => (
+                  {pregByLocation.data.map((row) => (
                     <tr key={row.project} className="border-b border-border/50 hover:bg-secondary/30 transition-colors">
                       <td className="py-2 px-3 text-foreground font-medium sticky left-0 bg-card">{row.project}</td>
-                      {pregByProject.stages.map(stage => {
+                      {pregByLocation.stages.map(stage => {
                         const count = (row as any)[stage] || 0;
                         const pct = row.total > 0 ? Math.round((count / row.total) * 1000) / 10 : 0;
-                        const intensity = pregByProject.maxCount > 0 ? count / pregByProject.maxCount : 0;
+                        const intensity = pregByLocation.maxCount > 0 ? count / pregByLocation.maxCount : 0;
                         const baseColor = STAGE_COLORS[stage] || 'hsl(219, 23%, 53%)';
                         return (
                           <td key={stage} className="py-2 px-3 text-center">
