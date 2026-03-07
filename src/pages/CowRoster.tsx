@@ -27,7 +27,7 @@ interface CowRow {
   ai_conception_rate: number;
   first_service_rate: number;
   second_service_rate: number;
-  calf_survival_rate: number;
+  calf_survival_rate: number | null;
   composite_score: number;
 }
 
