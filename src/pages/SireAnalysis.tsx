@@ -283,7 +283,7 @@ export default function SireAnalysis() {
                       {(() => {
                         const conception = (s.first_service_rate / 100) * 33.3;
                         const survival = (s.calf_survival_rate / 100) * 33.3;
-                        const gestation = s.avg_gestation_days > 0 ? Math.max(0, Math.min(33.3, ((285 - s.avg_gestation_days) / 15) * 33.3)) : 0;
+                        const gestation = s.avg_gestation_days > 0 ? Math.max(0, Math.min(33.3, ((290 - s.avg_gestation_days) / 20) * 33.3)) : 0;
                         const total = Math.round((conception + survival + gestation) * 10) / 10;
                         return (
                           <div className="flex items-center gap-2 group relative">
