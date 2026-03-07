@@ -8,12 +8,13 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { ArrowUp, ArrowDown, ArrowUpDown, Search, Crown, Calendar } from 'lucide-react';
+import { ArrowUp, ArrowDown, ArrowUpDown, Search, Crown, Calendar, ChevronDown, ChevronUp, AlertTriangle, Info } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ShimmerSkeleton, ShimmerTableRows } from '@/components/ui/shimmer-skeleton';
 import { ErrorBox } from '@/components/ui/error-box';
 import { EmptyState } from '@/components/ui/empty-state';
 import { computeCompositeFromRecords } from '@/lib/calculations';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface CowRow {
   lifetime_id: string;
