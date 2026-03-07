@@ -9,6 +9,7 @@ import { ErrorBox } from '@/components/ui/error-box';
 interface FlaggedRecord {
   lifetime_id: string;
   detail: string;
+  extraColumns?: Record<string, string>;
 }
 
 interface QualityCard {
@@ -18,6 +19,7 @@ interface QualityCard {
   count: number;
   severity: 'red' | 'amber';
   records: FlaggedRecord[];
+  customHeaders?: string[];
 }
 
 export default function DataQuality() {
