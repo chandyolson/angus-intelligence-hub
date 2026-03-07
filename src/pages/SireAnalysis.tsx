@@ -85,15 +85,65 @@ export default function SireAnalysis() {
       .map(s => ({ name: s.sire, value: s.bull_calf_pct }));
   }, [sireStats]);
 
-  const topSire = useMemo(() => {
-    const eligible = sireStats.filter(s => s.units_used_1st >= 25);
-    return eligible.length > 0 ? eligible.reduce((best, s) => s.first_service_rate > best.first_service_rate ? s : best, eligible[0]) : null;
-  }, [sireStats]);
+  // Dynamic leader cards based on sortKey
+  const leaderCards = useMemo(() => {
+    if (sireStats.length === 0) return [];
 
-  const mostUsed = useMemo(() => {
-    const withUnits = sireStats.filter(s => s.units_used_1st > 0);
-    return withUnits.length > 0 ? [...withUnits].sort((a, b) => b.units_used_1st - a.units_used_1st)[0] : null;
-  }, [sireStats]);
+    const cards: { emoji: string; label: string; sire: SireStats; value: string; sublabel: string; detail: string; borderClass: string }[] = [];
+
+    const best = (key: keyof SireStats, min = 0, filter?: (s: SireStats) => boolean) => {
+      const pool = filter ? sireStats.filter(filter) : sireStats;
+      const valid = pool.filter(s => (s[key] as number) > min);
+      return valid.length > 0 ? valid.reduce((a, b) => (a[key] as number) > (b[key] as number) ? a : b, valid[0]) : null;
+    };
+    const worst = (key: keyof SireStats, filter?: (s: SireStats) => boolean) => {
+      const pool = filter ? sireStats.filter(filter) : sireStats;
+      const valid = pool.filter(s => (s[key] as number) > 0);
+      return valid.length > 0 ? valid.reduce((a, b) => (a[key] as number) < (b[key] as number) ? a : b, valid[0]) : null;
+    };
+
+    const detailLine = (s: SireStats) =>
+      `${s.units_used_1st} units · ${s.total_calves} calves · ${s.calf_survival_rate}% survival${s.avg_calf_bw > 0 ? ` · ${s.avg_calf_bw} lbs` : ''}`;
+
+    switch (sortKey) {
+      case 'overall_ai_rate': {
+        const top = best('overall_ai_rate', 0, s => s.units_used_1st >= 25);
+        const low = worst('overall_ai_rate', s => s.units_used_1st >= 25);
+        if (top) cards.push({ emoji: '🏆', label: 'Best Overall AI Rate (25+ units)', sire: top, value: `${top.overall_ai_rate}%`, sublabel: 'Overall AI Conception', detail: detailLine(top), borderClass: 'border-success/40' });
+        if (low && low.sire !== top?.sire) cards.push({ emoji: '⚠', label: 'Lowest Overall AI Rate (25+ units)', sire: low, value: `${low.overall_ai_rate}%`, sublabel: 'Overall AI Conception', detail: detailLine(low), borderClass: 'border-destructive/40' });
+        break;
+      }
+      case 'first_service_rate': {
+        const top = best('first_service_rate', 0, s => s.units_used_1st >= 25);
+        const low = worst('first_service_rate', s => s.units_used_1st >= 25);
+        if (top) cards.push({ emoji: '🏆', label: 'Best 1st Service Rate (25+ units)', sire: top, value: `${top.first_service_rate}%`, sublabel: '1st Service AI Rate', detail: detailLine(top), borderClass: 'border-success/40' });
+        if (low && low.sire !== top?.sire) cards.push({ emoji: '⚠', label: 'Lowest 1st Service Rate (25+ units)', sire: low, value: `${low.first_service_rate}%`, sublabel: '1st Service AI Rate', detail: detailLine(low), borderClass: 'border-destructive/40' });
+        break;
+      }
+      case 'total_calves': {
+        const top = best('total_calves');
+        const topSurvivor = best('calf_survival_rate', 0, s => s.total_calves >= 20);
+        if (top) cards.push({ emoji: '👑', label: 'Most Calves Born', sire: top, value: `${top.total_calves}`, sublabel: 'Total Calves', detail: `${top.calf_survival_rate}% survival · ${top.avg_calf_bw > 0 ? `${top.avg_calf_bw} lbs avg BW` : ''}`, borderClass: 'border-primary/40' });
+        if (topSurvivor && topSurvivor.sire !== top?.sire) cards.push({ emoji: '💪', label: 'Best Survival Rate (20+ calves)', sire: topSurvivor, value: `${topSurvivor.calf_survival_rate}%`, sublabel: 'Calf Survival', detail: `${topSurvivor.total_calves} calves born`, borderClass: 'border-success/40' });
+        break;
+      }
+      case 'avg_calf_bw': {
+        const lightest = worst('avg_calf_bw', s => s.total_calves >= 10);
+        const heaviest = best('avg_calf_bw', 0, s => s.total_calves >= 10);
+        if (lightest) cards.push({ emoji: '🪶', label: 'Lightest Avg Birth Weight (10+ calves)', sire: lightest, value: `${lightest.avg_calf_bw} lbs`, sublabel: 'Avg Birth Weight', detail: `${lightest.total_calves} calves · ${lightest.calf_survival_rate}% survival`, borderClass: 'border-success/40' });
+        if (heaviest && heaviest.sire !== lightest?.sire) cards.push({ emoji: '🐂', label: 'Heaviest Avg Birth Weight (10+ calves)', sire: heaviest, value: `${heaviest.avg_calf_bw} lbs`, sublabel: 'Avg Birth Weight', detail: `${heaviest.total_calves} calves · ${heaviest.calf_survival_rate}% survival`, borderClass: 'border-primary/40' });
+        break;
+      }
+      case 'avg_gestation_days': {
+        const shortest = worst('avg_gestation_days', s => s.avg_gestation_days > 0);
+        const longest = best('avg_gestation_days', 0, s => s.avg_gestation_days > 0);
+        if (shortest) cards.push({ emoji: '⚡', label: 'Shortest Avg Gestation', sire: shortest, value: `${shortest.avg_gestation_days} d`, sublabel: 'Avg Gestation Length', detail: `${shortest.total_calves} calves · ${shortest.avg_calf_bw > 0 ? `${shortest.avg_calf_bw} lbs avg BW` : ''}`, borderClass: 'border-success/40' });
+        if (longest && longest.sire !== shortest?.sire) cards.push({ emoji: '🐢', label: 'Longest Avg Gestation', sire: longest, value: `${longest.avg_gestation_days} d`, sublabel: 'Avg Gestation Length', detail: `${longest.total_calves} calves · ${longest.avg_calf_bw > 0 ? `${longest.avg_calf_bw} lbs avg BW` : ''}`, borderClass: 'border-primary/40' });
+        break;
+      }
+    }
+    return cards;
+  }, [sireStats, sortKey]);
 
   const handleTableSort = (key: string) => {
     if (tableSortKey === key) setTableSortAsc(!tableSortAsc);
