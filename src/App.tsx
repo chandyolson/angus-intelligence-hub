@@ -42,6 +42,7 @@ const App = () => (
               <Route path="/cow/:lifetime_id" element={<CowDetail />} />
               <Route path="/rankings" element={<Rankings />} />
               <Route path="/sires" element={<SireAnalysis />} />
+              <Route path="/sires/:sire_name" element={<SireDetail />} />
               <Route path="/assistant" element={<AIAssistant />} />
               <Route path="/data-quality" element={<DataQuality />} />
               <Route path="/calving-interval" element={<CalvingInterval />} />
