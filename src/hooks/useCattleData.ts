@@ -31,9 +31,9 @@ async function fetchAllRows<T>(table: string, filter?: { column: string; value: 
   return allRows as T[];
 }
 
-function filterByOperation<T extends { operation?: string | null }>(rows: T[], operation: OperationFilter): T[] {
+function filterByOperation<T>(rows: T[], operation: OperationFilter): T[] {
   if (operation === 'Both') return rows;
-  return rows.filter(r => r.operation === operation);
+  return rows.filter(r => (r as any).operation === operation);
 }
 
 export function useAnimals() {
@@ -117,7 +117,6 @@ export function useRecordCounts() {
   return useQuery({
     queryKey: ['record_counts', operation],
     queryFn: async () => {
-      // Fetch all and filter client-side for consistency
       const [allAnimals, allBcr] = await Promise.all([
         fetchAllRows<Animal>('animals'),
         fetchAllRows<BreedingCalvingRecord>('blair_combined'),
