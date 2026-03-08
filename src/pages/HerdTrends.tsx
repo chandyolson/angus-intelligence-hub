@@ -294,6 +294,51 @@ export default function HerdTrends() {
         </Card>
       )}
 
+      {/* ── Cow Age Distribution ── */}
+      <h2 className="text-[15px] font-semibold text-foreground">Cow Age Distribution</h2>
+      {ageBuckets.length > 0 && (
+        <Card className="bg-card border-border">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">
+              Active Herd Age Breakdown
+            </CardTitle>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Age = {new Date().getFullYear()} − year_born. Herd average: {avgAge} years.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={ageBuckets} margin={{ top: 20, right: 20, left: 10, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                <XAxis dataKey="name" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} axisLine={false} tickLine={false} />
+                <Tooltip
+                  contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }}
+                  formatter={(value: number) => [`${value} cows`, 'Count']}
+                />
+                <Bar dataKey="count" radius={[4, 4, 0, 0]} barSize={48}>
+                  {ageBuckets.map((d, i) => (
+                    <Cell key={i} fill={d.color} />
+                  ))}
+                  <LabelList dataKey="count" position="top" style={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+            {agedPct > 15 && (
+              <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-3 mt-3 flex items-start gap-2">
+                <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-destructive">Replacement Warning</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {agedPct}% of the active herd is 11+ years old. A herd skewed this heavily toward aged cows signals a replacement crisis — consider accelerating heifer retention.
+                  </p>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Section: Fetal Sex Accuracy */}
       <h2 className="text-[15px] font-semibold text-foreground">Fetal Sex Accuracy</h2>
 
