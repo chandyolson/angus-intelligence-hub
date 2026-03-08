@@ -178,9 +178,9 @@ const columns: { key: SortKey; label: string }[] = [
 ];
 
 function exportCSV(rows: SireOverviewRow[]) {
-  const header = 'Sire,Total Uses,1st Service %,n (1st),2nd Service %,n (2nd),Overall AI %,Avg BW (lbs),Avg Gestation,Survival %,Grade\n';
+  const header = 'Sire,Total Uses,Calves Born,1st Service %,n (1st),2nd Service %,n (2nd),Overall AI %,Avg BW (lbs),Avg Gestation,Survival %,Grade\n';
   const body = rows.map(r =>
-    `"${r.sire}",${r.totalUses},${r.n1st >= MIN_METRIC ? r.rate1st : ''},${r.n1st},${r.n2nd >= MIN_METRIC ? r.rate2nd : ''},${r.n2nd},${r.overallRate},${r.nBW >= MIN_METRIC ? r.avgBW : ''},${r.nGest >= MIN_METRIC ? r.avgGest : ''},${r.nSurvival >= MIN_METRIC ? r.survivalPct : ''},${r.gradeLetter}`
+    `"${r.sire}",${r.totalUses},${r.totalCalves},${r.n1st >= MIN_METRIC ? r.rate1st : ''},${r.n1st},${r.n2nd >= MIN_METRIC ? r.rate2nd : ''},${r.n2nd},${r.overallRate},${r.nBW >= MIN_METRIC ? r.avgBW : ''},${r.nGest >= MIN_METRIC ? r.avgGest : ''},${r.nSurvival >= MIN_METRIC ? r.survivalPct : ''},${r.gradeLetter}`
   ).join('\n');
   const blob = new Blob([header + body], { type: 'text/csv' });
   const url = URL.createObjectURL(blob);
