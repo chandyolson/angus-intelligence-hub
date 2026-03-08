@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useAnimal, useCowBreedingRecords, useUltrasoundRecords, useBreedingCalvingRecords, useActiveAnimals } from '@/hooks/useCattleData';
+import { useAnimal, useCowBreedingRecords, useBreedingCalvingRecords, useActiveAnimals } from '@/hooks/useCattleData';
 import { BreedingCalvingRecord } from '@/types/cattle';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -80,7 +80,19 @@ export default function CowDetail() {
   const decodedId = decodeURIComponent(lifetime_id || '');
   const { data: animal, isLoading: la, error: animalError } = useAnimal(decodedId);
   const { data: calvingRecords, isLoading: lr, error: calvingError } = useCowBreedingRecords(decodedId);
-  const { data: ultrasoundRecords, isLoading: lu, error: ultraError } = useUltrasoundRecords(decodedId);
+  // Derive ultrasound records from blair_combined data
+  const ultrasoundRecords = useMemo(() => {
+    if (!calvingRecords) return [];
+    return calvingRecords
+      .filter(r => r.ultrasound_date)
+      .map(r => ({
+        ultrasound_date: r.ultrasound_date,
+        preg_stage: r.preg_stage,
+        dog: r.dog,
+        fetal_sex: r.fetal_sex,
+        ultrasound_notes: r.ultrasound_notes,
+      }));
+  }, [calvingRecords]);
   const { data: allRecords } = useBreedingCalvingRecords();
   const { data: activeAnimals } = useActiveAnimals('Blair');
 
@@ -114,7 +126,7 @@ export default function CowDetail() {
   const sortedCalving = useMemo(() => calvingRecords ? [...calvingRecords].sort((a, b) => (a.breeding_year ?? 0) - (b.breeding_year ?? 0)) : [], [calvingRecords]);
   const sortedUltrasound = useMemo(() => ultrasoundRecords ? [...ultrasoundRecords].sort((a, b) => (a.ultrasound_date ?? '').localeCompare(b.ultrasound_date ?? '')) : [], [ultrasoundRecords]);
 
-  const loading = la || lr || lu;
+  const loading = la || lr;
 
   if (loading) return (
     <div className="space-y-4">
@@ -127,7 +139,7 @@ export default function CowDetail() {
     </div>
   );
 
-  if (animalError || calvingError || ultraError) return (
+  if (animalError || calvingError) return (
     <div className="space-y-4">
       <Link to="/roster" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="h-4 w-4" /> Back to Cow List</Link>
       <ErrorBox />
@@ -256,7 +268,7 @@ export default function CowDetail() {
                   {sortedUltrasound.map((r, i) => (
                     <TableRow key={i} className="border-border text-[13px]" style={{ backgroundColor: i % 2 === 1 ? '#0E1528' : undefined }}>
                       <TableCell className="text-xs">{r.ultrasound_date ?? '—'}</TableCell><TableCell className={pregColor(r.preg_stage)}>{r.preg_stage ?? '—'}</TableCell>
-                      <TableCell>{r.dog ?? '—'}</TableCell><TableCell>{r.calf_sex ?? '—'}</TableCell><TableCell className="text-xs text-muted-foreground">{r.notes ?? '—'}</TableCell>
+                      <TableCell>{r.dog ?? '—'}</TableCell><TableCell>{r.fetal_sex ?? '—'}</TableCell><TableCell className="text-xs text-muted-foreground">{r.ultrasound_notes ?? '—'}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
