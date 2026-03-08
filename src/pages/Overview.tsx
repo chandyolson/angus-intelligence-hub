@@ -177,7 +177,7 @@ export default function Overview() {
       ) : kpis ? (
         <>
           {/* KPI Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             <KPICard icon={Users} label="Active Cows" value={kpis.activeCowCount.toLocaleString()} onClick={() => navigate('/cow-roster')} />
             <KPICard icon={Crosshair} label="Avg 1st Service AI Rate" value={`${kpis.firstServiceRate}%`} onClick={() => navigate('/rankings')} />
             <KPICard icon={Baby} label="Avg Calf Survival Rate" value={`${kpis.survivalRate}%`} onClick={() => navigate('/rankings')} />
