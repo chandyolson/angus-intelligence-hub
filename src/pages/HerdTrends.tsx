@@ -1,14 +1,15 @@
 import { useMemo } from 'react';
-import { useAnimals } from '@/hooks/useCattleData';
+import { useAnimals, useBreedingCalvingRecords } from '@/hooks/useCattleData';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertTriangle } from 'lucide-react';
 import { ShimmerSkeleton } from '@/components/ui/shimmer-skeleton';
 import { ErrorBox } from '@/components/ui/error-box';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LabelList, Line, ComposedChart, Legend } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LabelList, Line, ComposedChart, Legend, LineChart } from 'recharts';
 
 
 export default function HerdTrends() {
   const { data: animals, isLoading: la, error: re } = useAnimals();
+  const { data: records, isLoading: lr, error: rr } = useBreedingCalvingRecords();
 
   // ── Cow Sire (Dam Line) Distribution ──
   const damSireData = useMemo(() => {
