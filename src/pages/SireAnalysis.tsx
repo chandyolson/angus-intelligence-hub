@@ -2,13 +2,11 @@ import { useMemo, useState } from 'react';
 import { useBreedingCalvingRecords } from '@/hooks/useCattleData';
 import { BreedingCalvingRecord } from '@/types/cattle';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { ShimmerSkeleton } from '@/components/ui/shimmer-skeleton';
 import { ErrorBox } from '@/components/ui/error-box';
-import { EmptyState } from '@/components/ui/empty-state';
 import { Trophy, AlertTriangle } from 'lucide-react';
 import AdvancedSireSection from '@/components/sire-analysis/AdvancedSireSection';
+import SireOverviewTable from '@/components/sire-analysis/SireOverviewTable';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ReferenceArea, ResponsiveContainer, Cell, ScatterChart, Scatter, ZAxis, LabelList, ComposedChart, Line } from 'recharts';
 
 interface SireRow {
@@ -17,43 +15,12 @@ interface SireRow {
   sampleSize: number;
   avgBW: number;
   survivalRate: number;
-  badge: 'ELITE' | 'STRONG' | 'AVERAGE' | 'BELOW AVG';
 }
-
-interface CombinedSireRow {
-  sire: string;
-  rate1st: number;
-  n1st: number;
-  rate2nd: number;
-  n2nd: number;
-  avgBW: number;
-  survivalRate: number;
-  badge: 'ELITE' | 'STRONG' | 'AVERAGE' | 'BELOW AVG';
-}
-
-
 
 const rateColor = (rate: number) => {
   if (rate >= 70) return 'hsl(142, 71%, 45%)';
   if (rate >= 55) return 'hsl(48, 96%, 53%)';
   return 'hsl(0, 72%, 51%)';
-};
-
-const badgeStyle = (badge: string) => {
-  switch (badge) {
-    case 'ELITE': return 'bg-success/20 text-success border-success/30';
-    case 'STRONG': return 'bg-lime-500/20 text-lime-400 border-lime-500/30';
-    case 'AVERAGE': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
-    case 'BELOW AVG': return 'bg-destructive/20 text-destructive border-destructive/30';
-    default: return '';
-  }
-};
-
-const getBadge = (rate: number): SireRow['badge'] => {
-  if (rate >= 70) return 'ELITE';
-  if (rate >= 55) return 'STRONG';
-  if (rate >= 45) return 'AVERAGE';
-  return 'BELOW AVG';
 };
 
 function computeServiceTable(
