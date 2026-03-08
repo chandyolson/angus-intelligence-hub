@@ -8,7 +8,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   LineChart, Line, ReferenceLine, ResponsiveContainer, Cell,
 } from 'recharts';
-import { AlertTriangle, Users, Crosshair, HeartPulse, Clock, Baby, Ban } from 'lucide-react';
+import { AlertTriangle, Users, Crosshair, HeartPulse, Clock, Baby, Ban, Scale } from 'lucide-react';
 import { ShimmerCard } from '@/components/ui/shimmer-skeleton';
 import { ErrorBox } from '@/components/ui/error-box';
 import { cn } from '@/lib/utils';
