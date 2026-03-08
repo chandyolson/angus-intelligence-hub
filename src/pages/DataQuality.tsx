@@ -14,6 +14,7 @@ import { ErrorBox } from '@/components/ui/error-box';
 import { RecordEditPanel, MarkReviewedDialog } from '@/components/data-quality/RecordEditPanel';
 import { SireDeduplication } from '@/components/data-quality/SireDeduplication';
 import { MissingRecordGaps } from '@/components/data-quality/MissingRecordGaps';
+import { FetalSexAccuracy } from '@/components/data-quality/FetalSexAccuracy';
 import { cn } from '@/lib/utils';
 
 type Severity = 'critical' | 'high' | 'medium' | 'low';
@@ -479,6 +480,9 @@ export default function DataQuality() {
               </div>
             </div>
           )}
+
+          {/* Fetal Sex Accuracy */}
+          <FetalSexAccuracy />
 
           {/* Sire Deduplication */}
           <SireDeduplication />
