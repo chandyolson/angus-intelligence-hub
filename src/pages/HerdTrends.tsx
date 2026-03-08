@@ -8,8 +8,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 
 
 export default function HerdTrends() {
-  const { data: records, isLoading: lr, error: re } = useBreedingCalvingRecords();
-  const { data: animals, isLoading: la } = useAnimals();
+  const { data: animals, isLoading: la, error: re } = useAnimals();
 
   // ── Cow Sire (Dam Line) Distribution ──
   const damSireData = useMemo(() => {
