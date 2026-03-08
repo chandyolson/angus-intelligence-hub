@@ -146,8 +146,8 @@ const bwColor = (bw: number) => {
 };
 
 const gestColor = (g: number) => {
-  if (g >= 270 && g <= 290) return 'hsl(142, 71%, 45%)';
-  if ((g >= 265 && g < 270) || (g > 290 && g <= 295)) return 'hsl(48, 96%, 53%)';
+  if (g >= 270 && g <= 285) return 'hsl(142, 71%, 45%)';
+  if ((g >= 265 && g < 270) || (g > 285 && g <= 290)) return 'hsl(48, 96%, 53%)';
   return 'hsl(0, 72%, 51%)';
 };
 
