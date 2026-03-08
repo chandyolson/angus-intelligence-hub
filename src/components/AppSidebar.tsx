@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, ShieldAlert, FlaskConical, Beef, TrendingUp,
   Baby, Weight, Scissors, HeartPulse, Users, Menu, X, ChevronDown,
-  Bot, BarChart3, Clock, Ban,
+  Bot, BarChart3, Clock, Ban, ClipboardList,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useRecordCounts } from '@/hooks/useCattleData';
@@ -28,6 +28,7 @@ export function AppSidebar() {
 
   const sections: NavSection[] = [
     { title: 'Overview', icon: LayoutDashboard, url: '/' },
+    { title: 'Cow List', icon: ClipboardList, url: '/roster' },
     { title: 'Data Quality', icon: ShieldAlert, url: '/data-quality', badge: qualityCount, badgeColor: 'bg-destructive text-destructive-foreground' },
     { title: 'Sire Analysis', icon: FlaskConical, url: '/sires' },
     {
