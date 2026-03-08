@@ -341,7 +341,10 @@ export default function Rankings() {
         </CardContent>
       </Card>
 
-      {/* Section 1: Rankings */}
+      {/* Cow Lookup */}
+      <CowLookup animals={animals ?? []} records={records ?? []} cullFlags={cullFlags} />
+
+      {/* Section 3: Rankings */}
       <Card className="bg-card border-border">
         <CardHeader className="pb-2 flex flex-row items-center justify-between">
           <CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">Composite Score Rankings</CardTitle>
