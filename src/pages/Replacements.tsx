@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip,
   ResponsiveContainer, Legend, ReferenceLine, LabelList,
+  BarChart, Bar, Cell, ScatterChart, Scatter, ZAxis,
 } from 'recharts';
 
 type SortKey = 'heiferTag' | 'heiferYear' | 'damTag' | 'damScore' | 'damCalves' | 'damConception' | 'damInterval' | 'damGestation';
