@@ -321,14 +321,18 @@ function KPICard({ icon: Icon, label, value, flagRed, flagText }: {
   );
 }
 
-function StatBlock({ label, value, highlight, accent }: {
-  label: string; value: string; highlight?: boolean; accent?: boolean;
+function StatBlock({ label, value, highlight, accent, onClick }: {
+  label: string; value: string; highlight?: boolean; accent?: boolean; onClick?: () => void;
 }) {
   return (
-    <div className={cn(
-      'rounded-lg p-3 text-center',
-      highlight ? 'bg-destructive/10' : accent ? 'bg-success/10' : 'bg-muted/30',
-    )}>
+    <div
+      className={cn(
+        'rounded-lg p-3 text-center transition-colors',
+        highlight ? 'bg-destructive/10' : accent ? 'bg-success/10' : 'bg-muted/30',
+        onClick && 'cursor-pointer hover:ring-1 hover:ring-primary/40',
+      )}
+      onClick={onClick}
+    >
       <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">{label}</p>
       <p className={cn(
         'text-lg font-bold',
