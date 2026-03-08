@@ -35,7 +35,14 @@ export function AppSidebar() {
         { title: 'Group Reconciliation', url: '/reconciliation', icon: Users },
       ],
     },
-    { title: 'Sire Analysis', icon: FlaskConical, url: '/sires' },
+    {
+      title: 'Sire Analysis', icon: FlaskConical,
+      children: [
+        { title: 'Overview', url: '/sires', icon: FlaskConical },
+        { title: 'Gestation', url: '/gestation', icon: HeartPulse },
+        { title: 'Birth Weight', url: '/birth-weight', icon: Weight },
+      ],
+    },
     {
       title: 'Cow Performance', icon: Beef,
       children: [
@@ -48,8 +55,6 @@ export function AppSidebar() {
       ],
     },
     { title: 'Herd Trends', icon: TrendingUp, url: '/herd-trends' },
-    { title: 'Gestation', icon: HeartPulse, url: '/gestation' },
-    { title: 'Birth Weight', icon: Weight, url: '/birth-weight' },
     
   ];
 
