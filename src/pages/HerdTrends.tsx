@@ -6,10 +6,10 @@ import { BreedingCalvingRecord } from '@/types/cattle';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
+import { Download, AlertTriangle } from 'lucide-react';
 import { ShimmerSkeleton } from '@/components/ui/shimmer-skeleton';
 import { ErrorBox } from '@/components/ui/error-box';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LabelList, Line, ComposedChart, Legend } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LabelList, Line, ComposedChart, Legend, ReferenceLine } from 'recharts';
 
 function normalize(sex: string | null): string | null {
   if (!sex) return null;
@@ -188,6 +188,37 @@ export default function HerdTrends() {
     return rows;
   }, [animals]);
 
+  // ── Cow Age Distribution ──
+  const { ageBuckets, avgAge, agedPct } = useMemo(() => {
+    if (!animals) return { ageBuckets: [], avgAge: 0, agedPct: 0 };
+    const currentYear = new Date().getFullYear();
+    const blairActive = animals.filter(a => a.operation === 'Blair' && a.status?.toLowerCase() === 'active' && a.year_born);
+
+    const ages = blairActive.map(a => currentYear - a.year_born!);
+    if (ages.length === 0) return { ageBuckets: [], avgAge: 0, agedPct: 0 };
+
+    const avg = Math.round((ages.reduce((s, a) => s + a, 0) / ages.length) * 10) / 10;
+
+    const bucketDefs = [
+      { label: '2 (1st Calf)', min: 0, max: 2, color: 'hsl(48, 96%, 53%)' },
+      { label: '3–4 (Young)', min: 3, max: 4, color: 'hsl(142, 71%, 45%)' },
+      { label: '5–7 (Prime)', min: 5, max: 7, color: 'hsl(142, 71%, 45%)' },
+      { label: '8–10 (Mature)', min: 8, max: 10, color: 'hsl(48, 96%, 53%)' },
+      { label: '11+ (Aged)', min: 11, max: 999, color: 'hsl(0, 72%, 51%)' },
+    ];
+
+    const data = bucketDefs.map(b => ({
+      name: b.label,
+      count: ages.filter(a => a >= b.min && a <= b.max).length,
+      color: b.color,
+    }));
+
+    const aged = data.find(d => d.name.startsWith('11+'))?.count ?? 0;
+    const pct = Math.round((aged / ages.length) * 1000) / 10;
+
+    return { ageBuckets: data, avgAge: avg, agedPct: pct };
+  }, [animals]);
+
   const CHART_COLORS = ['#22c55e', '#3b82f6', '#f97316', '#a855f7', '#eab308', '#ec4899', '#14b8a6', '#f43f5e'];
 
   if (lr || la) return (
@@ -259,6 +290,51 @@ export default function HerdTrends() {
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ── Cow Age Distribution ── */}
+      <h2 className="text-[15px] font-semibold text-foreground">Cow Age Distribution</h2>
+      {ageBuckets.length > 0 && (
+        <Card className="bg-card border-border">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">
+              Active Herd Age Breakdown
+            </CardTitle>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Age = {new Date().getFullYear()} − year_born. Herd average: {avgAge} years.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={ageBuckets} margin={{ top: 20, right: 20, left: 10, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                <XAxis dataKey="name" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} axisLine={false} tickLine={false} />
+                <Tooltip
+                  contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }}
+                  formatter={(value: number) => [`${value} cows`, 'Count']}
+                />
+                <Bar dataKey="count" radius={[4, 4, 0, 0]} barSize={48}>
+                  {ageBuckets.map((d, i) => (
+                    <Cell key={i} fill={d.color} />
+                  ))}
+                  <LabelList dataKey="count" position="top" style={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+            {agedPct > 15 && (
+              <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-3 mt-3 flex items-start gap-2">
+                <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-destructive">Replacement Warning</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {agedPct}% of the active herd is 11+ years old. A herd skewed this heavily toward aged cows signals a replacement crisis — consider accelerating heifer retention.
+                  </p>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
