@@ -478,6 +478,9 @@ export default function DataQuality() {
             </div>
           )}
 
+          {/* Sire Deduplication */}
+          <SireDeduplication />
+
           {/* Edit panel */}
           {editTarget && (
             <RecordEditPanel
