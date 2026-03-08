@@ -239,6 +239,18 @@ export default function SireAnalysis() {
   const firstServiceRows = useMemo(() => records ? computeServiceTable(records, '1st') : [], [records]);
   const secondServiceRows = useMemo(() => records ? computeServiceTable(records, '2nd') : [], [records]);
 
+  const topPerformer = useMemo(() => {
+    const eligible = firstServiceRows.filter(s => s.sampleSize >= 25);
+    if (eligible.length === 0) return null;
+    return eligible.reduce((a, b) => a.rate > b.rate ? a : b);
+  }, [firstServiceRows]);
+
+  const mostUsedBelowAvg = useMemo(() => {
+    const eligible = firstServiceRows.filter(s => s.rate < 88);
+    if (eligible.length === 0) return null;
+    return eligible.reduce((a, b) => a.sampleSize > b.sampleSize ? a : b);
+  }, [firstServiceRows]);
+
   // Gestation by calf_sire
   const gestationData = useMemo(() => {
     if (!records) return [];
