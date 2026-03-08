@@ -460,6 +460,9 @@ export default function SireAnalysis() {
           </Card>
         )}
       </div>
+
+      {/* Advanced Section */}
+      {records && records.length > 0 && <AdvancedSireSection records={records} />}
     </div>
   );
 }
