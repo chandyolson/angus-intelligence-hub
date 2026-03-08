@@ -61,10 +61,17 @@ export function useBreedingCalvingRecords() {
 export function useUltrasoundRecords(lifetimeId?: string) {
   return useQuery({
     queryKey: ['ultrasound_records', lifetimeId],
-    queryFn: () =>
-      lifetimeId
-        ? fetchAllRows<UltrasoundRecord>('ultrasound', { column: 'lifetime_id', value: lifetimeId })
-        : fetchAllRows<UltrasoundRecord>('ultrasound'),
+    queryFn: async () => {
+      try {
+        const result = lifetimeId
+          ? await fetchAllRows<UltrasoundRecord>('ultrasound', { column: 'lifetime_id', value: lifetimeId })
+          : await fetchAllRows<UltrasoundRecord>('ultrasound');
+        return result;
+      } catch {
+        // ultrasound table may not exist
+        return [] as UltrasoundRecord[];
+      }
+    },
     enabled: lifetimeId !== undefined,
   });
 }
