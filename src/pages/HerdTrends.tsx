@@ -116,14 +116,6 @@ export default function HerdTrends() {
 
   const kpiColor = overallRate < 1 ? 'text-success' : overallRate <= 2 ? 'text-yellow-400' : 'text-destructive';
 
-  if (lr || la) return (
-    <div className="space-y-6">
-      <ShimmerSkeleton className="h-8 w-48" />
-      <ShimmerSkeleton className="h-96" />
-    </div>
-  );
-  if (re) return <ErrorBox />;
-
   // ── Open Rate by Group per Year ──
   const { openByYearGroup, openGroups, openYears, openGroupTable } = useMemo(() => {
     if (!records) return { openByYearGroup: [], openGroups: [] as string[], openYears: [] as number[], openGroupTable: [] as any[] };
