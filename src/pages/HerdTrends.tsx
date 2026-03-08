@@ -167,24 +167,35 @@ export default function HerdTrends() {
   // ── Cow Sire (Dam Line) Distribution ──
   const damSireData = useMemo(() => {
     if (!animals) return [];
+    const currentYear = new Date().getFullYear();
     const blairActive = animals.filter(a => a.operation === 'Blair' && a.status?.toLowerCase() === 'active');
-    const countMap = new Map<string, number>();
+    const countMap = new Map<string, { count: number; totalAge: number; ageCount: number }>();
     let otherCount = 0;
+    let otherTotalAge = 0;
+    let otherAgeCount = 0;
 
     blairActive.forEach(a => {
       const ds = a.sire?.trim();
       if (!ds) return;
-      countMap.set(ds, (countMap.get(ds) || 0) + 1);
+      const entry = countMap.get(ds) || { count: 0, totalAge: 0, ageCount: 0 };
+      entry.count++;
+      if (a.year_born) { entry.totalAge += currentYear - a.year_born; entry.ageCount++; }
+      countMap.set(ds, entry);
     });
 
-    const rows: { name: string; count: number }[] = [];
-    countMap.forEach((count, name) => {
-      if (count >= 5) rows.push({ name, count });
-      else otherCount += count;
+    const rows: { name: string; count: number; avgAge: number }[] = [];
+    countMap.forEach((entry, name) => {
+      if (entry.count >= 5) {
+        rows.push({ name, count: entry.count, avgAge: entry.ageCount > 0 ? Math.round((entry.totalAge / entry.ageCount) * 10) / 10 : 0 });
+      } else {
+        otherCount += entry.count;
+        otherTotalAge += entry.totalAge;
+        otherAgeCount += entry.ageCount;
+      }
     });
 
     rows.sort((a, b) => b.count - a.count);
-    if (otherCount > 0) rows.push({ name: 'Other', count: otherCount });
+    if (otherCount > 0) rows.push({ name: 'Other', count: otherCount, avgAge: otherAgeCount > 0 ? Math.round((otherTotalAge / otherAgeCount) * 10) / 10 : 0 });
     return rows;
   }, [animals]);
 
@@ -261,34 +272,36 @@ export default function HerdTrends() {
       </Card>
 
       {/* ── Cow Sire (Dam Line) Distribution ── */}
-      <h2 className="text-[15px] font-semibold text-foreground">Cow Sire Distribution (Dam Line)</h2>
+      <h2 className="text-[15px] font-semibold text-foreground">Cow Sire Distribution</h2>
       {damSireData.length > 0 && (
         <Card className="bg-card border-border">
           <CardHeader className="pb-2">
             <CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">
-              Active Herd by Dam Sire
+              Active Herd by Sire
             </CardTitle>
             <p className="text-[11px] text-muted-foreground mt-1">
-              Genetic makeup of active Blair cows by dam line. Minimum 5 active cows per sire; smaller groups combined into "Other."
+              Genetic makeup of active Blair cows by sire. Minimum 5 active cows per sire; smaller groups combined into "Other." Diamond markers show average productive life (years) per sire group.
             </p>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={Math.max(damSireData.length * 36, 200)}>
-              <BarChart layout="vertical" data={damSireData} margin={{ left: 110, right: 50 }}>
+            <ResponsiveContainer width="100%" height={Math.max(damSireData.length * 40, 200)}>
+              <ComposedChart layout="vertical" data={damSireData} margin={{ left: 110, right: 60 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis type="number" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} />
                 <YAxis dataKey="name" type="category" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} width={105} />
                 <Tooltip
                   contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }}
-                  formatter={(value: number) => [`${value} cows`, 'Count']}
+                  formatter={(value: number, name: string) => [name === 'avgAge' ? `${value} yrs` : `${value} cows`, name === 'avgAge' ? 'Avg Productive Life' : 'Count']}
                 />
-                <Bar dataKey="count" radius={[0, 4, 4, 0]}>
+                <Legend wrapperStyle={{ fontSize: 11 }} formatter={(value: string) => value === 'avgAge' ? 'Avg Productive Life (yrs)' : 'Cow Count'} />
+                <Bar dataKey="count" radius={[0, 4, 4, 0]} barSize={20}>
                   {damSireData.map((d, i) => (
                     <Cell key={i} fill={d.name === 'Other' ? 'hsl(var(--muted-foreground))' : CHART_COLORS[i % CHART_COLORS.length]} />
                   ))}
                   <LabelList dataKey="count" position="right" style={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} />
                 </Bar>
-              </BarChart>
+                <Line dataKey="avgAge" stroke="hsl(var(--foreground))" strokeWidth={0} dot={{ r: 4, fill: 'hsl(var(--foreground))', stroke: 'hsl(var(--foreground))' }} type="monotone" />
+              </ComposedChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
