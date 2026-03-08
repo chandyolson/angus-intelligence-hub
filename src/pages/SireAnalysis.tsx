@@ -259,10 +259,10 @@ export default function SireAnalysis() {
     return eligible.reduce((a, b) => a.sampleSize > b.sampleSize ? a : b);
   }, [firstServiceRows]);
 
-  // Gestation by calf_sire
+  // Gestation by calf_sire (with avg BW overlay)
   const gestationData = useMemo(() => {
     if (!records) return [];
-    const sireMap = new Map<string, number[]>();
+    const sireMap = new Map<string, { gests: number[]; bws: number[] }>();
     records.forEach(r => {
       if (!r.calf_sire || r.calf_sire.toLowerCase().includes('cleanup')) return;
       let gd = r.gestation_days;
@@ -275,14 +275,20 @@ export default function SireAnalysis() {
           if (diff >= 250 && diff <= 310) gd = diff; else return;
         } else return;
       }
-      const arr = sireMap.get(r.calf_sire) || [];
-      arr.push(gd);
-      sireMap.set(r.calf_sire, arr);
+      const entry = sireMap.get(r.calf_sire) || { gests: [], bws: [] };
+      entry.gests.push(gd);
+      if (r.calf_bw != null && r.calf_bw > 0) entry.bws.push(r.calf_bw);
+      sireMap.set(r.calf_sire, entry);
     });
-    const rows: { name: string; avg: number; count: number }[] = [];
-    sireMap.forEach((vals, sire) => {
-      if (vals.length < 10) return;
-      rows.push({ name: sire, avg: Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10, count: vals.length });
+    const rows: { name: string; avg: number; count: number; avgBW: number | null }[] = [];
+    sireMap.forEach((d, sire) => {
+      if (d.gests.length < 10) return;
+      rows.push({
+        name: sire,
+        avg: Math.round((d.gests.reduce((a, b) => a + b, 0) / d.gests.length) * 10) / 10,
+        count: d.gests.length,
+        avgBW: d.bws.length > 0 ? Math.round((d.bws.reduce((a, b) => a + b, 0) / d.bws.length) * 10) / 10 : null,
+      });
     });
     return rows.sort((a, b) => a.avg - b.avg);
   }, [records]);
