@@ -129,7 +129,7 @@ export default function Rankings() {
     return computeCullFlags(ranked, records);
   }, [ranked, records]);
 
-  const activeCowCount = useMemo(() => animals?.length ?? 0, [animals]);
+  const uniqueFlaggedIds = useMemo(() => new Set(cullFlags.map(f => f.lifetime_id)), [cullFlags]);
   const excludedCount = useMemo(() => {
     if (!animals || !records) return 0;
     const byLid = new Map<string, number>();
