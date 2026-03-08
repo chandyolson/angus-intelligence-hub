@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Animal, BreedingCalvingRecord, UltrasoundRecord, BlairCombinedRecord } from '@/types/cattle';
+import { useOperation, OperationFilter } from '@/hooks/useOperationContext';
 
 /** Paginated fetch to bypass Supabase's 1000-row default limit */
 async function fetchAllRows<T>(table: string, filter?: { column: string; value: string }): Promise<T[]> {
@@ -30,21 +31,32 @@ async function fetchAllRows<T>(table: string, filter?: { column: string; value: 
   return allRows as T[];
 }
 
+function filterByOperation<T extends { operation?: string | null }>(rows: T[], operation: OperationFilter): T[] {
+  if (operation === 'Both') return rows;
+  return rows.filter(r => r.operation === operation);
+}
+
 export function useAnimals() {
+  const { operation } = useOperation();
   return useQuery({
-    queryKey: ['animals'],
-    queryFn: () => fetchAllRows<Animal>('animals'),
+    queryKey: ['animals', operation],
+    queryFn: async () => {
+      const all = await fetchAllRows<Animal>('animals');
+      return filterByOperation(all, operation);
+    },
   });
 }
 
-export function useActiveAnimals(operation?: string) {
+export function useActiveAnimals(operationOverride?: string) {
+  const { operation } = useOperation();
+  const effectiveOp = operationOverride ?? operation;
   return useQuery({
-    queryKey: ['animals', 'active', operation],
+    queryKey: ['animals', 'active', effectiveOp],
     queryFn: async () => {
       const all = await fetchAllRows<Animal>('animals');
       return all.filter(a => {
         if (a.status?.toLowerCase() !== 'active') return false;
-        if (operation && a.operation !== operation) return false;
+        if (effectiveOp && effectiveOp !== 'Both' && a.operation !== effectiveOp) return false;
         return true;
       });
     },
@@ -52,9 +64,13 @@ export function useActiveAnimals(operation?: string) {
 }
 
 export function useBreedingCalvingRecords() {
+  const { operation } = useOperation();
   return useQuery({
-    queryKey: ['blair_combined'],
-    queryFn: () => fetchAllRows<BreedingCalvingRecord>('blair_combined'),
+    queryKey: ['blair_combined', operation],
+    queryFn: async () => {
+      const all = await fetchAllRows<BreedingCalvingRecord>('blair_combined');
+      return filterByOperation(all, operation);
+    },
   });
 }
 
@@ -97,21 +113,25 @@ export function useCowBreedingRecords(lifetimeId: string) {
 }
 
 export function useRecordCounts() {
+  const { operation } = useOperation();
   return useQuery({
-    queryKey: ['record_counts'],
+    queryKey: ['record_counts', operation],
     queryFn: async () => {
-      const [animals, bcr] = await Promise.all([
-        supabase.from('animals').select('*', { count: 'exact', head: true }),
-        supabase.from('blair_combined').select('*', { count: 'exact', head: true }),
+      // Fetch all and filter client-side for consistency
+      const [allAnimals, allBcr] = await Promise.all([
+        fetchAllRows<Animal>('animals'),
+        fetchAllRows<BreedingCalvingRecord>('blair_combined'),
       ]);
+      const animals = filterByOperation(allAnimals, operation);
+      const bcr = filterByOperation(allBcr, operation);
       let ultrasoundCount = 0;
       try {
         const ultrasound = await (supabase.from as any)('ultrasound').select('*', { count: 'exact', head: true });
         ultrasoundCount = ultrasound.count ?? 0;
       } catch { /* table may not exist */ }
       return {
-        animals: animals.count ?? 0,
-        breeding_calving: bcr.count ?? 0,
+        animals: animals.length,
+        breeding_calving: bcr.length,
         ultrasound: ultrasoundCount,
       };
     },
@@ -119,8 +139,12 @@ export function useRecordCounts() {
 }
 
 export function useBlairCombined() {
+  const { operation } = useOperation();
   return useQuery({
-    queryKey: ['blair_combined'],
-    queryFn: () => fetchAllRows<BlairCombinedRecord>('blair_combined'),
+    queryKey: ['blair_combined', operation],
+    queryFn: async () => {
+      const all = await fetchAllRows<BlairCombinedRecord>('blair_combined');
+      return filterByOperation(all, operation);
+    },
   });
 }

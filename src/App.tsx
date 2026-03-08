@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Layout } from "@/components/Layout";
+import { OperationProvider } from "@/hooks/useOperationContext";
 import Overview from "@/pages/Overview";
 import Dashboard from "@/pages/Dashboard";
 import CowRoster from "@/pages/CowRoster";
@@ -30,27 +31,29 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<Overview />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/roster" element={<CowRoster />} />
-            <Route path="/cow/:lifetime_id" element={<CowDetail />} />
-            <Route path="/rankings" element={<Rankings />} />
-            <Route path="/sires" element={<SireAnalysis />} />
-            <Route path="/assistant" element={<AIAssistant />} />
-            <Route path="/data-quality" element={<DataQuality />} />
-            <Route path="/calving-interval" element={<CalvingInterval />} />
-            <Route path="/open-cows" element={<OpenCows />} />
-            <Route path="/herd-trends" element={<HerdTrends />} />
-            <Route path="/gestation" element={<Gestation />} />
-            <Route path="/birth-weight" element={<BirthWeight />} />
-            <Route path="/culling" element={<Culling />} />
-            <Route path="/replacements" element={<Replacements />} />
-            <Route path="/reconciliation" element={<Reconciliation />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Layout>
+        <OperationProvider>
+          <Layout>
+            <Routes>
+              <Route path="/" element={<Overview />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/roster" element={<CowRoster />} />
+              <Route path="/cow/:lifetime_id" element={<CowDetail />} />
+              <Route path="/rankings" element={<Rankings />} />
+              <Route path="/sires" element={<SireAnalysis />} />
+              <Route path="/assistant" element={<AIAssistant />} />
+              <Route path="/data-quality" element={<DataQuality />} />
+              <Route path="/calving-interval" element={<CalvingInterval />} />
+              <Route path="/open-cows" element={<OpenCows />} />
+              <Route path="/herd-trends" element={<HerdTrends />} />
+              <Route path="/gestation" element={<Gestation />} />
+              <Route path="/birth-weight" element={<BirthWeight />} />
+              <Route path="/culling" element={<Culling />} />
+              <Route path="/replacements" element={<Replacements />} />
+              <Route path="/reconciliation" element={<Reconciliation />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Layout>
+        </OperationProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
