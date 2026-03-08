@@ -28,22 +28,22 @@ export function AppSidebar() {
 
   const sections: NavSection[] = [
     { title: 'Overview', icon: LayoutDashboard, url: '/' },
-    { title: 'Cow List', icon: ClipboardList, url: '/roster' },
     { title: 'Data Quality', icon: ShieldAlert, url: '/data-quality', badge: qualityCount, badgeColor: 'bg-destructive text-destructive-foreground' },
     { title: 'Sire Analysis', icon: FlaskConical, url: '/sires' },
     {
       title: 'Cow Performance', icon: Beef,
       children: [
+        { title: 'Cow List', url: '/roster', icon: ClipboardList },
         { title: 'Composite Score', url: '/rankings', icon: BarChart3 },
         { title: 'Calving Interval', url: '/calving-interval', icon: Clock },
         { title: 'Open Cows', url: '/open-cows', icon: Ban },
+        { title: 'Culling & Retention', url: '/culling', icon: Scissors },
+        { title: 'Replacement Heifers', url: '/replacements', icon: Baby },
       ],
     },
     { title: 'Herd Trends', icon: TrendingUp, url: '/herd-trends' },
     { title: 'Gestation', icon: HeartPulse, url: '/gestation' },
     { title: 'Birth Weight', icon: Weight, url: '/birth-weight' },
-    { title: 'Culling & Retention', icon: Scissors, url: '/culling' },
-    { title: 'Replacement Heifers', icon: Baby, url: '/replacements' },
     { title: 'Group Reconciliation', icon: Users, url: '/reconciliation' },
   ];
 
@@ -116,7 +116,7 @@ export function AppSidebar() {
                     <span className="flex-1 text-left">{section.title}</span>
                     <ChevronDown className={cn('h-3.5 w-3.5 transition-transform duration-200', isOpen && 'rotate-180')} />
                   </button>
-                  <div className={cn('overflow-hidden transition-all duration-200', isOpen ? 'max-h-40' : 'max-h-0')}>
+                  <div className={cn('overflow-hidden transition-all duration-200', isOpen ? 'max-h-60' : 'max-h-0')}>
                     <div className="ml-4 pl-3 border-l border-border/50 space-y-0.5 py-1">
                       {section.children.map(child => renderItem(child.url, child.icon, child.title))}
                     </div>
