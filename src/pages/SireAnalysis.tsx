@@ -313,6 +313,42 @@ export default function SireAnalysis() {
     <div className="space-y-6">
       <h1 className="text-[20px] font-semibold text-foreground">Sire Analysis</h1>
 
+      {/* Highlight Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {topPerformer && (
+          <Card className="bg-card border-success/40">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-2 mb-2">
+                <Trophy className="h-5 w-5 text-success" />
+                <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Top Performer (25+ records)</span>
+              </div>
+              <p className="text-xl font-bold text-foreground">{topPerformer.sire}</p>
+              <p className="text-3xl font-bold mt-1" style={{ color: rateColor(topPerformer.rate) }}>{topPerformer.rate}%</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">1st Service AI Rate</p>
+              <p className="text-sm text-muted-foreground mt-3">
+                {topPerformer.sampleSize} units · {topPerformer.avgBW > 0 ? `${topPerformer.avgBW} lbs avg BW · ` : ''}{topPerformer.survivalRate}% survival
+              </p>
+            </CardContent>
+          </Card>
+        )}
+        {mostUsedBelowAvg && (
+          <Card className="bg-card border-destructive/40">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-2 mb-2">
+                <AlertTriangle className="h-5 w-5 text-destructive" />
+                <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Most Used Below Average (&lt;88%)</span>
+              </div>
+              <p className="text-xl font-bold text-foreground">{mostUsedBelowAvg.sire}</p>
+              <p className="text-3xl font-bold mt-1" style={{ color: rateColor(mostUsedBelowAvg.rate) }}>{mostUsedBelowAvg.rate}%</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">1st Service AI Rate</p>
+              <p className="text-sm text-muted-foreground mt-3">
+                {mostUsedBelowAvg.sampleSize} units · {mostUsedBelowAvg.avgBW > 0 ? `${mostUsedBelowAvg.avgBW} lbs avg BW · ` : ''}{mostUsedBelowAvg.survivalRate}% survival
+              </p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
       {/* 1st Service Table */}
       <SireServiceTable
         title="First Service AI Rate"
