@@ -28,22 +28,22 @@ export function AppSidebar() {
 
   const sections: NavSection[] = [
     { title: 'Overview', icon: LayoutDashboard, url: '/' },
-    { title: 'Cow List', icon: ClipboardList, url: '/roster' },
     { title: 'Data Quality', icon: ShieldAlert, url: '/data-quality', badge: qualityCount, badgeColor: 'bg-destructive text-destructive-foreground' },
     { title: 'Sire Analysis', icon: FlaskConical, url: '/sires' },
     {
       title: 'Cow Performance', icon: Beef,
       children: [
+        { title: 'Cow List', url: '/roster', icon: ClipboardList },
         { title: 'Composite Score', url: '/rankings', icon: BarChart3 },
         { title: 'Calving Interval', url: '/calving-interval', icon: Clock },
         { title: 'Open Cows', url: '/open-cows', icon: Ban },
+        { title: 'Culling & Retention', url: '/culling', icon: Scissors },
+        { title: 'Replacement Heifers', url: '/replacements', icon: Baby },
       ],
     },
     { title: 'Herd Trends', icon: TrendingUp, url: '/herd-trends' },
     { title: 'Gestation', icon: HeartPulse, url: '/gestation' },
     { title: 'Birth Weight', icon: Weight, url: '/birth-weight' },
-    { title: 'Culling & Retention', icon: Scissors, url: '/culling' },
-    { title: 'Replacement Heifers', icon: Baby, url: '/replacements' },
     { title: 'Group Reconciliation', icon: Users, url: '/reconciliation' },
   ];
 
