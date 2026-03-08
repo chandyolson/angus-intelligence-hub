@@ -126,9 +126,7 @@ export default function CowDetail() {
   const sortedCalving = useMemo(() => calvingRecords ? [...calvingRecords].sort((a, b) => (a.breeding_year ?? 0) - (b.breeding_year ?? 0)) : [], [calvingRecords]);
   const sortedUltrasound = useMemo(() => ultrasoundRecords ? [...ultrasoundRecords].sort((a, b) => (a.ultrasound_date ?? '').localeCompare(b.ultrasound_date ?? '')) : [], [ultrasoundRecords]);
 
-  const loading = la || lr;
-
-  if (loading) return (
+  const loading = la || lrf (loading) return (
     <div className="space-y-4">
       <ShimmerSkeleton className="h-6 w-40" />
       <ShimmerCard className="h-32" />
@@ -139,7 +137,7 @@ export default function CowDetail() {
     </div>
   );
 
-  if (animalError || calvingError || ultraError) return (
+  if (animalError || calvingError || ulrn (
     <div className="space-y-4">
       <Link to="/roster" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="h-4 w-4" /> Back to Cow List</Link>
       <ErrorBox />
