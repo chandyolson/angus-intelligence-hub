@@ -12,6 +12,7 @@ import { Download, AlertTriangle } from 'lucide-react';
 import { ShimmerSkeleton, ShimmerCard, ShimmerTableRows } from '@/components/ui/shimmer-skeleton';
 import { ErrorBox } from '@/components/ui/error-box';
 import { EmptyState } from '@/components/ui/empty-state';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 interface RankedCow {
   rank: number; lifetime_id: string; tag: string | null; year_born: number | null; sire: string | null;
