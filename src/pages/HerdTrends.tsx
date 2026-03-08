@@ -124,9 +124,132 @@ export default function HerdTrends() {
   );
   if (re) return <ErrorBox />;
 
+  // ── Open Rate by Group per Year ──
+  const { openByYearGroup, openGroups, openYears, openGroupTable } = useMemo(() => {
+    if (!records) return { openByYearGroup: [], openGroups: [] as string[], openYears: [] as number[], openGroupTable: [] as any[] };
+
+    const map = new Map<string, { total: number; open: number }>(); // key: `group|year`
+    const gs = new Set<string>();
+    const ys = new Set<number>();
+
+    records.forEach(r => {
+      if (!r.breeding_year || !r.preg_stage) return;
+      const g = (r as any).ultrasound_group || 'Unknown';
+      gs.add(g);
+      ys.add(r.breeding_year);
+      const key = `${g}|${r.breeding_year}`;
+      let b = map.get(key);
+      if (!b) { b = { total: 0, open: 0 }; map.set(key, b); }
+      b.total++;
+      if (r.preg_stage.toLowerCase() === 'open') b.open++;
+    });
+
+    const sortedGroups = [...gs].sort();
+    const sortedYears = [...ys].sort();
+
+    // Grouped bar chart data: one row per year, one key per group
+    const GROUP_COLORS = ['#22c55e', '#3b82f6', '#f97316', '#a855f7', '#eab308', '#ec4899', '#14b8a6', '#f43f5e'];
+    const chartData = sortedYears.map(year => {
+      const row: any = { year };
+      sortedGroups.forEach(g => {
+        const b = map.get(`${g}|${year}`);
+        if (b && b.total >= 3) row[g] = Math.round((b.open / b.total) * 1000) / 10;
+      });
+      return row;
+    });
+
+    // Table data: rows = groups, columns = years
+    const tableRows = sortedGroups.map(g => {
+      const row: any = { group: g };
+      sortedYears.forEach(year => {
+        const b = map.get(`${g}|${year}`);
+        row[`y${year}`] = b && b.total >= 3 ? Math.round((b.open / b.total) * 1000) / 10 : null;
+        row[`n${year}`] = b?.total ?? 0;
+      });
+      return row;
+    });
+
+    return { openByYearGroup: chartData, openGroups: sortedGroups, openYears: sortedYears, openGroupTable: tableRows };
+  }, [records]);
+
+  const CHART_COLORS = ['#22c55e', '#3b82f6', '#f97316', '#a855f7', '#eab308', '#ec4899', '#14b8a6', '#f43f5e'];
+
   return (
     <div className="space-y-6">
       <h1 className="text-[20px] font-semibold text-foreground">Herd Trends</h1>
+
+      {/* ── Open Rate Trend Section ── */}
+      <h2 className="text-[15px] font-semibold text-foreground">Open Rate Trend</h2>
+
+      {/* Panel 2: Grouped bar chart by group */}
+      <Card className="bg-card border-border">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">Open Rate by Management Group</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={320}>
+            <BarChart data={openByYearGroup} margin={{ top: 10, right: 20, left: 10, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+              <XAxis dataKey="year" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} axisLine={false} tickLine={false} unit="%" />
+              <Tooltip
+                contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }}
+                formatter={(v: any, name: string) => [`${v}%`, name]}
+              />
+              <Legend wrapperStyle={{ fontSize: 11 }} />
+              {openGroups.map((g, i) => (
+                <Bar key={g} dataKey={g} fill={CHART_COLORS[i % CHART_COLORS.length]} radius={[3, 3, 0, 0]} />
+              ))}
+            </BarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      {/* Panel 3: Summary table group × year */}
+      <Card className="bg-card border-border">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">Open Rate — Group × Year</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-sidebar border-border hover:bg-sidebar">
+                  <TableHead className="text-[12px]">Group</TableHead>
+                  {openYears.map(y => (
+                    <TableHead key={y} className="text-[12px] text-center">{y}</TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {openGroupTable.map((row: any, i: number) => (
+                  <TableRow key={row.group} className="border-border text-[13px]"
+                    style={{ backgroundColor: i % 2 === 1 ? '#0E1528' : undefined }}>
+                    <TableCell className="font-medium text-foreground">{row.group}</TableCell>
+                    {openYears.map(y => {
+                      const val = row[`y${y}`];
+                      const n = row[`n${y}`];
+                      let cls = 'text-muted-foreground';
+                      if (val != null) {
+                        cls = val < 5 ? 'text-green-400 font-medium' : val <= 10 ? 'text-yellow-400 font-medium' : 'text-red-400 font-semibold';
+                      }
+                      return (
+                        <TableCell key={y} className={`text-center ${cls}`}>
+                          {val != null ? `${val}%` : '—'}
+                          {n >= 3 && <span className="block text-[9px] text-muted-foreground">n={n}</span>}
+                        </TableCell>
+                      );
+                    })}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          <p className="text-xs text-muted-foreground px-4 py-3 border-t border-border">
+            💡 Same-year group comparison isolates whether a problem is a management issue specific to one group or a herd-wide reproductive problem.
+          </p>
+        </CardContent>
+      </Card>
 
       {/* Section: Fetal Sex Accuracy */}
       <h2 className="text-[15px] font-semibold text-foreground">Fetal Sex Accuracy</h2>
