@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAnimals, useBlairCombined } from '@/hooks/useCattleData';
 import { computeCowStats, computeCalvingIntervals, computeCompositeFromRecords } from '@/lib/calculations';
 import { BlairCombinedRecord, BreedingCalvingRecord } from '@/types/cattle';
@@ -28,6 +29,7 @@ const ChartTooltip = ({ active, payload, label }: any) => {
 };
 
 export default function Overview() {
+  const navigate = useNavigate();
   const { data: animals, isLoading: loadingAnimals, error: animalsError } = useAnimals();
   const { data: combined, isLoading: loadingCombined, error: combinedError } = useBlairCombined();
   const loading = loadingAnimals || loadingCombined;
@@ -221,10 +223,10 @@ export default function Overview() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
-                  <StatBlock label="Average" value={`${kpis.avgInterval} days`} highlight={kpis.avgInterval > 365} />
-                  <StatBlock label="Median" value={`${kpis.medianInterval} days`} />
-                  <StatBlock label="Best" value={`${kpis.bestInterval} days`} accent />
-                  <StatBlock label="Longest" value={`${kpis.longestInterval} days`} highlight />
+                  <StatBlock label="Average" value={`${kpis.avgInterval} days`} highlight={kpis.avgInterval > 365} onClick={() => navigate('/calving-interval')} />
+                  <StatBlock label="Median" value={`${kpis.medianInterval} days`} onClick={() => navigate('/calving-interval')} />
+                  <StatBlock label="Best" value={`${kpis.bestInterval} days`} accent onClick={() => navigate('/calving-interval')} />
+                  <StatBlock label="Longest" value={`${kpis.longestInterval} days`} highlight onClick={() => navigate('/calving-interval')} />
                 </div>
 
                 {kpis.avgInterval > 365 && (
@@ -319,14 +321,18 @@ function KPICard({ icon: Icon, label, value, flagRed, flagText }: {
   );
 }
 
-function StatBlock({ label, value, highlight, accent }: {
-  label: string; value: string; highlight?: boolean; accent?: boolean;
+function StatBlock({ label, value, highlight, accent, onClick }: {
+  label: string; value: string; highlight?: boolean; accent?: boolean; onClick?: () => void;
 }) {
   return (
-    <div className={cn(
-      'rounded-lg p-3 text-center',
-      highlight ? 'bg-destructive/10' : accent ? 'bg-success/10' : 'bg-muted/30',
-    )}>
+    <div
+      className={cn(
+        'rounded-lg p-3 text-center transition-colors',
+        highlight ? 'bg-destructive/10' : accent ? 'bg-success/10' : 'bg-muted/30',
+        onClick && 'cursor-pointer hover:ring-1 hover:ring-primary/40',
+      )}
+      onClick={onClick}
+    >
       <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">{label}</p>
       <p className={cn(
         'text-lg font-bold',
