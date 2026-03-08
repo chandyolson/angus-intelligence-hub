@@ -418,24 +418,32 @@ export default function SireAnalysis() {
         <Card className="bg-card border-border">
           <CardHeader className="pb-2">
             <CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">Gestation Length by Sire</CardTitle>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Bars = avg gestation days · ◆ markers = avg birth weight (lbs, top axis)
+            </p>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={Math.max(gestationData.length * 36, 200)}>
-              <BarChart layout="vertical" data={gestationData} margin={{ left: 110, right: 40 }}>
+              <ComposedChart layout="vertical" data={gestationData} margin={{ left: 110, right: 50 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis type="number" domain={['dataMin - 2', 'dataMax + 2']} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} />
+                <XAxis xAxisId="gest" type="number" domain={['dataMin - 2', 'dataMax + 2']} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} />
+                <XAxis xAxisId="bw" type="number" orientation="top" tick={{ fill: 'hsl(var(--primary))', fontSize: 10 }} tickFormatter={(v: number) => `${v} lbs`} />
                 <YAxis dataKey="name" type="category" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} width={105} />
                 <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }}
-                  formatter={(value: number, _: string, entry: any) => [`${value} days (n=${entry.payload.count})`, 'Avg Gestation']} />
-                <ReferenceLine x={herdAvgGestation} stroke="hsl(var(--foreground))" strokeDasharray="5 5"
+                  formatter={(value: number, name: string, entry: any) => {
+                    if (name === 'avgBW') return [`${value} lbs`, 'Avg Birth Weight'];
+                    return [`${value} days (n=${entry.payload.count})`, 'Avg Gestation'];
+                  }} />
+                <ReferenceLine xAxisId="gest" x={herdAvgGestation} stroke="hsl(var(--foreground))" strokeDasharray="5 5"
                   label={{ value: `Herd Avg: ${herdAvgGestation}d`, fill: 'hsl(var(--muted-foreground))', fontSize: 10, position: 'top' }} />
-                <Bar dataKey="avg" radius={[0, 4, 4, 0]}>
+                <Bar xAxisId="gest" dataKey="avg" radius={[0, 4, 4, 0]}>
                   {gestationData.map((d, i) => (
                     <Cell key={i} fill={d.avg <= 275.5 ? 'hsl(142, 71%, 45%)' : d.avg <= 278 ? 'hsl(48, 96%, 53%)' : 'hsl(0, 72%, 51%)'} />
                   ))}
                   <LabelList dataKey="count" position="right" style={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} formatter={(v: number) => `n=${v}`} />
                 </Bar>
-              </BarChart>
+                <Line xAxisId="bw" dataKey="avgBW" stroke="hsl(var(--primary))" strokeWidth={0} dot={{ r: 5, fill: 'hsl(var(--primary))', strokeWidth: 0 }} />
+              </ComposedChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
