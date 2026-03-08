@@ -205,51 +205,6 @@ export default function HerdTrends() {
         </CardContent>
       </Card>
 
-      {/* Panel 3: Summary table group × year */}
-      <Card className="bg-card border-border">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">Open Rate — Group × Year</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-sidebar border-border hover:bg-sidebar">
-                  <TableHead className="text-[12px]">Group</TableHead>
-                  {openYears.map(y => (
-                    <TableHead key={y} className="text-[12px] text-center">{y}</TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {openGroupTable.map((row: any, i: number) => (
-                  <TableRow key={row.group} className="border-border text-[13px]"
-                    style={{ backgroundColor: i % 2 === 1 ? '#0E1528' : undefined }}>
-                    <TableCell className="font-medium text-foreground">{row.group}</TableCell>
-                    {openYears.map(y => {
-                      const val = row[`y${y}`];
-                      const n = row[`n${y}`];
-                      let cls = 'text-muted-foreground';
-                      if (val != null) {
-                        cls = val < 5 ? 'text-green-400 font-medium' : val <= 10 ? 'text-yellow-400 font-medium' : 'text-red-400 font-semibold';
-                      }
-                      return (
-                        <TableCell key={y} className={`text-center ${cls}`}>
-                          {val != null ? `${val}%` : '—'}
-                          {n >= 3 && <span className="block text-[9px] text-muted-foreground">n={n}</span>}
-                        </TableCell>
-                      );
-                    })}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-          <p className="text-xs text-muted-foreground px-4 py-3 border-t border-border">
-            💡 Same-year group comparison isolates whether a problem is a management issue specific to one group or a herd-wide reproductive problem.
-          </p>
-        </CardContent>
-      </Card>
 
       {/* Section: Fetal Sex Accuracy */}
       <h2 className="text-[15px] font-semibold text-foreground">Fetal Sex Accuracy</h2>
