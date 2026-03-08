@@ -18,6 +18,12 @@ export type Database = {
         Row: {
           animal_type: string | null
           bw: number | null
+          c1_conception_score: number | null
+          c2_survival_score: number | null
+          c3_interval_score: number | null
+          c4_calves_per_year_score: number | null
+          c5_gestation_score: number | null
+          c6_birthweight_score: number | null
           cattle_type: string | null
           dam: string | null
           dam_bw: number | null
@@ -42,6 +48,8 @@ export type Database = {
           status: string | null
           tag: string | null
           tag_color: string | null
+          value_score: number | null
+          value_score_percentile: number | null
           ww: number | null
           year_born: number | null
           yw: number | null
@@ -49,6 +57,12 @@ export type Database = {
         Insert: {
           animal_type?: string | null
           bw?: number | null
+          c1_conception_score?: number | null
+          c2_survival_score?: number | null
+          c3_interval_score?: number | null
+          c4_calves_per_year_score?: number | null
+          c5_gestation_score?: number | null
+          c6_birthweight_score?: number | null
           cattle_type?: string | null
           dam?: string | null
           dam_bw?: number | null
@@ -73,6 +87,8 @@ export type Database = {
           status?: string | null
           tag?: string | null
           tag_color?: string | null
+          value_score?: number | null
+          value_score_percentile?: number | null
           ww?: number | null
           year_born?: number | null
           yw?: number | null
@@ -80,6 +96,12 @@ export type Database = {
         Update: {
           animal_type?: string | null
           bw?: number | null
+          c1_conception_score?: number | null
+          c2_survival_score?: number | null
+          c3_interval_score?: number | null
+          c4_calves_per_year_score?: number | null
+          c5_gestation_score?: number | null
+          c6_birthweight_score?: number | null
           cattle_type?: string | null
           dam?: string | null
           dam_bw?: number | null
@@ -104,6 +126,8 @@ export type Database = {
           status?: string | null
           tag?: string | null
           tag_color?: string | null
+          value_score?: number | null
+          value_score_percentile?: number | null
           ww?: number | null
           year_born?: number | null
           yw?: number | null
