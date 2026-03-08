@@ -317,9 +317,10 @@ export default function SireAnalysis() {
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-4 mb-3 text-[10px]">
-              <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded-full" style={{ background: 'hsl(142, 71%, 45%)' }} /> Ideal Range</span>
-              <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded-full" style={{ background: 'hsl(48, 96%, 53%)' }} /> Monitor</span>
-              <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded-full" style={{ background: 'hsl(0, 72%, 51%)' }} /> High Dystocia Risk</span>
+              <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded-full" style={{ background: 'hsl(142, 71%, 45%)' }} /> 100% Survival</span>
+              <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded-full" style={{ background: 'hsl(48, 96%, 53%)' }} /> 97–99% Survival</span>
+              <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded-full" style={{ background: 'hsl(0, 72%, 51%)' }} /> &lt;97% Survival</span>
+              <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded-full" style={{ background: 'hsl(var(--muted-foreground))' }} /> Insufficient Data</span>
             </div>
             <ResponsiveContainer width="100%" height={440}>
               <ScatterChart margin={{ left: 10, right: 30, bottom: 30, top: 10 }}>
