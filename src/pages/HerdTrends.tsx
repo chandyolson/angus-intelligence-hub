@@ -6,24 +6,6 @@ import { ShimmerSkeleton } from '@/components/ui/shimmer-skeleton';
 import { ErrorBox } from '@/components/ui/error-box';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LabelList, Line, ComposedChart, Legend } from 'recharts';
 
-function normalize(sex: string | null): string | null {
-  if (!sex) return null;
-  const s = sex.trim().toLowerCase();
-  if (['bull', 'male', 'b', 'm', 'steer'].some(k => s.includes(k))) return 'bull';
-  if (['heifer', 'female', 'h', 'f'].some(k => s.includes(k))) return 'heifer';
-  if (s === 'unknown' || s === '') return null;
-  return s;
-}
-
-interface MismatchRow {
-  lifetime_id: string;
-  tag: string | null;
-  breeding_year: number | null;
-  ultrasound_group: string | null;
-  fetal_sex: string;
-  calf_sex: string;
-  dog: number | null;
-}
 
 export default function HerdTrends() {
   const { data: records, isLoading: lr, error: re } = useBreedingCalvingRecords();
