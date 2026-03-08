@@ -38,8 +38,9 @@ const SEV_CFG: Record<Severity, { label: string; bg: string; border: string; tex
 };
 
 const VALID_PREG_STAGES = new Set([
-  'AI', 'Second AI', 'Cleanup', 'Short', 'Medium', 'Long',
-  'Open', 'Bull', 'ET', 'Exposed', 'Not Exposed',
+  'ai', 'second ai', 'early', 'middle', 'late', 'very late', 'open',
+  'cleanup', 'short', 'medium', 'long',
+  'bull', 'et', 'exposed', 'not exposed',
 ]);
 
 let checkCounter = 0;
