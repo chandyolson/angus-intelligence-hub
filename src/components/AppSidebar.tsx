@@ -28,7 +28,13 @@ export function AppSidebar() {
 
   const sections: NavSection[] = [
     { title: 'Overview', icon: LayoutDashboard, url: '/' },
-    { title: 'Data Quality', icon: ShieldAlert, url: '/data-quality', badge: qualityCount, badgeColor: 'bg-destructive text-destructive-foreground' },
+    {
+      title: 'Data Management', icon: ShieldAlert,
+      children: [
+        { title: 'Data Quality', url: '/data-quality', icon: ShieldAlert },
+        { title: 'Group Reconciliation', url: '/reconciliation', icon: Users },
+      ],
+    },
     { title: 'Sire Analysis', icon: FlaskConical, url: '/sires' },
     {
       title: 'Cow Performance', icon: Beef,
