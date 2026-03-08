@@ -172,7 +172,7 @@ export default function BirthWeight() {
           <CardTitle className="flex items-center gap-2">
             <Weight className="h-5 w-5 text-primary" /> Birth Weight by Year
           </CardTitle>
-          <p className="text-sm text-muted-foreground">Herd average calf birth weight trend over time.</p>
+          <p className="text-sm text-muted-foreground">Herd average calf birth weight trend by calving year.</p>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={320}>
