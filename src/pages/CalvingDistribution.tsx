@@ -37,7 +37,7 @@ function parseRecords(records: BreedingCalvingRecord[]): CalvingRecord[] {
     .filter(r => (r as any).operation === 'Blair' && r.calving_date)
     .map(r => {
       const d = new Date(r.calving_date!);
-      return { date: d, week: getWeekOfYear(d), year: r.breeding_year ?? d.getFullYear(), calfStatus: r.calf_status };
+      return { date: d, week: getWeekOfYear(d), year: d.getFullYear(), calfStatus: r.calf_status };
     });
 }
 
