@@ -190,14 +190,6 @@ export default function CalvingInterval() {
     })), `open_cows_${new Date().toISOString().split('T')[0]}.csv`);
   };
 
-  if (la || lr) return (
-    <div className="space-y-6">
-      <ShimmerSkeleton className="h-8 w-60" />
-      <ShimmerSkeleton className="h-96" />
-    </div>
-  );
-  if (ae || re) return <ErrorBox />;
-
   // Summary stats for cards
   const summaryStats = useMemo(() => {
     if (intervalRows.length === 0) return null;
@@ -205,7 +197,6 @@ export default function CalvingInterval() {
     const lowest = sorted[0];
     const highest = sorted[sorted.length - 1];
     const avg = Math.round(intervalRows.reduce((s, r) => s + r.avgInterval, 0) / intervalRows.length);
-    // Cows near the average (within ±10 days)
     const avgCows = intervalRows.filter(r => Math.abs(r.avgInterval - avg) <= 10);
     return { lowest, highest, avg, avgCows };
   }, [intervalRows]);
@@ -219,6 +210,14 @@ export default function CalvingInterval() {
     setDialogCows(cows);
     setDialogOpen(true);
   };
+
+  if (la || lr) return (
+    <div className="space-y-6">
+      <ShimmerSkeleton className="h-8 w-60" />
+      <ShimmerSkeleton className="h-96" />
+    </div>
+  );
+  if (ae || re) return <ErrorBox />;
 
   return (
     <div className="space-y-6">
