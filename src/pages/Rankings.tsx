@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useActiveAnimals, useBreedingCalvingRecords } from '@/hooks/useCattleData';
 import { exportToCSV, computeCompositeFromRecords } from '@/lib/calculations';
+import { CowLookup } from '@/components/rankings/CowLookup';
 import { Animal, BreedingCalvingRecord } from '@/types/cattle';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
