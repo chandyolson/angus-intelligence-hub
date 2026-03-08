@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Scissors, Download, AlertTriangle, Eye, Activity, Search, ArrowUpDown } from 'lucide-react';
-import { useActiveAnimals, useBlairCombined } from '@/hooks/useCattleData';
+import { Scissors, Download, Search, ArrowUpDown, GitBranch } from 'lucide-react';
+import { useActiveAnimals, useAnimals, useBlairCombined } from '@/hooks/useCattleData';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, ResponsiveContainer, Cell, Line, ComposedChart, Scatter } from 'recharts';
 import { exportToCSV } from '@/lib/calculations';
 import { useNavigate } from 'react-router-dom';
 
