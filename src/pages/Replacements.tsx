@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Baby, Download, Search, ArrowUpDown } from 'lucide-react';
+import { Baby, Download, Search, ArrowUpDown, ChevronDown } from 'lucide-react';
 import { useAnimals, useBlairCombined } from '@/hooks/useCattleData';
 import { exportToCSV } from '@/lib/calculations';
 import { useNavigate } from 'react-router-dom';
@@ -251,101 +252,108 @@ export default function Replacements() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-foreground">Replacement Heifers</h1>
 
-      {/* Section 1 — Heifer Candidates by Dam Score */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            <CardTitle className="flex items-center gap-2">
-              <Baby className="h-5 w-5 text-primary" /> Heifer Candidates by Dam Score
-            </CardTitle>
-            <div className="flex items-center gap-2 flex-wrap">
-              <Select value={yearFilter} onValueChange={setYearFilter}>
-                <SelectTrigger className="w-32">
-                  <SelectValue placeholder="Year" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Years</SelectItem>
-                  {yearOptions.map(y => (
-                    <SelectItem key={y} value={String(y)}>{y}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search tag or ID…"
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  className="pl-9 w-52"
-                />
+      {/* Section 1 — Heifer Candidates by Dam Score (Collapsible) */}
+      <Collapsible defaultOpen={false}>
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <CollapsibleTrigger className="flex items-center gap-2 group cursor-pointer">
+                <Baby className="h-5 w-5 text-primary" />
+                <CardTitle className="text-2xl">Heifer Candidates by Dam Score</CardTitle>
+                <Badge variant="secondary" className="text-xs">{filteredHeifers.length}</Badge>
+                <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+              </CollapsibleTrigger>
+              <div className="flex items-center gap-2 flex-wrap">
+                <Select value={yearFilter} onValueChange={setYearFilter}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue placeholder="Year" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Years</SelectItem>
+                    {yearOptions.map(y => (
+                      <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search tag or ID…"
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    className="pl-9 w-52"
+                  />
+                </div>
+                <Button variant="outline" size="sm" onClick={handleExport}>
+                  <Download className="h-4 w-4 mr-1" /> Export CSV
+                </Button>
               </div>
-              <Button variant="outline" size="sm" onClick={handleExport}>
-                <Download className="h-4 w-4 mr-1" /> Export CSV
-              </Button>
             </div>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Heifers born in the last 2 years ranked by dam's composite score. Top 25% dam scores highlighted in green.
-          </p>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <p className="text-muted-foreground py-8 text-center">Loading…</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <SortHeader label="Heifer Tag" k="heiferTag" />
-                    <SortHeader label="Born" k="heiferYear" />
-                    <SortHeader label="Dam Tag" k="damTag" />
-                    <SortHeader label="Dam Score" k="damScore" />
-                    <SortHeader label="Dam Calves" k="damCalves" />
-                    <SortHeader label="Dam AI %" k="damConception" />
-                    <SortHeader label="Dam Avg Interval" k="damInterval" />
-                    <SortHeader label="Dam Avg Gest" k="damGestation" />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredHeifers.map(r => (
-                    <TableRow
-                      key={r.heiferId}
-                      className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => navigate(`/cow/${r.heiferId}`)}
-                    >
-                      <TableCell className="font-medium">{r.heiferTag || '—'}</TableCell>
-                      <TableCell>{r.heiferYear}</TableCell>
-                      <TableCell
-                        className="cursor-pointer text-primary underline-offset-2 hover:underline"
-                        onClick={e => { e.stopPropagation(); navigate(`/cow/${r.damLid}`); }}
-                      >
-                        {r.damTag || r.damLid}
-                      </TableCell>
-                      <TableCell className={scoreColor(r.damScore)}>
-                        {r.damScore > 0 ? r.damScore.toFixed(1) : '—'}
-                      </TableCell>
-                      <TableCell>{r.damCalves}</TableCell>
-                      <TableCell>{r.damConception > 0 ? `${r.damConception}%` : '—'}</TableCell>
-                      <TableCell className={intervalColor(r.damInterval)}>
-                        {r.damInterval > 0 ? `${r.damInterval}d` : '—'}
-                      </TableCell>
-                      <TableCell>{r.damGestation > 0 ? `${r.damGestation}d` : '—'}</TableCell>
-                    </TableRow>
-                  ))}
-                  {filteredHeifers.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                        No heifer candidates found.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-              <p className="text-xs text-muted-foreground mt-2">{filteredHeifers.length} heifer candidates</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            <p className="text-sm text-muted-foreground">
+              Heifers born in the last 2 years ranked by dam's composite score. Top 25% dam scores highlighted in green.
+            </p>
+          </CardHeader>
+          <CollapsibleContent>
+            <CardContent>
+              {loading ? (
+                <p className="text-muted-foreground py-8 text-center">Loading…</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <SortHeader label="Heifer Tag" k="heiferTag" />
+                        <SortHeader label="Born" k="heiferYear" />
+                        <SortHeader label="Dam Tag" k="damTag" />
+                        <SortHeader label="Dam Score" k="damScore" />
+                        <SortHeader label="Dam Calves" k="damCalves" />
+                        <SortHeader label="Dam AI %" k="damConception" />
+                        <SortHeader label="Dam Avg Interval" k="damInterval" />
+                        <SortHeader label="Dam Avg Gest" k="damGestation" />
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredHeifers.map(r => (
+                        <TableRow
+                          key={r.heiferId}
+                          className="cursor-pointer hover:bg-muted/50"
+                          onClick={() => navigate(`/cow/${r.heiferId}`)}
+                        >
+                          <TableCell className="font-medium">{r.heiferTag || '—'}</TableCell>
+                          <TableCell>{r.heiferYear}</TableCell>
+                          <TableCell
+                            className="cursor-pointer text-primary underline-offset-2 hover:underline"
+                            onClick={e => { e.stopPropagation(); navigate(`/cow/${r.damLid}`); }}
+                          >
+                            {r.damTag || r.damLid}
+                          </TableCell>
+                          <TableCell className={scoreColor(r.damScore)}>
+                            {r.damScore > 0 ? r.damScore.toFixed(1) : '—'}
+                          </TableCell>
+                          <TableCell>{r.damCalves}</TableCell>
+                          <TableCell>{r.damConception > 0 ? `${r.damConception}%` : '—'}</TableCell>
+                          <TableCell className={intervalColor(r.damInterval)}>
+                            {r.damInterval > 0 ? `${r.damInterval}d` : '—'}
+                          </TableCell>
+                          <TableCell>{r.damGestation > 0 ? `${r.damGestation}d` : '—'}</TableCell>
+                        </TableRow>
+                      ))}
+                      {filteredHeifers.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                            No heifer candidates found.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                  <p className="text-xs text-muted-foreground mt-2">{filteredHeifers.length} heifer candidates</p>
+                </div>
+              )}
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
 
       {/* Section 2 — First-Calf Heifer vs Mature Cow Conception */}
       <Card>
