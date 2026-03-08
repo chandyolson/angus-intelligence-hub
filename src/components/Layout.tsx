@@ -45,7 +45,7 @@ function OperationWarningBanner() {
   const { operation } = useOperation();
   if (operation !== 'Both') return null;
   return (
-    <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-md px-4 py-2 flex items-center gap-2 mx-6 mt-2">
+    <div className="lg:ml-[220px] bg-yellow-500/10 border border-yellow-500/30 rounded-md px-4 py-2 flex items-center gap-2 mx-6 mt-2">
       <AlertTriangle className="h-4 w-4 text-yellow-400 shrink-0" />
       <p className="text-xs text-yellow-400">
         Viewing combined data from both operations — some metrics may not be comparable across operations.
