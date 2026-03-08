@@ -172,7 +172,7 @@ export default function HerdTrends() {
     let otherCount = 0;
 
     blairActive.forEach(a => {
-      const ds = a.dam_sire?.trim();
+      const ds = a.sire?.trim();
       if (!ds) return;
       countMap.set(ds, (countMap.get(ds) || 0) + 1);
     });
