@@ -54,11 +54,18 @@ function computeRankedCows(animals: Animal[], records: BreedingCalvingRecord[]):
   const q50 = scoreable[Math.floor(scoreable.length * 0.5)]?.composite_score ?? 0;
   const q75 = scoreable[Math.floor(scoreable.length * 0.25)]?.composite_score ?? 0;
 
-  return rows.map((r, i) => ({
-    ...r,
-    quartile: r.total_calves < 2 || r.composite_score <= 0 ? 'AVERAGE' as const :
-      r.composite_score >= q75 ? 'ELITE' : r.composite_score >= q50 ? 'STRONG' : r.composite_score >= q25 ? 'AVERAGE' : 'CULL WATCH',
-  })).filter(r => r.total_calves >= 2).sort((a, b) => b.composite_score - a.composite_score).map((r, i) => ({ ...r, rank: i + 1 }));
+  const getQuartile = (score: number, calves: number): RankedCow['quartile'] => {
+    if (calves < 2 || score <= 0) return 'AVERAGE';
+    if (score >= q75) return 'ELITE';
+    if (score >= q50) return 'STRONG';
+    if (score >= q25) return 'AVERAGE';
+    return 'CULL WATCH';
+  };
+
+  return rows
+    .filter(r => r.total_calves >= 2)
+    .sort((a, b) => b.composite_score - a.composite_score)
+    .map((r, i) => ({ ...r, rank: i + 1, quartile: getQuartile(r.composite_score, r.total_calves) }));
 }
 
 function computeCullFlags(ranked: RankedCow[], records: BreedingCalvingRecord[]): CullFlag[] {
