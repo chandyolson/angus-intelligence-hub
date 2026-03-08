@@ -223,10 +223,10 @@ export default function Overview() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
-                  <StatBlock label="Average" value={`${kpis.avgInterval} days`} highlight={kpis.avgInterval > 365} />
-                  <StatBlock label="Median" value={`${kpis.medianInterval} days`} />
-                  <StatBlock label="Best" value={`${kpis.bestInterval} days`} accent />
-                  <StatBlock label="Longest" value={`${kpis.longestInterval} days`} highlight />
+                  <StatBlock label="Average" value={`${kpis.avgInterval} days`} highlight={kpis.avgInterval > 365} onClick={() => navigate('/calving-interval')} />
+                  <StatBlock label="Median" value={`${kpis.medianInterval} days`} onClick={() => navigate('/calving-interval')} />
+                  <StatBlock label="Best" value={`${kpis.bestInterval} days`} accent onClick={() => navigate('/calving-interval')} />
+                  <StatBlock label="Longest" value={`${kpis.longestInterval} days`} highlight onClick={() => navigate('/calving-interval')} />
                 </div>
 
                 {kpis.avgInterval > 365 && (
