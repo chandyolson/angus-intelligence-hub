@@ -54,7 +54,13 @@ export function AppSidebar() {
         { title: 'Replacement Heifers', url: '/replacements', icon: Baby },
       ],
     },
-    { title: 'Herd Trends', icon: TrendingUp, url: '/herd-trends' },
+    {
+      title: 'Herd Trends', icon: TrendingUp,
+      children: [
+        { title: 'Demographics', url: '/herd-trends', icon: TrendingUp },
+        { title: 'Calving Distribution', url: '/calving-distribution', icon: Baby },
+      ],
+    },
     
   ];
 

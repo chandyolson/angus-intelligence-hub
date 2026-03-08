@@ -46,6 +46,7 @@ const App = () => (
               <Route path="/calving-interval" element={<CalvingInterval />} />
               <Route path="/open-cows" element={<OpenCows />} />
               <Route path="/herd-trends" element={<HerdTrends />} />
+              <Route path="/calving-distribution" element={<CalvingDistribution />} />
               <Route path="/gestation" element={<Gestation />} />
               <Route path="/birth-weight" element={<BirthWeight />} />
               <Route path="/culling" element={<Culling />} />
