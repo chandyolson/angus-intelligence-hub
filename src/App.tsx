@@ -21,6 +21,7 @@ import BirthWeight from "@/pages/BirthWeight";
 import Culling from "@/pages/Culling";
 import Replacements from "@/pages/Replacements";
 import Reconciliation from "@/pages/Reconciliation";
+import CalvingDistribution from "@/pages/CalvingDistribution";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
