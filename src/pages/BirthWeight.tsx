@@ -164,48 +164,7 @@ export default function BirthWeight() {
         )}
       </div>
 
-      {/* Section 1 — BW by AI Sire */}
-      <SireBarChart title="Birth Weight by AI Sire" data={aiSireData} herdAvg={herdAvgBW} />
-
-      {/* Section 2 — BW by Cow Sire */}
-      <SireBarChart title="Birth Weight by Cow Sire (Dam Genetics)" data={cowSireData} herdAvg={herdAvgBW} />
-
-      {/* Section 3 — Flag Report */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Weight className="h-5 w-5 text-primary" /> Birth Weight Flag Report
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="heavy">
-            <TabsList>
-              <TabsTrigger value="heavy">Heavy ({heavyCalves.length})</TabsTrigger>
-              <TabsTrigger value="light">Light ({lightCalves.length})</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="heavy">
-              <FlagTable
-                rows={heavyCalves}
-                colorFn={(bw) => bw > 100 ? 'text-red-400 font-semibold' : 'text-orange-400 font-medium'}
-                filename="heavy_calves.csv"
-                navigate={navigate}
-              />
-            </TabsContent>
-
-            <TabsContent value="light">
-              <FlagTable
-                rows={lightCalves}
-                colorFn={(bw) => bw < 50 ? 'text-red-400 font-semibold' : 'text-orange-400 font-medium'}
-                filename="light_calves.csv"
-                navigate={navigate}
-              />
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
-
-      {/* Section 4 — BW by Year */}
+      {/* BW by Year */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -231,6 +190,12 @@ export default function BirthWeight() {
           </ResponsiveContainer>
         </CardContent>
       </Card>
+
+      {/* BW by AI Sire */}
+      <SireBarChart title="Birth Weight by AI Sire" data={aiSireData} herdAvg={herdAvgBW} />
+
+      {/* BW by Cow Sire */}
+      <SireBarChart title="Birth Weight by Cow Sire (Dam Genetics)" data={cowSireData} herdAvg={herdAvgBW} />
     </div>
   );
 }
