@@ -38,8 +38,9 @@ const SEV_CFG: Record<Severity, { label: string; bg: string; border: string; tex
 };
 
 const VALID_PREG_STAGES = new Set([
-  'AI', 'Second AI', 'Cleanup', 'Short', 'Medium', 'Long',
-  'Open', 'Bull', 'ET', 'Exposed', 'Not Exposed',
+  'ai', 'second ai', 'early', 'middle', 'late', 'very late', 'open',
+  'cleanup', 'short', 'medium', 'long',
+  'bull', 'et', 'exposed', 'not exposed',
 ]);
 
 let checkCounter = 0;
@@ -188,7 +189,7 @@ export default function DataQuality() {
         v.push({ checkId: nextCheckId('M'), rule: 'AI date 2 without sire 2', severity: 'medium', lifetime_id: lid, breeding_year: yr, currentValue: 'ai_sire_2: (null)', tableSource: 'combined', flaggedField: 'ai_sire_2' });
       }
 
-      if (r.preg_stage && !VALID_PREG_STAGES.has(r.preg_stage)) {
+      if (r.preg_stage && !VALID_PREG_STAGES.has(r.preg_stage.toLowerCase().trim())) {
         v.push({ checkId: nextCheckId('M'), rule: 'Invalid preg stage value', severity: 'medium', lifetime_id: lid, breeding_year: yr, currentValue: `"${r.preg_stage}"`, tableSource: 'combined', flaggedField: 'preg_stage' });
       }
     });
