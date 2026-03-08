@@ -261,46 +261,7 @@ export default function Rankings() {
     return displayed.map((cow, i) => renderRow(cow, i));
   };
 
-  const QUARTILE_COLORS = ['hsl(0, 72%, 51%)', 'hsl(25, 95%, 53%)', 'hsl(48, 96%, 53%)', 'hsl(142, 71%, 45%)'];
-  const QUARTILE_LABELS = ['Bottom 25%', '25–50%', '50–75%', 'Top 25%'];
 
-  const quartileDistribution = useMemo(() => {
-    const withScore = ranked.filter(r => r.composite_score > 0);
-    const sorted = [...withScore].sort((a, b) => a.composite_score - b.composite_score);
-    const n = sorted.length;
-    if (n === 0) return QUARTILE_LABELS.map((l, i) => ({ bucket: l, count: 0, pct: 0, fill: QUARTILE_COLORS[i] }));
-    const buckets = [0, 0, 0, 0];
-    sorted.forEach((_, idx) => {
-      const q = Math.min(Math.floor((idx / n) * 4), 3);
-      buckets[q]++;
-    });
-    return QUARTILE_LABELS.map((l, i) => ({ bucket: l, count: buckets[i], pct: n > 0 ? Math.round((buckets[i] / n) * 100) : 0, fill: QUARTILE_COLORS[i] }));
-  }, [ranked]);
-
-  const componentDistributions = useMemo(() => {
-    if (!animals) return [];
-    const components: { key: keyof Animal; label: string; weight: string }[] = [
-      { key: 'c1_conception_score', label: 'C1 Conception Score', weight: '30%' },
-      { key: 'c2_survival_score', label: 'C2 Calf Survival Rate', weight: '25%' },
-      { key: 'c3_interval_score', label: 'C3 Calving Interval', weight: '20%' },
-      { key: 'c4_calves_per_year_score', label: 'C4 Calves/Productive Year', weight: '15%' },
-      { key: 'c5_gestation_score', label: 'C5 Avg Gestation', weight: '5%' },
-      { key: 'c6_birthweight_score', label: 'C6 Birth Weight', weight: '5%' },
-    ];
-    return components.map(comp => {
-      const vals = animals
-        .filter(a => a.status?.toLowerCase() === 'active' && a[comp.key] != null && (a[comp.key] as number) > 0)
-        .map(a => a[comp.key] as number)
-        .sort((a, b) => a - b);
-      const n = vals.length;
-      const buckets = [0, 0, 0, 0];
-      vals.forEach((_, idx) => { buckets[Math.min(Math.floor((idx / n) * 4), 3)]++; });
-      return {
-        ...comp,
-        data: QUARTILE_LABELS.map((l, i) => ({ bucket: l, count: buckets[i], fill: QUARTILE_COLORS[i] })),
-      };
-    });
-  }, [animals]);
 
   return (
     <div className="space-y-6">
