@@ -80,6 +80,7 @@ export default function Culling() {
     }).map(animal => {
       const lid = animal.lifetime_id ?? '';
       const cowRecs = recsByLid.get(lid) || [];
+      const flags: number[] = [];
       const age = animal.year_born ? currentYear - animal.year_born : 0;
 
       // FLAG 1 — Any open event
