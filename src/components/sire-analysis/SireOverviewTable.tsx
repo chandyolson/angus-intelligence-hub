@@ -61,7 +61,8 @@ function computeSireOverview(records: BreedingCalvingRecord[]): SireOverviewRow[
 
     // Calf outcomes by calf_sire
     if (r.calf_sire) {
-      const e = calfMap.get(r.calf_sire) || { bws: [], gests: [], alive: 0, withStatus: 0 };
+      const e = calfMap.get(r.calf_sire) || { bws: [], gests: [], alive: 0, withStatus: 0, totalCalves: 0 };
+      e.totalCalves++;
       if (r.calf_bw != null && r.calf_bw > 0) e.bws.push(r.calf_bw);
       if (r.gestation_days != null && r.gestation_days >= 260 && r.gestation_days <= 295) e.gests.push(r.gestation_days);
       if (r.calf_status) {
