@@ -122,7 +122,6 @@ function computeSireOverview(records: BreedingCalvingRecord[]): SireOverviewRow[
       avgBW, nBW: calf?.bws.length || 0,
       avgGest, nGest: calf?.gests.length || 0,
       survivalPct, nSurvival,
-      survivalPct, nSurvival: calf?.withStatus || 0,
       grade,
       gradeLetter,
     });
