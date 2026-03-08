@@ -12,6 +12,7 @@ import { AlertTriangle, AlertOctagon, Info, ShieldAlert, Download, Pencil, Check
 import { ShimmerCard } from '@/components/ui/shimmer-skeleton';
 import { ErrorBox } from '@/components/ui/error-box';
 import { RecordEditPanel, MarkReviewedDialog } from '@/components/data-quality/RecordEditPanel';
+import { SireDeduplication } from '@/components/data-quality/SireDeduplication';
 import { cn } from '@/lib/utils';
 
 type Severity = 'critical' | 'high' | 'medium' | 'low';
