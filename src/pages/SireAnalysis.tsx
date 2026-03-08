@@ -9,7 +9,7 @@ import { ErrorBox } from '@/components/ui/error-box';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Trophy, AlertTriangle } from 'lucide-react';
 import AdvancedSireSection from '@/components/sire-analysis/AdvancedSireSection';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ResponsiveContainer, Cell, ScatterChart, Scatter, ZAxis, LabelList } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ResponsiveContainer, Cell, ScatterChart, Scatter, ZAxis, LabelList, ComposedChart, Line } from 'recharts';
 
 interface SireRow {
   sire: string;
@@ -259,10 +259,10 @@ export default function SireAnalysis() {
     return eligible.reduce((a, b) => a.sampleSize > b.sampleSize ? a : b);
   }, [firstServiceRows]);
 
-  // Gestation by calf_sire
+  // Gestation by calf_sire (with avg BW overlay)
   const gestationData = useMemo(() => {
     if (!records) return [];
-    const sireMap = new Map<string, number[]>();
+    const sireMap = new Map<string, { gests: number[]; bws: number[] }>();
     records.forEach(r => {
       if (!r.calf_sire || r.calf_sire.toLowerCase().includes('cleanup')) return;
       let gd = r.gestation_days;
@@ -275,14 +275,20 @@ export default function SireAnalysis() {
           if (diff >= 250 && diff <= 310) gd = diff; else return;
         } else return;
       }
-      const arr = sireMap.get(r.calf_sire) || [];
-      arr.push(gd);
-      sireMap.set(r.calf_sire, arr);
+      const entry = sireMap.get(r.calf_sire) || { gests: [], bws: [] };
+      entry.gests.push(gd);
+      if (r.calf_bw != null && r.calf_bw > 0) entry.bws.push(r.calf_bw);
+      sireMap.set(r.calf_sire, entry);
     });
-    const rows: { name: string; avg: number; count: number }[] = [];
-    sireMap.forEach((vals, sire) => {
-      if (vals.length < 10) return;
-      rows.push({ name: sire, avg: Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10, count: vals.length });
+    const rows: { name: string; avg: number; count: number; avgBW: number | null }[] = [];
+    sireMap.forEach((d, sire) => {
+      if (d.gests.length < 10) return;
+      rows.push({
+        name: sire,
+        avg: Math.round((d.gests.reduce((a, b) => a + b, 0) / d.gests.length) * 10) / 10,
+        count: d.gests.length,
+        avgBW: d.bws.length > 0 ? Math.round((d.bws.reduce((a, b) => a + b, 0) / d.bws.length) * 10) / 10 : null,
+      });
     });
     return rows.sort((a, b) => a.avg - b.avg);
   }, [records]);
@@ -412,24 +418,32 @@ export default function SireAnalysis() {
         <Card className="bg-card border-border">
           <CardHeader className="pb-2">
             <CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">Gestation Length by Sire</CardTitle>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Bars = avg gestation days · ◆ markers = avg birth weight (lbs, top axis)
+            </p>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={Math.max(gestationData.length * 36, 200)}>
-              <BarChart layout="vertical" data={gestationData} margin={{ left: 110, right: 40 }}>
+              <ComposedChart layout="vertical" data={gestationData} margin={{ left: 110, right: 50 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis type="number" domain={['dataMin - 2', 'dataMax + 2']} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} />
+                <XAxis xAxisId="gest" type="number" domain={['dataMin - 2', 'dataMax + 2']} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} />
+                <XAxis xAxisId="bw" type="number" orientation="top" tick={{ fill: 'hsl(var(--primary))', fontSize: 10 }} tickFormatter={(v: number) => `${v} lbs`} />
                 <YAxis dataKey="name" type="category" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} width={105} />
                 <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }}
-                  formatter={(value: number, _: string, entry: any) => [`${value} days (n=${entry.payload.count})`, 'Avg Gestation']} />
-                <ReferenceLine x={herdAvgGestation} stroke="hsl(var(--foreground))" strokeDasharray="5 5"
+                  formatter={(value: number, name: string, entry: any) => {
+                    if (name === 'avgBW') return [`${value} lbs`, 'Avg Birth Weight'];
+                    return [`${value} days (n=${entry.payload.count})`, 'Avg Gestation'];
+                  }} />
+                <ReferenceLine xAxisId="gest" x={herdAvgGestation} stroke="hsl(var(--foreground))" strokeDasharray="5 5"
                   label={{ value: `Herd Avg: ${herdAvgGestation}d`, fill: 'hsl(var(--muted-foreground))', fontSize: 10, position: 'top' }} />
-                <Bar dataKey="avg" radius={[0, 4, 4, 0]}>
+                <Bar xAxisId="gest" dataKey="avg" radius={[0, 4, 4, 0]}>
                   {gestationData.map((d, i) => (
                     <Cell key={i} fill={d.avg <= 275.5 ? 'hsl(142, 71%, 45%)' : d.avg <= 278 ? 'hsl(48, 96%, 53%)' : 'hsl(0, 72%, 51%)'} />
                   ))}
                   <LabelList dataKey="count" position="right" style={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} formatter={(v: number) => `n=${v}`} />
                 </Bar>
-              </BarChart>
+                <Line xAxisId="bw" dataKey="avgBW" stroke="hsl(var(--primary))" strokeWidth={0} dot={{ r: 5, fill: 'hsl(var(--primary))', strokeWidth: 0 }} />
+              </ComposedChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
