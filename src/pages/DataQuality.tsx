@@ -481,6 +481,9 @@ export default function DataQuality() {
             </div>
           )}
 
+          {/* Fetal Sex Accuracy */}
+          <FetalSexAccuracy />
+
           {/* Sire Deduplication */}
           <SireDeduplication />
 
