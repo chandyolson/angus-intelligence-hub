@@ -287,7 +287,7 @@ export default function SireAnalysis() {
                   label={{ value: `Herd Avg: ${herdAvgGestation}d`, fill: 'hsl(var(--muted-foreground))', fontSize: 10, position: 'top' }} />
                 <Bar xAxisId="gest" dataKey="avg" radius={[0, 4, 4, 0]}>
                   {gestationData.map((d, i) => (
-                    <Cell key={i} fill={d.avg <= 275.5 ? 'hsl(142, 71%, 45%)' : d.avg <= 278 ? 'hsl(48, 96%, 53%)' : 'hsl(0, 72%, 51%)'} />
+                    <Cell key={i} fill={d.avg >= 270 && d.avg <= 285 ? 'hsl(142, 71%, 45%)' : (d.avg >= 265 && d.avg < 270) || (d.avg > 285 && d.avg <= 290) ? 'hsl(48, 96%, 53%)' : 'hsl(0, 72%, 51%)'} />
                   ))}
                   <LabelList dataKey="count" position="right" style={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} formatter={(v: number) => `n=${v}`} />
                 </Bar>
