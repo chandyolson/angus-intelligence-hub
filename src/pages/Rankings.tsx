@@ -430,6 +430,11 @@ export default function Rankings() {
               <TableBody>{renderRankingRows()}</TableBody>
             </Table>
           </div>
+          {excludedCount > 0 && (
+            <p className="text-xs text-muted-foreground mt-3">
+              {excludedCount} cow{excludedCount !== 1 ? 's' : ''} excluded — fewer than 2 calving records
+            </p>
+          )}
         </CardContent>
       </Card>
 
