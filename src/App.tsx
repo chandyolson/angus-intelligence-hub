@@ -11,6 +11,7 @@ import CowRoster from "@/pages/CowRoster";
 import CowDetail from "@/pages/CowDetail";
 import Rankings from "@/pages/Rankings";
 import SireAnalysis from "@/pages/SireAnalysis";
+import SireDetail from "@/pages/SireDetail";
 import AIAssistant from "@/pages/AIAssistant";
 import DataQuality from "@/pages/DataQuality";
 import CalvingInterval from "@/pages/CalvingInterval";
@@ -41,6 +42,7 @@ const App = () => (
               <Route path="/cow/:lifetime_id" element={<CowDetail />} />
               <Route path="/rankings" element={<Rankings />} />
               <Route path="/sires" element={<SireAnalysis />} />
+              <Route path="/sires/:sire_name" element={<SireDetail />} />
               <Route path="/assistant" element={<AIAssistant />} />
               <Route path="/data-quality" element={<DataQuality />} />
               <Route path="/calving-interval" element={<CalvingInterval />} />
