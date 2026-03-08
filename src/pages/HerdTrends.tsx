@@ -166,6 +166,14 @@ export default function HerdTrends() {
 
   const CHART_COLORS = ['#22c55e', '#3b82f6', '#f97316', '#a855f7', '#eab308', '#ec4899', '#14b8a6', '#f43f5e'];
 
+  if (lr || la) return (
+    <div className="space-y-6">
+      <ShimmerSkeleton className="h-8 w-48" />
+      <ShimmerSkeleton className="h-96" />
+    </div>
+  );
+  if (re) return <ErrorBox />;
+
   return (
     <div className="space-y-6">
       <h1 className="text-[20px] font-semibold text-foreground">Herd Trends</h1>
