@@ -117,6 +117,7 @@ function computeSireOverview(records: BreedingCalvingRecord[]): SireOverviewRow[
 
     rows.push({
       sire,
+      totalCalves: calf?.totalCalves || 0,
       totalUses,
       rate1st, n1st,
       rate2nd, n2nd,
