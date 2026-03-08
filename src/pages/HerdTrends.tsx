@@ -188,6 +188,37 @@ export default function HerdTrends() {
     return rows;
   }, [animals]);
 
+  // ── Cow Age Distribution ──
+  const { ageBuckets, avgAge, agedPct } = useMemo(() => {
+    if (!animals) return { ageBuckets: [], avgAge: 0, agedPct: 0 };
+    const currentYear = new Date().getFullYear();
+    const blairActive = animals.filter(a => a.operation === 'Blair' && a.status?.toLowerCase() === 'active' && a.year_born);
+
+    const ages = blairActive.map(a => currentYear - a.year_born!);
+    if (ages.length === 0) return { ageBuckets: [], avgAge: 0, agedPct: 0 };
+
+    const avg = Math.round((ages.reduce((s, a) => s + a, 0) / ages.length) * 10) / 10;
+
+    const bucketDefs = [
+      { label: '2 (1st Calf)', min: 0, max: 2, color: 'hsl(48, 96%, 53%)' },
+      { label: '3–4 (Young)', min: 3, max: 4, color: 'hsl(142, 71%, 45%)' },
+      { label: '5–7 (Prime)', min: 5, max: 7, color: 'hsl(142, 71%, 45%)' },
+      { label: '8–10 (Mature)', min: 8, max: 10, color: 'hsl(48, 96%, 53%)' },
+      { label: '11+ (Aged)', min: 11, max: 999, color: 'hsl(0, 72%, 51%)' },
+    ];
+
+    const data = bucketDefs.map(b => ({
+      name: b.label,
+      count: ages.filter(a => a >= b.min && a <= b.max).length,
+      color: b.color,
+    }));
+
+    const aged = data.find(d => d.name.startsWith('11+'))?.count ?? 0;
+    const pct = Math.round((aged / ages.length) * 1000) / 10;
+
+    return { ageBuckets: data, avgAge: avg, agedPct: pct };
+  }, [animals]);
+
   const CHART_COLORS = ['#22c55e', '#3b82f6', '#f97316', '#a855f7', '#eab308', '#ec4899', '#14b8a6', '#f43f5e'];
 
   if (lr || la) return (
