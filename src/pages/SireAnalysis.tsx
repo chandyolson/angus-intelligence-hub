@@ -4,7 +4,7 @@ import { BreedingCalvingRecord } from '@/types/cattle';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ShimmerSkeleton } from '@/components/ui/shimmer-skeleton';
 import { ErrorBox } from '@/components/ui/error-box';
-import { Trophy, AlertTriangle } from 'lucide-react';
+import { Trophy, AlertTriangle, TrendingUp } from 'lucide-react';
 import AdvancedSireSection from '@/components/sire-analysis/AdvancedSireSection';
 import SireOverviewTable from '@/components/sire-analysis/SireOverviewTable';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ReferenceArea, ResponsiveContainer, Cell, ScatterChart, Scatter, ZAxis, LabelList, ComposedChart, Line } from 'recharts';
@@ -56,10 +56,21 @@ export default function SireAnalysis() {
   // Dynamic herd average 1st service rate: COUNT(preg_stage='AI') / COUNT(ai_date_1 IS NOT NULL)
   const herdAvg1stService = useMemo(() => {
     if (!records) return 0;
-    const withAiDate1 = records.filter(r => r.ai_date_1 != null);
+    const blair = records.filter(r => (r as any).operation === 'Blair');
+    const withAiDate1 = blair.filter(r => r.ai_date_1 != null);
     if (withAiDate1.length === 0) return 0;
     const aiConceived = withAiDate1.filter(r => r.preg_stage?.toLowerCase() === 'ai').length;
     return Math.round((aiConceived / withAiDate1.length) * 1000) / 10;
+  }, [records]);
+
+  // Dynamic herd average 2nd service rate
+  const herdAvg2ndService = useMemo(() => {
+    if (!records) return { rate: 0, count: 0 };
+    const blair = records.filter(r => (r as any).operation === 'Blair');
+    const withAiDate2 = blair.filter(r => r.ai_date_2 != null);
+    if (withAiDate2.length === 0) return { rate: 0, count: 0 };
+    const conceived = withAiDate2.filter(r => r.preg_stage?.toLowerCase() === 'second ai').length;
+    return { rate: Math.round((conceived / withAiDate2.length) * 1000) / 10, count: withAiDate2.length };
   }, [records]);
 
   const topPerformer = useMemo(() => {
@@ -201,46 +212,55 @@ export default function SireAnalysis() {
     <div className="space-y-6">
       <h1 className="text-[20px] font-semibold text-foreground">Sire Analysis</h1>
 
-      {/* Highlight Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Herd Average Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card className="bg-card border-border">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <TrendingUp className="h-4 w-4 text-primary" />
+              <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Herd 1st Service Rate</span>
+            </div>
+            <p className="text-3xl font-bold" style={{ color: rateColor(herdAvg1stService) }}>{herdAvg1stService}%</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-card border-border">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <TrendingUp className="h-4 w-4 text-primary" />
+              <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Herd 2nd Service Rate</span>
+            </div>
+            <p className="text-3xl font-bold" style={{ color: rateColor(herdAvg2ndService.rate) }}>
+              {herdAvg2ndService.count >= 5 ? `${herdAvg2ndService.rate}%` : '—'}
+            </p>
+          </CardContent>
+        </Card>
         {topPerformer && (
           <Card className="bg-card border-success/40">
-            <CardContent className="p-5">
-              <div className="flex items-center gap-2 mb-2">
-                <Trophy className="h-5 w-5 text-success" />
-                <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Top Performer (25+ records)</span>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-1">
+                <Trophy className="h-4 w-4 text-success" />
+                <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Top Performer</span>
               </div>
-              <p className="text-xl font-bold text-foreground">{topPerformer.sire}</p>
-              <p className="text-3xl font-bold mt-1" style={{ color: rateColor(topPerformer.rate) }}>{topPerformer.rate}%</p>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">1st Service AI Rate</p>
-              <p className="text-sm text-muted-foreground mt-3">
-                {topPerformer.sampleSize} units · {topPerformer.avgBW > 0 ? `${topPerformer.avgBW} lbs avg BW · ` : ''}{topPerformer.survivalRate}% survival
-              </p>
+              <p className="text-lg font-bold text-foreground">{topPerformer.sire}</p>
+              <p className="text-2xl font-bold" style={{ color: rateColor(topPerformer.rate) }}>{topPerformer.rate}%</p>
             </CardContent>
           </Card>
         )}
         {mostUsedBelowAvg && (
           <Card className="bg-card border-destructive/40">
-            <CardContent className="p-5">
-              <div className="flex items-center gap-2 mb-2">
-                <AlertTriangle className="h-5 w-5 text-destructive" />
-                <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Most Used Below Average (&lt;55%)</span>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-1">
+                <AlertTriangle className="h-4 w-4 text-destructive" />
+                <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Most Used &lt;55%</span>
               </div>
-              <p className="text-xl font-bold text-foreground">{mostUsedBelowAvg.sire}</p>
-              <p className="text-3xl font-bold mt-1" style={{ color: rateColor(mostUsedBelowAvg.rate) }}>{mostUsedBelowAvg.rate}%</p>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">1st Service AI Rate</p>
-              <p className="text-sm text-muted-foreground mt-3">
-                {mostUsedBelowAvg.sampleSize} units · {mostUsedBelowAvg.avgBW > 0 ? `${mostUsedBelowAvg.avgBW} lbs avg BW · ` : ''}{mostUsedBelowAvg.survivalRate}% survival
-              </p>
+              <p className="text-lg font-bold text-foreground">{mostUsedBelowAvg.sire}</p>
+              <p className="text-2xl font-bold" style={{ color: rateColor(mostUsedBelowAvg.rate) }}>{mostUsedBelowAvg.rate}%</p>
             </CardContent>
           </Card>
         )}
       </div>
 
       {records && <SireOverviewTable records={records} />}
-      <p className="text-xs text-muted-foreground -mt-4 px-1">
-        💡 Herd average first service rate: {herdAvg1stService}%. Blair operation only.
-      </p>
 
       {/* Gestation Length by Sire */}
       {gestationData.length > 0 && (
