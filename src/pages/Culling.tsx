@@ -49,6 +49,7 @@ function linearSlope(ys: number[]): number {
 
 export default function Culling() {
   const { data: animals, isLoading: loadingAnimals } = useActiveAnimals();
+  const { data: allAnimals } = useAnimals();
   const { data: records, isLoading: loadingRecords } = useBlairCombined();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
