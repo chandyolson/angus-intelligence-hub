@@ -217,25 +217,37 @@ export default function Culling() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <Card>
+        <Card
+          className={`cursor-pointer transition-all hover:ring-2 hover:ring-destructive/50 ${priorityFilter === 'URGENT' ? 'ring-2 ring-destructive' : ''}`}
+          onClick={() => setPriorityFilter(priorityFilter === 'URGENT' ? null : 'URGENT')}
+        >
           <CardContent className="pt-6 text-center">
             <p className="text-3xl font-bold text-destructive">{summary.urgent}</p>
             <p className="text-sm text-muted-foreground">URGENT</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card
+          className={`cursor-pointer transition-all hover:ring-2 hover:ring-yellow-500/50 ${priorityFilter === 'REVIEW' ? 'ring-2 ring-yellow-500' : ''}`}
+          onClick={() => setPriorityFilter(priorityFilter === 'REVIEW' ? null : 'REVIEW')}
+        >
           <CardContent className="pt-6 text-center">
             <p className="text-3xl font-bold text-yellow-500">{summary.review}</p>
             <p className="text-sm text-muted-foreground">REVIEW</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card
+          className={`cursor-pointer transition-all hover:ring-2 hover:ring-muted-foreground/50 ${priorityFilter === 'MONITOR' ? 'ring-2 ring-muted-foreground' : ''}`}
+          onClick={() => setPriorityFilter(priorityFilter === 'MONITOR' ? null : 'MONITOR')}
+        >
           <CardContent className="pt-6 text-center">
             <p className="text-3xl font-bold text-muted-foreground">{summary.monitor}</p>
             <p className="text-sm text-muted-foreground">MONITOR</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card
+          className={`cursor-pointer transition-all hover:ring-2 hover:ring-primary/50 ${priorityFilter === null ? '' : ''}`}
+          onClick={() => setPriorityFilter(null)}
+        >
           <CardContent className="pt-6 text-center">
             <p className="text-3xl font-bold text-foreground">{summary.total}</p>
             <p className="text-sm text-muted-foreground">Total Flagged</p>
