@@ -40,7 +40,7 @@ function computeSireOverview(records: BreedingCalvingRecord[]): SireOverviewRow[
   // 2nd service map (by ai_sire_2)
   const second = new Map<string, { attempts: number; conceived: number }>();
   // Calf outcome map (by calf_sire)
-  const calfMap = new Map<string, { bws: number[]; gests: number[]; alive: number; withStatus: number }>();
+  const calfMap = new Map<string, { bws: number[]; gests: number[]; alive: number; withStatus: number; totalCalves: number }>();
 
   blairRecords.forEach(r => {
     // 1st service
