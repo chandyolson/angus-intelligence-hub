@@ -12,6 +12,7 @@ import { Download, AlertTriangle } from 'lucide-react';
 import { ShimmerSkeleton, ShimmerCard, ShimmerTableRows } from '@/components/ui/shimmer-skeleton';
 import { ErrorBox } from '@/components/ui/error-box';
 import { EmptyState } from '@/components/ui/empty-state';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 interface RankedCow {
   rank: number; lifetime_id: string; tag: string | null; year_born: number | null; sire: string | null;
@@ -132,6 +133,47 @@ export default function Rankings() {
     return { a: computeSireMetrics(sireA, records), b: computeSireMetrics(sireB, records) };
   }, [sireA, sireB, records]);
 
+  const QUARTILE_COLORS = ['hsl(0, 72%, 51%)', 'hsl(25, 95%, 53%)', 'hsl(48, 96%, 53%)', 'hsl(142, 71%, 45%)'];
+  const QUARTILE_LABELS = ['Bottom 25%', '25–50%', '50–75%', 'Top 25%'];
+
+  const quartileDistribution = useMemo(() => {
+    const withScore = ranked.filter(r => r.composite_score > 0);
+    const sorted = [...withScore].sort((a, b) => a.composite_score - b.composite_score);
+    const n = sorted.length;
+    if (n === 0) return QUARTILE_LABELS.map((l, i) => ({ bucket: l, count: 0, pct: 0, fill: QUARTILE_COLORS[i] }));
+    const buckets = [0, 0, 0, 0];
+    sorted.forEach((_, idx) => {
+      const q = Math.min(Math.floor((idx / n) * 4), 3);
+      buckets[q]++;
+    });
+    return QUARTILE_LABELS.map((l, i) => ({ bucket: l, count: buckets[i], pct: n > 0 ? Math.round((buckets[i] / n) * 100) : 0, fill: QUARTILE_COLORS[i] }));
+  }, [ranked]);
+
+  const componentDistributions = useMemo(() => {
+    if (!animals) return [];
+    const components: { key: keyof Animal; label: string; weight: string }[] = [
+      { key: 'c1_conception_score', label: 'C1 Conception Score', weight: '30%' },
+      { key: 'c2_survival_score', label: 'C2 Calf Survival Rate', weight: '25%' },
+      { key: 'c3_interval_score', label: 'C3 Calving Interval', weight: '20%' },
+      { key: 'c4_calves_per_year_score', label: 'C4 Calves/Productive Year', weight: '15%' },
+      { key: 'c5_gestation_score', label: 'C5 Avg Gestation', weight: '5%' },
+      { key: 'c6_birthweight_score', label: 'C6 Birth Weight', weight: '5%' },
+    ];
+    return components.map(comp => {
+      const vals = animals
+        .filter(a => a.status?.toLowerCase() === 'active' && a[comp.key] != null && (a[comp.key] as number) > 0)
+        .map(a => a[comp.key] as number)
+        .sort((a, b) => a - b);
+      const n = vals.length;
+      const buckets = [0, 0, 0, 0];
+      vals.forEach((_, idx) => { buckets[Math.min(Math.floor((idx / n) * 4), 3)]++; });
+      return {
+        ...comp,
+        data: QUARTILE_LABELS.map((l, i) => ({ bucket: l, count: buckets[i], fill: QUARTILE_COLORS[i] })),
+      };
+    });
+  }, [animals]);
+
   const quartileStyle = (q: string) => {
     switch (q) {
       case 'ELITE': return 'bg-success/20 text-success border-success/30';
@@ -219,9 +261,84 @@ export default function Rankings() {
     return displayed.map((cow, i) => renderRow(cow, i));
   };
 
+
+
   return (
     <div className="space-y-6">
       <h1 className="text-[20px] font-semibold text-foreground">Rankings & Culling</h1>
+
+      {/* Section 1: Combined Score Distribution */}
+      <Card className="bg-card border-border">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">Combined Score Distribution</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[280px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={quartileDistribution} barSize={60}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                <XAxis dataKey="bucket" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} axisLine={false} tickLine={false} />
+                <Tooltip
+                  contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }}
+                  labelStyle={{ color: 'hsl(var(--foreground))' }}
+                  formatter={(value: number, _: string, entry: any) => [`${value} cows (${entry.payload.pct}%)`, 'Count']}
+                />
+                <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                  {quartileDistribution.map((d, i) => (
+                    <Cell key={i} fill={d.fill} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="flex justify-center gap-6 mt-2">
+            {quartileDistribution.map((d, i) => (
+              <div key={i} className="flex items-center gap-2 text-xs text-muted-foreground">
+                <span className="h-3 w-3 rounded-sm" style={{ backgroundColor: d.fill }} />
+                <span>{d.bucket}: <span className="text-foreground font-medium">{d.count}</span> ({d.pct}%)</span>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Section 2: Component Score Grid */}
+      <Card className="bg-card border-border">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">Component Score Grid</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {componentDistributions.map(comp => (
+              <div key={comp.key as string} className="rounded-lg border border-border bg-background p-3">
+                <div className="flex items-baseline justify-between mb-2">
+                  <span className="text-xs font-medium text-foreground">{comp.label}</span>
+                  <span className="text-[10px] text-muted-foreground font-medium">Weight: {comp.weight}</span>
+                </div>
+                <div className="h-[140px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={comp.data} barSize={28}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                      <XAxis dataKey="bucket" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 9 }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 9 }} axisLine={false} tickLine={false} width={30} />
+                      <Tooltip
+                        contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 11 }}
+                        formatter={(value: number) => [`${value} cows`, 'Count']}
+                      />
+                      <Bar dataKey="count" radius={[3, 3, 0, 0]}>
+                        {comp.data.map((d, i) => (
+                          <Cell key={i} fill={d.fill} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Section 1: Rankings */}
       <Card className="bg-card border-border">
