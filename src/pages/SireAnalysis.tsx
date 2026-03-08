@@ -330,6 +330,100 @@ export default function SireAnalysis() {
         onSort={handleSort2nd}
       />
 
+      {/* Gestation Length by Sire */}
+      {gestationData.length > 0 && (
+        <Card className="bg-card border-border">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">Gestation Length by Sire</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={Math.max(gestationData.length * 36, 200)}>
+              <BarChart layout="vertical" data={gestationData} margin={{ left: 110, right: 40 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis type="number" domain={['dataMin - 2', 'dataMax + 2']} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} />
+                <YAxis dataKey="name" type="category" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} width={105} />
+                <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }}
+                  formatter={(value: number, _: string, entry: any) => [`${value} days (n=${entry.payload.count})`, 'Avg Gestation']} />
+                <ReferenceLine x={herdAvgGestation} stroke="hsl(var(--foreground))" strokeDasharray="5 5"
+                  label={{ value: `Herd Avg: ${herdAvgGestation}d`, fill: 'hsl(var(--muted-foreground))', fontSize: 10, position: 'top' }} />
+                <Bar dataKey="avg" radius={[0, 4, 4, 0]}>
+                  {gestationData.map((d, i) => (
+                    <Cell key={i} fill={d.avg <= 275.5 ? 'hsl(142, 71%, 45%)' : d.avg <= 278 ? 'hsl(48, 96%, 53%)' : 'hsl(0, 72%, 51%)'} />
+                  ))}
+                  <LabelList dataKey="count" position="right" style={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} formatter={(v: number) => `n=${v}`} />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Birth Weight by Sire */}
+      {bwData.length > 0 && (
+        <Card className="bg-card border-border">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">Birth Weight by Sire</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={Math.max(bwData.length * 36, 200)}>
+              <BarChart layout="vertical" data={bwData} margin={{ left: 110, right: 40 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis type="number" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} />
+                <YAxis dataKey="name" type="category" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} width={105} />
+                <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }}
+                  formatter={(value: number, _: string, entry: any) => [`${value} lbs (n=${entry.payload.count})`, 'Avg BW']} />
+                <ReferenceLine x={herdAvgBW} stroke="hsl(var(--foreground))" strokeDasharray="5 5"
+                  label={{ value: `Herd Avg: ${herdAvgBW} lbs`, fill: 'hsl(var(--muted-foreground))', fontSize: 10, position: 'top' }} />
+                <Bar dataKey="avg" radius={[0, 4, 4, 0]}>
+                  {bwData.map((d, i) => (
+                    <Cell key={i} fill={d.avg > 90 ? 'hsl(0, 72%, 51%)' : 'hsl(142, 71%, 45%)'} />
+                  ))}
+                  <LabelList dataKey="count" position="right" style={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} formatter={(v: number) => `n=${v}`} />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Gestation vs Birth Weight Scatter */}
+      {scatterData.length > 0 && (
+        <Card className="bg-card border-border">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">Gestation vs Birth Weight by Sire</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={380}>
+              <ScatterChart margin={{ left: 10, right: 30, bottom: 30, top: 10 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="gestation" name="Gestation (d)" type="number" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                  label={{ value: 'Avg Gestation (days)', position: 'bottom', offset: 15, fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} />
+                <YAxis dataKey="bw" name="Birth Weight (lbs)" type="number" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                  label={{ value: 'Avg BW (lbs)', angle: -90, position: 'insideLeft', fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} />
+                <ZAxis dataKey="count" range={[60, 500]} name="Sample Size" />
+                <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }}
+                  content={({ active, payload }) => {
+                    if (!active || !payload?.[0]) return null;
+                    const d = payload[0].payload;
+                    return (
+                      <div className="bg-card border border-border rounded-md px-3 py-2 text-xs shadow-lg">
+                        <p className="text-primary font-medium">{d.name}</p>
+                        <p className="text-muted-foreground">Gestation: {d.gestation} days</p>
+                        <p className="text-muted-foreground">Avg BW: {d.bw} lbs</p>
+                        <p className="text-muted-foreground">Sample: {d.count} records</p>
+                      </div>
+                    );
+                  }}
+                />
+                <Scatter data={scatterData} fill="hsl(var(--primary))">
+                  <LabelList dataKey="name" position="top" style={{ fill: 'hsl(var(--muted-foreground))', fontSize: 9 }} />
+                </Scatter>
+              </ScatterChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Highlight Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {topPerformer && (
