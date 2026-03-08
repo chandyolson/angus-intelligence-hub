@@ -130,7 +130,12 @@ export default function Rankings() {
   }, [ranked, records]);
 
   const activeCowCount = useMemo(() => animals?.length ?? 0, [animals]);
-  const uniqueFlaggedIds = useMemo(() => new Set(cullFlags.map(f => f.lifetime_id)), [cullFlags]);
+  const excludedCount = useMemo(() => {
+    if (!animals || !records) return 0;
+    const byLid = new Map<string, number>();
+    records.forEach(r => { if (r.lifetime_id && r.calving_date) byLid.set(r.lifetime_id, (byLid.get(r.lifetime_id) || 0) + 1); });
+    return animals.filter(a => (byLid.get(a.lifetime_id ?? '') || 0) < 2).length;
+  }, [animals, records]);
 
   const sires = useMemo(() => {
     if (!records) return [];
