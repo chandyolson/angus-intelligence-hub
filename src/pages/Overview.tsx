@@ -84,6 +84,13 @@ export default function Overview() {
     const openCount = seasonRecs.filter(r => r.preg_stage?.toLowerCase() === 'open').length;
     const openRate = seasonRecs.length > 0 ? (openCount / seasonRecs.length) * 100 : 0;
 
+    // Avg Calf Birth Weight
+    const bws: number[] = [];
+    records.forEach(r => {
+      if (r.calf_bw != null && r.calf_bw > 0) bws.push(r.calf_bw);
+    });
+    const avgCalfBW = bws.length > 0 ? Math.round((bws.reduce((a, b) => a + b, 0) / bws.length) * 10) / 10 : 0;
+
     return {
       activeCowCount,
       firstServiceRate: Math.round(firstServiceRate * 10) / 10,
@@ -95,6 +102,7 @@ export default function Overview() {
       avgGestation: Math.round(avgGestation * 10) / 10,
       openRate: Math.round(openRate * 10) / 10,
       openSeason: latestYear,
+      avgCalfBW,
     };
   }, [records, blairActive]);
 
