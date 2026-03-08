@@ -35,7 +35,7 @@ export default function Overview() {
   const loading = loadingAnimals || loadingCombined;
 
   const blairActive = useMemo(() =>
-    (animals ?? []).filter(a => a.operation === 'Blair' && a.status?.toLowerCase() === 'active'),
+    (animals ?? []).filter(a => a.status?.toLowerCase() === 'active'),
     [animals]
   );
 

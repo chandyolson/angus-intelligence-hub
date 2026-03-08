@@ -36,7 +36,7 @@ type IntervalSortKey = 'tag' | 'avgInterval' | 'medianInterval' | 'latestInterva
 type OpenSortKey = 'tag' | 'totalOpen' | 'mostRecentYear' | 'year_born';
 
 export default function CalvingInterval() {
-  const { data: animals, isLoading: la, error: ae } = useActiveAnimals('Blair');
+  const { data: animals, isLoading: la, error: ae } = useActiveAnimals();
   const { data: records, isLoading: lr, error: re } = useBreedingCalvingRecords();
   const navigate = useNavigate();
 
