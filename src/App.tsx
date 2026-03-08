@@ -11,6 +11,7 @@ import CowRoster from "@/pages/CowRoster";
 import CowDetail from "@/pages/CowDetail";
 import Rankings from "@/pages/Rankings";
 import SireAnalysis from "@/pages/SireAnalysis";
+import SireDetail from "@/pages/SireDetail";
 import AIAssistant from "@/pages/AIAssistant";
 import DataQuality from "@/pages/DataQuality";
 import CalvingInterval from "@/pages/CalvingInterval";
