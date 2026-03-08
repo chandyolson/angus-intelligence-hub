@@ -103,7 +103,7 @@ function computeSireOverview(records: BreedingCalvingRecord[]): SireOverviewRow[
     const nSurvival = calf?.withStatus || 0;
 
     const hasSurvival = nSurvival >= MIN_METRIC;
-    const grade = hasSurvival ? overallRate * 0.6 + survivalPct * 0.4 : 0;
+    const grade = hasSurvival ? survivalPct * 0.75 + overallRate * 0.25 : 0;
     let gradeLetter = '—';
     if (hasSurvival) {
       if (grade >= 85) gradeLetter = 'A';
