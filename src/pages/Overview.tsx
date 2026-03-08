@@ -8,7 +8,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   LineChart, Line, ReferenceLine, ResponsiveContainer, Cell,
 } from 'recharts';
-import { AlertTriangle, Users, Crosshair, HeartPulse, Clock, Baby, Ban } from 'lucide-react';
+import { AlertTriangle, Users, Crosshair, HeartPulse, Clock, Baby, Ban, Scale } from 'lucide-react';
 import { ShimmerCard } from '@/components/ui/shimmer-skeleton';
 import { ErrorBox } from '@/components/ui/error-box';
 import { cn } from '@/lib/utils';
@@ -84,6 +84,13 @@ export default function Overview() {
     const openCount = seasonRecs.filter(r => r.preg_stage?.toLowerCase() === 'open').length;
     const openRate = seasonRecs.length > 0 ? (openCount / seasonRecs.length) * 100 : 0;
 
+    // Avg Calf Birth Weight
+    const bws: number[] = [];
+    records.forEach(r => {
+      if (r.calf_bw != null && r.calf_bw > 0) bws.push(r.calf_bw);
+    });
+    const avgCalfBW = bws.length > 0 ? Math.round((bws.reduce((a, b) => a + b, 0) / bws.length) * 10) / 10 : 0;
+
     return {
       activeCowCount,
       firstServiceRate: Math.round(firstServiceRate * 10) / 10,
@@ -95,6 +102,7 @@ export default function Overview() {
       avgGestation: Math.round(avgGestation * 10) / 10,
       openRate: Math.round(openRate * 10) / 10,
       openSeason: latestYear,
+      avgCalfBW,
     };
   }, [records, blairActive]);
 
@@ -188,6 +196,7 @@ export default function Overview() {
               flagText={kpis.openRate > 10 ? 'Above 10% threshold' : undefined}
               onClick={() => navigate('/open-cows')}
             />
+            <KPICard icon={Scale} label="Avg Calf Birth Weight" value={`${kpis.avgCalfBW} lbs`} onClick={() => navigate('/birth-weight')} />
           </div>
 
           {/* Two side-by-side cards */}
