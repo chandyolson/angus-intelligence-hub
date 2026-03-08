@@ -12,6 +12,7 @@ import { Download, ArrowUpDown } from 'lucide-react';
 interface SireOverviewRow {
   sire: string;
   totalUses: number;
+  totalCalves: number;
   rate1st: number;
   n1st: number;
   rate2nd: number;
