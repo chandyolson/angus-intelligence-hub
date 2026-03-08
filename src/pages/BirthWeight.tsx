@@ -115,9 +115,54 @@ export default function BirthWeight() {
 
   if (isLoading) return <p className="text-muted-foreground p-8">Loading…</p>;
 
+  const heaviestAI = aiSireData.length ? aiSireData[aiSireData.length - 1] : null;
+  const lightestAI = aiSireData.length ? aiSireData[0] : null;
+  const heaviestCow = cowSireData.length ? cowSireData[cowSireData.length - 1] : null;
+  const lightestCow = cowSireData.length ? cowSireData[0] : null;
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-foreground">Birth Weight Analysis</h1>
+
+      {/* Leader Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {heaviestAI && (
+          <Card className="border-red-500/30 bg-red-500/5">
+            <CardContent className="p-4">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Heaviest AI Sire</p>
+              <p className="text-lg font-bold text-foreground truncate">{heaviestAI.sire}</p>
+              <p className="text-sm text-red-400 font-semibold">{heaviestAI.avg} lbs <span className="text-muted-foreground font-normal">· n={heaviestAI.n}</span></p>
+            </CardContent>
+          </Card>
+        )}
+        {lightestAI && (
+          <Card className="border-emerald-500/30 bg-emerald-500/5">
+            <CardContent className="p-4">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Lightest AI Sire</p>
+              <p className="text-lg font-bold text-foreground truncate">{lightestAI.sire}</p>
+              <p className="text-sm text-emerald-400 font-semibold">{lightestAI.avg} lbs <span className="text-muted-foreground font-normal">· n={lightestAI.n}</span></p>
+            </CardContent>
+          </Card>
+        )}
+        {heaviestCow && (
+          <Card className="border-red-500/30 bg-red-500/5">
+            <CardContent className="p-4">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Heaviest Cow Sire</p>
+              <p className="text-lg font-bold text-foreground truncate">{heaviestCow.sire}</p>
+              <p className="text-sm text-red-400 font-semibold">{heaviestCow.avg} lbs <span className="text-muted-foreground font-normal">· n={heaviestCow.n}</span></p>
+            </CardContent>
+          </Card>
+        )}
+        {lightestCow && (
+          <Card className="border-emerald-500/30 bg-emerald-500/5">
+            <CardContent className="p-4">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Lightest Cow Sire</p>
+              <p className="text-lg font-bold text-foreground truncate">{lightestCow.sire}</p>
+              <p className="text-sm text-emerald-400 font-semibold">{lightestCow.avg} lbs <span className="text-muted-foreground font-normal">· n={lightestCow.n}</span></p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
 
       {/* Section 1 — BW by AI Sire */}
       <SireBarChart title="Birth Weight by AI Sire" data={aiSireData} herdAvg={herdAvgBW} />
