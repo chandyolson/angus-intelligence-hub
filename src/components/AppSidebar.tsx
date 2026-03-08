@@ -50,7 +50,7 @@ export function AppSidebar() {
     { title: 'Herd Trends', icon: TrendingUp, url: '/herd-trends' },
     { title: 'Gestation', icon: HeartPulse, url: '/gestation' },
     { title: 'Birth Weight', icon: Weight, url: '/birth-weight' },
-    { title: 'Group Reconciliation', icon: Users, url: '/reconciliation' },
+    
   ];
 
   const toggle = (title: string) =>
