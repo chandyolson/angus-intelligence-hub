@@ -1,14 +1,15 @@
 import { useMemo } from 'react';
-import { useAnimals } from '@/hooks/useCattleData';
+import { useAnimals, useBreedingCalvingRecords } from '@/hooks/useCattleData';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertTriangle } from 'lucide-react';
 import { ShimmerSkeleton } from '@/components/ui/shimmer-skeleton';
 import { ErrorBox } from '@/components/ui/error-box';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LabelList, Line, ComposedChart, Legend } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LabelList, Line, ComposedChart, Legend, LineChart } from 'recharts';
 
 
 export default function HerdTrends() {
   const { data: animals, isLoading: la, error: re } = useAnimals();
+  const { data: records, isLoading: lr, error: rr } = useBreedingCalvingRecords();
 
   // ── Cow Sire (Dam Line) Distribution ──
   const damSireData = useMemo(() => {
@@ -76,15 +77,37 @@ export default function HerdTrends() {
     return { ageBuckets: data, avgAge: avg, agedPct: pct };
   }, [animals]);
 
+  // ── Birth Weight & Gestation by Year ──
+  const bwGestByYear = useMemo(() => {
+    if (!records) return [];
+    const yearMap = new Map<number, { bws: number[]; gests: number[] }>();
+    records.forEach(r => {
+      if (!r.breeding_year) return;
+      const entry = yearMap.get(r.breeding_year) || { bws: [], gests: [] };
+      if (r.calf_bw != null && r.calf_bw > 0) entry.bws.push(r.calf_bw);
+      if (r.gestation_days != null && r.gestation_days >= 250 && r.gestation_days <= 310) entry.gests.push(r.gestation_days);
+      yearMap.set(r.breeding_year, entry);
+    });
+    const rows: { year: number; avgBW: number | null; avgGest: number | null }[] = [];
+    yearMap.forEach((d, year) => {
+      rows.push({
+        year,
+        avgBW: d.bws.length >= 5 ? Math.round((d.bws.reduce((a, b) => a + b, 0) / d.bws.length) * 10) / 10 : null,
+        avgGest: d.gests.length >= 5 ? Math.round((d.gests.reduce((a, b) => a + b, 0) / d.gests.length) * 10) / 10 : null,
+      });
+    });
+    return rows.sort((a, b) => a.year - b.year);
+  }, [records]);
+
   const CHART_COLORS = ['#22c55e', '#3b82f6', '#f97316', '#a855f7', '#eab308', '#ec4899', '#14b8a6', '#f43f5e'];
 
-  if (la) return (
+  if (la || lr) return (
     <div className="space-y-6">
       <ShimmerSkeleton className="h-8 w-48" />
       <ShimmerSkeleton className="h-96" />
     </div>
   );
-  if (re) return <ErrorBox />;
+  if (re || rr) return <ErrorBox />;
 
   return (
     <div className="space-y-6">
@@ -169,6 +192,47 @@ export default function HerdTrends() {
             </ResponsiveContainer>
           </CardContent>
         </Card>
+      )}
+
+      {/* ── Birth Weight & Gestation by Year ── */}
+      {bwGestByYear.length > 0 && (
+        <>
+          <h2 className="text-[15px] font-semibold text-foreground">Birth Weight & Gestation by Year</h2>
+          <Card className="bg-card border-border">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">
+                Avg Birth Weight & Gestation Length by Breeding Year
+              </CardTitle>
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Left axis = avg birth weight (lbs) · Right axis = avg gestation length (days). Min 5 records per year.
+              </p>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={340}>
+                <ComposedChart data={bwGestByYear} margin={{ top: 10, right: 50, left: 10, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="year" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} />
+                  <YAxis yAxisId="bw" tick={{ fill: 'hsl(142, 71%, 45%)', fontSize: 11 }}
+                    label={{ value: 'Avg BW (lbs)', angle: -90, position: 'insideLeft', fill: 'hsl(142, 71%, 45%)', fontSize: 11 }} />
+                  <YAxis yAxisId="gest" orientation="right" tick={{ fill: 'hsl(var(--primary))', fontSize: 11 }}
+                    label={{ value: 'Avg Gestation (days)', angle: 90, position: 'insideRight', fill: 'hsl(var(--primary))', fontSize: 11 }} />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }}
+                    formatter={(value: number | null, name: string) => {
+                      if (value == null) return ['—', name];
+                      return name === 'avgBW' ? [`${value} lbs`, 'Avg Birth Weight'] : [`${value} days`, 'Avg Gestation'];
+                    }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: 11 }} formatter={(v: string) => v === 'avgBW' ? 'Avg Birth Weight (lbs)' : 'Avg Gestation (days)'} />
+                  <Line yAxisId="bw" type="monotone" dataKey="avgBW" stroke="hsl(142, 71%, 45%)" strokeWidth={2}
+                    dot={{ r: 4, fill: 'hsl(142, 71%, 45%)' }} connectNulls />
+                  <Line yAxisId="gest" type="monotone" dataKey="avgGest" stroke="hsl(var(--primary))" strokeWidth={2}
+                    dot={{ r: 4, fill: 'hsl(var(--primary))' }} connectNulls />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </>
       )}
 
     </div>
