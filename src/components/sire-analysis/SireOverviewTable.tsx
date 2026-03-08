@@ -285,6 +285,7 @@ export default function SireOverviewTable({ records }: { records: BreedingCalvin
                 >
                   <TableCell className="font-medium text-foreground">{r.sire}</TableCell>
                   <TableCell className="text-muted-foreground">{r.totalUses}</TableCell>
+                  <TableCell className="text-muted-foreground">{r.totalCalves || '—'}</TableCell>
 
                   {/* 1st Service */}
                   <TableCell>
