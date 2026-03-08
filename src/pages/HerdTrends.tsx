@@ -244,32 +244,6 @@ export default function HerdTrends() {
     <div className="space-y-6">
       <h1 className="text-[20px] font-semibold text-foreground">Herd Trends</h1>
 
-      {/* ── Open Rate Trend Section ── */}
-      <h2 className="text-[15px] font-semibold text-foreground">Open Rate Trend</h2>
-
-      {/* Panel 2: Grouped bar chart by group */}
-      <Card className="bg-card border-border">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">Open Rate by Management Group</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={320}>
-            <BarChart data={openByYearGroup} margin={{ top: 10, right: 20, left: 10, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-              <XAxis dataKey="year" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} axisLine={false} tickLine={false} unit="%" />
-              <Tooltip
-                contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }}
-                formatter={(v: any, name: string) => [`${v}%`, name]}
-              />
-              <Legend wrapperStyle={{ fontSize: 11 }} />
-              {openGroups.map((g, i) => (
-                <Bar key={g} dataKey={g} fill={CHART_COLORS[i % CHART_COLORS.length]} radius={[3, 3, 0, 0]} />
-              ))}
-            </BarChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
 
       {/* ── Cow Sire (Dam Line) Distribution ── */}
       <h2 className="text-[15px] font-semibold text-foreground">Cow Sire Distribution</h2>
