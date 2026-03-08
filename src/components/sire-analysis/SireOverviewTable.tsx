@@ -12,6 +12,7 @@ import { Download, ArrowUpDown } from 'lucide-react';
 interface SireOverviewRow {
   sire: string;
   totalUses: number;
+  totalCalves: number;
   rate1st: number;
   n1st: number;
   rate2nd: number;
@@ -28,7 +29,7 @@ interface SireOverviewRow {
   gradeLetter: string;
 }
 
-type SortKey = keyof Pick<SireOverviewRow, 'sire' | 'totalUses' | 'rate1st' | 'rate2nd' | 'overallRate' | 'avgBW' | 'avgGest' | 'survivalPct' | 'grade'>;
+type SortKey = keyof Pick<SireOverviewRow, 'sire' | 'totalUses' | 'totalCalves' | 'rate1st' | 'rate2nd' | 'overallRate' | 'avgBW' | 'avgGest' | 'survivalPct' | 'grade'>;
 
 function computeSireOverview(records: BreedingCalvingRecord[]): SireOverviewRow[] {
   // Filter Blair only
@@ -39,7 +40,7 @@ function computeSireOverview(records: BreedingCalvingRecord[]): SireOverviewRow[
   // 2nd service map (by ai_sire_2)
   const second = new Map<string, { attempts: number; conceived: number }>();
   // Calf outcome map (by calf_sire)
-  const calfMap = new Map<string, { bws: number[]; gests: number[]; alive: number; withStatus: number }>();
+  const calfMap = new Map<string, { bws: number[]; gests: number[]; alive: number; withStatus: number; totalCalves: number }>();
 
   blairRecords.forEach(r => {
     // 1st service
@@ -60,7 +61,8 @@ function computeSireOverview(records: BreedingCalvingRecord[]): SireOverviewRow[
 
     // Calf outcomes by calf_sire
     if (r.calf_sire) {
-      const e = calfMap.get(r.calf_sire) || { bws: [], gests: [], alive: 0, withStatus: 0 };
+      const e = calfMap.get(r.calf_sire) || { bws: [], gests: [], alive: 0, withStatus: 0, totalCalves: 0 };
+      e.totalCalves++;
       if (r.calf_bw != null && r.calf_bw > 0) e.bws.push(r.calf_bw);
       if (r.gestation_days != null && r.gestation_days >= 260 && r.gestation_days <= 295) e.gests.push(r.gestation_days);
       if (r.calf_status) {
@@ -115,6 +117,7 @@ function computeSireOverview(records: BreedingCalvingRecord[]): SireOverviewRow[
 
     rows.push({
       sire,
+      totalCalves: calf?.totalCalves || 0,
       totalUses,
       rate1st, n1st,
       rate2nd, n2nd,
@@ -164,6 +167,7 @@ const MIN_METRIC = 5;
 const columns: { key: SortKey; label: string }[] = [
   { key: 'sire', label: 'Sire Name' },
   { key: 'totalUses', label: 'Total Uses' },
+  { key: 'totalCalves', label: 'Calves Born' },
   { key: 'rate1st', label: '1st Service %' },
   { key: 'rate2nd', label: '2nd Service %' },
   { key: 'overallRate', label: 'Overall AI %' },
@@ -174,9 +178,9 @@ const columns: { key: SortKey; label: string }[] = [
 ];
 
 function exportCSV(rows: SireOverviewRow[]) {
-  const header = 'Sire,Total Uses,1st Service %,n (1st),2nd Service %,n (2nd),Overall AI %,Avg BW (lbs),Avg Gestation,Survival %,Grade\n';
+  const header = 'Sire,Total Uses,Calves Born,1st Service %,n (1st),2nd Service %,n (2nd),Overall AI %,Avg BW (lbs),Avg Gestation,Survival %,Grade\n';
   const body = rows.map(r =>
-    `"${r.sire}",${r.totalUses},${r.n1st >= MIN_METRIC ? r.rate1st : ''},${r.n1st},${r.n2nd >= MIN_METRIC ? r.rate2nd : ''},${r.n2nd},${r.overallRate},${r.nBW >= MIN_METRIC ? r.avgBW : ''},${r.nGest >= MIN_METRIC ? r.avgGest : ''},${r.nSurvival >= MIN_METRIC ? r.survivalPct : ''},${r.gradeLetter}`
+    `"${r.sire}",${r.totalUses},${r.totalCalves},${r.n1st >= MIN_METRIC ? r.rate1st : ''},${r.n1st},${r.n2nd >= MIN_METRIC ? r.rate2nd : ''},${r.n2nd},${r.overallRate},${r.nBW >= MIN_METRIC ? r.avgBW : ''},${r.nGest >= MIN_METRIC ? r.avgGest : ''},${r.nSurvival >= MIN_METRIC ? r.survivalPct : ''},${r.gradeLetter}`
   ).join('\n');
   const blob = new Blob([header + body], { type: 'text/csv' });
   const url = URL.createObjectURL(blob);
@@ -281,6 +285,7 @@ export default function SireOverviewTable({ records }: { records: BreedingCalvin
                 >
                   <TableCell className="font-medium text-foreground">{r.sire}</TableCell>
                   <TableCell className="text-muted-foreground">{r.totalUses}</TableCell>
+                  <TableCell className="text-muted-foreground">{r.totalCalves || '—'}</TableCell>
 
                   {/* 1st Service */}
                   <TableCell>
