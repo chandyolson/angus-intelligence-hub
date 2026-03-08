@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Layout } from "@/components/Layout";
+import Overview from "@/pages/Overview";
 import Dashboard from "@/pages/Dashboard";
 import CowRoster from "@/pages/CowRoster";
 import CowDetail from "@/pages/CowDetail";
@@ -31,7 +32,8 @@ const App = () => (
       <BrowserRouter>
         <Layout>
           <Routes>
-            <Route path="/" element={<Dashboard />} />
+            <Route path="/" element={<Overview />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/roster" element={<CowRoster />} />
             <Route path="/cow/:lifetime_id" element={<CowDetail />} />
             <Route path="/rankings" element={<Rankings />} />
