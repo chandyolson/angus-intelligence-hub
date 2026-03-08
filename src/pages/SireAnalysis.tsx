@@ -388,7 +388,7 @@ export default function SireAnalysis() {
             <CardContent className="p-5">
               <div className="flex items-center gap-2 mb-2">
                 <AlertTriangle className="h-5 w-5 text-destructive" />
-                <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Most Used Below Average (&lt;88%)</span>
+                <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Most Used Below Average (&lt;55%)</span>
               </div>
               <p className="text-xl font-bold text-foreground">{mostUsedBelowAvg.sire}</p>
               <p className="text-3xl font-bold mt-1" style={{ color: rateColor(mostUsedBelowAvg.rate) }}>{mostUsedBelowAvg.rate}%</p>
