@@ -34,9 +34,8 @@ interface CombinedSireRow {
 
 
 const rateColor = (rate: number) => {
-  if (rate >= 95) return 'hsl(142, 71%, 45%)';
-  if (rate >= 88) return 'hsl(82, 85%, 45%)';
-  if (rate >= 80) return 'hsl(48, 96%, 53%)';
+  if (rate >= 70) return 'hsl(142, 71%, 45%)';
+  if (rate >= 55) return 'hsl(48, 96%, 53%)';
   return 'hsl(0, 72%, 51%)';
 };
 
@@ -51,9 +50,9 @@ const badgeStyle = (badge: string) => {
 };
 
 const getBadge = (rate: number): SireRow['badge'] => {
-  if (rate >= 95) return 'ELITE';
-  if (rate >= 88) return 'STRONG';
-  if (rate >= 80) return 'AVERAGE';
+  if (rate >= 70) return 'ELITE';
+  if (rate >= 55) return 'STRONG';
+  if (rate >= 45) return 'AVERAGE';
   return 'BELOW AVG';
 };
 
@@ -239,6 +238,15 @@ export default function SireAnalysis() {
   const firstServiceRows = useMemo(() => records ? computeServiceTable(records, '1st') : [], [records]);
   const secondServiceRows = useMemo(() => records ? computeServiceTable(records, '2nd') : [], [records]);
 
+  // Dynamic herd average 1st service rate: COUNT(preg_stage='AI') / COUNT(ai_date_1 IS NOT NULL)
+  const herdAvg1stService = useMemo(() => {
+    if (!records) return 0;
+    const withAiDate1 = records.filter(r => r.ai_date_1 != null);
+    if (withAiDate1.length === 0) return 0;
+    const aiConceived = withAiDate1.filter(r => r.preg_stage?.toLowerCase() === 'ai').length;
+    return Math.round((aiConceived / withAiDate1.length) * 1000) / 10;
+  }, [records]);
+
   const topPerformer = useMemo(() => {
     const eligible = firstServiceRows.filter(s => s.sampleSize >= 25);
     if (eligible.length === 0) return null;
@@ -246,7 +254,7 @@ export default function SireAnalysis() {
   }, [firstServiceRows]);
 
   const mostUsedBelowAvg = useMemo(() => {
-    const eligible = firstServiceRows.filter(s => s.rate < 88);
+    const eligible = firstServiceRows.filter(s => s.rate < 55);
     if (eligible.length === 0) return null;
     return eligible.reduce((a, b) => a.sampleSize > b.sampleSize ? a : b);
   }, [firstServiceRows]);
@@ -380,7 +388,7 @@ export default function SireAnalysis() {
             <CardContent className="p-5">
               <div className="flex items-center gap-2 mb-2">
                 <AlertTriangle className="h-5 w-5 text-destructive" />
-                <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Most Used Below Average (&lt;88%)</span>
+                <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Most Used Below Average (&lt;55%)</span>
               </div>
               <p className="text-xl font-bold text-foreground">{mostUsedBelowAvg.sire}</p>
               <p className="text-3xl font-bold mt-1" style={{ color: rateColor(mostUsedBelowAvg.rate) }}>{mostUsedBelowAvg.rate}%</p>
@@ -395,6 +403,9 @@ export default function SireAnalysis() {
 
       {/* Combined Service Table */}
       <CombinedSireTable firstRows={firstServiceRows} secondRows={secondServiceRows} />
+      <p className="text-xs text-muted-foreground -mt-4 px-1">
+        💡 Herd average first service rate: {herdAvg1stService}%. Thresholds reflect Blair Bros historical performance.
+      </p>
 
       {/* Gestation Length by Sire */}
       {gestationData.length > 0 && (
