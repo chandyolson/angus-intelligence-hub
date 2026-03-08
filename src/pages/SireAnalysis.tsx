@@ -8,6 +8,7 @@ import { ShimmerSkeleton } from '@/components/ui/shimmer-skeleton';
 import { ErrorBox } from '@/components/ui/error-box';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Trophy, AlertTriangle } from 'lucide-react';
+import AdvancedSireSection from '@/components/sire-analysis/AdvancedSireSection';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ResponsiveContainer, Cell, ScatterChart, Scatter, ZAxis, LabelList } from 'recharts';
 
 interface SireRow {
@@ -459,6 +460,9 @@ export default function SireAnalysis() {
           </Card>
         )}
       </div>
+
+      {/* Advanced Section */}
+      {records && records.length > 0 && <AdvancedSireSection records={records} />}
     </div>
   );
 }
