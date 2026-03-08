@@ -167,24 +167,35 @@ export default function HerdTrends() {
   // ── Cow Sire (Dam Line) Distribution ──
   const damSireData = useMemo(() => {
     if (!animals) return [];
+    const currentYear = new Date().getFullYear();
     const blairActive = animals.filter(a => a.operation === 'Blair' && a.status?.toLowerCase() === 'active');
-    const countMap = new Map<string, number>();
+    const countMap = new Map<string, { count: number; totalAge: number; ageCount: number }>();
     let otherCount = 0;
+    let otherTotalAge = 0;
+    let otherAgeCount = 0;
 
     blairActive.forEach(a => {
       const ds = a.sire?.trim();
       if (!ds) return;
-      countMap.set(ds, (countMap.get(ds) || 0) + 1);
+      const entry = countMap.get(ds) || { count: 0, totalAge: 0, ageCount: 0 };
+      entry.count++;
+      if (a.year_born) { entry.totalAge += currentYear - a.year_born; entry.ageCount++; }
+      countMap.set(ds, entry);
     });
 
-    const rows: { name: string; count: number }[] = [];
-    countMap.forEach((count, name) => {
-      if (count >= 5) rows.push({ name, count });
-      else otherCount += count;
+    const rows: { name: string; count: number; avgAge: number }[] = [];
+    countMap.forEach((entry, name) => {
+      if (entry.count >= 5) {
+        rows.push({ name, count: entry.count, avgAge: entry.ageCount > 0 ? Math.round((entry.totalAge / entry.ageCount) * 10) / 10 : 0 });
+      } else {
+        otherCount += entry.count;
+        otherTotalAge += entry.totalAge;
+        otherAgeCount += entry.ageCount;
+      }
     });
 
     rows.sort((a, b) => b.count - a.count);
-    if (otherCount > 0) rows.push({ name: 'Other', count: otherCount });
+    if (otherCount > 0) rows.push({ name: 'Other', count: otherCount, avgAge: otherAgeCount > 0 ? Math.round((otherTotalAge / otherAgeCount) * 10) / 10 : 0 });
     return rows;
   }, [animals]);
 
