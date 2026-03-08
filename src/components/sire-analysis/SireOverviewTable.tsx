@@ -100,13 +100,18 @@ function computeSireOverview(records: BreedingCalvingRecord[]): SireOverviewRow[
     const avgBW = calf && calf.bws.length > 0 ? Math.round((calf.bws.reduce((a, b) => a + b, 0) / calf.bws.length) * 10) / 10 : 0;
     const avgGest = calf && calf.gests.length > 0 ? Math.round((calf.gests.reduce((a, b) => a + b, 0) / calf.gests.length) * 10) / 10 : 0;
     const survivalPct = calf && calf.withStatus > 0 ? Math.round((calf.alive / calf.withStatus) * 1000) / 10 : 0;
+    const nSurvival = calf?.withStatus || 0;
 
-    const grade = overallRate * 0.6 + survivalPct * 0.4;
-    let gradeLetter = 'F';
-    if (grade >= 85) gradeLetter = 'A';
-    else if (grade >= 75) gradeLetter = 'B';
-    else if (grade >= 65) gradeLetter = 'C';
-    else if (grade >= 55) gradeLetter = 'D';
+    const hasSurvival = nSurvival >= MIN_METRIC;
+    const grade = hasSurvival ? overallRate * 0.6 + survivalPct * 0.4 : 0;
+    let gradeLetter = '—';
+    if (hasSurvival) {
+      if (grade >= 85) gradeLetter = 'A';
+      else if (grade >= 75) gradeLetter = 'B';
+      else if (grade >= 65) gradeLetter = 'C';
+      else if (grade >= 55) gradeLetter = 'D';
+      else gradeLetter = 'F';
+    }
 
     rows.push({
       sire,
@@ -116,7 +121,7 @@ function computeSireOverview(records: BreedingCalvingRecord[]): SireOverviewRow[
       overallRate, nOverall,
       avgBW, nBW: calf?.bws.length || 0,
       avgGest, nGest: calf?.gests.length || 0,
-      survivalPct, nSurvival: calf?.withStatus || 0,
+      survivalPct, nSurvival,
       grade,
       gradeLetter,
     });
@@ -250,7 +255,7 @@ export default function SireOverviewTable({ records }: { records: BreedingCalvin
       <CardContent className="p-0">
         <div className="max-h-[600px] overflow-auto">
           <Table>
-            <TableHeader>
+            <TableHeader className="sticky top-0 z-10">
               <TableRow className="bg-sidebar border-border hover:bg-sidebar">
                 {columns.map(col => (
                   <TableHead
@@ -319,7 +324,9 @@ export default function SireOverviewTable({ records }: { records: BreedingCalvin
 
                   {/* Grade */}
                   <TableCell>
-                    <Badge variant="outline" className={`text-[10px] ${gradeStyle(r.gradeLetter)}`}>{r.gradeLetter}</Badge>
+                    {r.gradeLetter !== '—' ? (
+                      <Badge variant="outline" className={`text-[10px] ${gradeStyle(r.gradeLetter)}`}>{r.gradeLetter}</Badge>
+                    ) : <span className="text-muted-foreground">—</span>}
                   </TableCell>
                 </TableRow>
               ))}
