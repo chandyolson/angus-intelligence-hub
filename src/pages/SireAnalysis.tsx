@@ -206,6 +206,99 @@ export default function SireAnalysis() {
     setSort2nd(prev => prev.key === key ? { key, asc: !prev.asc } : { key, asc: false });
   };
 
+  // Gestation by calf_sire
+  const gestationData = useMemo(() => {
+    if (!records) return [];
+    const sireMap = new Map<string, number[]>();
+    records.forEach(r => {
+      if (!r.calf_sire || r.calf_sire.toLowerCase().includes('cleanup')) return;
+      let gd = r.gestation_days;
+      if (gd == null || gd < 250 || gd > 310) {
+        if (r.calving_date && r.ai_date_1 && (r.preg_stage?.toLowerCase() === 'ai')) {
+          const diff = Math.round((new Date(r.calving_date).getTime() - new Date(r.ai_date_1).getTime()) / 86400000);
+          if (diff >= 250 && diff <= 310) gd = diff; else return;
+        } else if (r.calving_date && r.ai_date_2 && (r.preg_stage?.toLowerCase() === 'second ai')) {
+          const diff = Math.round((new Date(r.calving_date).getTime() - new Date(r.ai_date_2).getTime()) / 86400000);
+          if (diff >= 250 && diff <= 310) gd = diff; else return;
+        } else return;
+      }
+      const arr = sireMap.get(r.calf_sire) || [];
+      arr.push(gd);
+      sireMap.set(r.calf_sire, arr);
+    });
+    const rows: { name: string; avg: number; count: number }[] = [];
+    sireMap.forEach((vals, sire) => {
+      if (vals.length < 10) return;
+      rows.push({ name: sire, avg: Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10, count: vals.length });
+    });
+    return rows.sort((a, b) => a.avg - b.avg);
+  }, [records]);
+
+  const herdAvgGestation = useMemo(() => {
+    if (gestationData.length === 0) return 0;
+    const total = gestationData.reduce((s, d) => s + d.avg * d.count, 0);
+    const n = gestationData.reduce((s, d) => s + d.count, 0);
+    return n > 0 ? Math.round((total / n) * 10) / 10 : 0;
+  }, [gestationData]);
+
+  // BW by ai_sire_1
+  const bwData = useMemo(() => {
+    if (!records) return [];
+    const sireMap = new Map<string, number[]>();
+    records.forEach(r => {
+      if (!r.ai_sire_1 || r.ai_sire_1.toLowerCase().includes('cleanup')) return;
+      if (r.calf_bw == null || r.calf_bw <= 0) return;
+      const arr = sireMap.get(r.ai_sire_1) || [];
+      arr.push(r.calf_bw);
+      sireMap.set(r.ai_sire_1, arr);
+    });
+    const rows: { name: string; avg: number; count: number }[] = [];
+    sireMap.forEach((vals, sire) => {
+      if (vals.length < 10) return;
+      rows.push({ name: sire, avg: Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10, count: vals.length });
+    });
+    return rows.sort((a, b) => a.avg - b.avg);
+  }, [records]);
+
+  const herdAvgBW = useMemo(() => {
+    if (bwData.length === 0) return 0;
+    const total = bwData.reduce((s, d) => s + d.avg * d.count, 0);
+    const n = bwData.reduce((s, d) => s + d.count, 0);
+    return n > 0 ? Math.round((total / n) * 10) / 10 : 0;
+  }, [bwData]);
+
+  // Scatter: gestation vs BW
+  const scatterData = useMemo(() => {
+    if (!records) return [];
+    const sireMap = new Map<string, { gests: number[]; bws: number[] }>();
+    records.forEach(r => {
+      const sire = r.calf_sire;
+      if (!sire || sire.toLowerCase().includes('cleanup')) return;
+      let gd = r.gestation_days;
+      if (gd == null || gd < 250 || gd > 310) {
+        if (r.calving_date && r.ai_date_1 && r.preg_stage?.toLowerCase() === 'ai') {
+          const diff = Math.round((new Date(r.calving_date).getTime() - new Date(r.ai_date_1).getTime()) / 86400000);
+          if (diff >= 250 && diff <= 310) gd = diff;
+        }
+      }
+      const entry = sireMap.get(sire) || { gests: [], bws: [] };
+      if (gd != null && gd >= 250 && gd <= 310) entry.gests.push(gd);
+      if (r.calf_bw != null && r.calf_bw > 0) entry.bws.push(r.calf_bw);
+      sireMap.set(sire, entry);
+    });
+    const rows: { name: string; gestation: number; bw: number; count: number }[] = [];
+    sireMap.forEach((data, sire) => {
+      if (data.gests.length < 10 || data.bws.length < 10) return;
+      rows.push({
+        name: sire,
+        gestation: Math.round((data.gests.reduce((a, b) => a + b, 0) / data.gests.length) * 10) / 10,
+        bw: Math.round((data.bws.reduce((a, b) => a + b, 0) / data.bws.length) * 10) / 10,
+        count: data.gests.length,
+      });
+    });
+    return rows;
+  }, [records]);
+
   if (isLoading) return (
     <div className="space-y-6">
       <ShimmerSkeleton className="h-8 w-48" />
