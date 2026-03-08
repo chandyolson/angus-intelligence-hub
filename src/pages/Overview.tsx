@@ -300,12 +300,15 @@ export default function Overview() {
 
 /* ─── Sub-components ─── */
 
-function KPICard({ icon: Icon, label, value, flagRed, flagText }: {
+function KPICard({ icon: Icon, label, value, flagRed, flagText, onClick }: {
   icon: React.ElementType; label: string; value: string;
-  flagRed?: boolean; flagText?: string;
+  flagRed?: boolean; flagText?: string; onClick?: () => void;
 }) {
   return (
-    <Card className={cn('bg-card border-l-4', flagRed ? 'border-destructive/60' : 'border-primary/40')}>
+    <Card
+      className={cn('bg-card border-l-4 transition-colors', flagRed ? 'border-destructive/60' : 'border-primary/40', onClick && 'cursor-pointer hover:ring-1 hover:ring-primary/40')}
+      onClick={onClick}
+    >
       <CardContent className="p-4">
         <div className="flex items-center gap-2 mb-2">
           <Icon className={cn('h-4 w-4', flagRed ? 'text-destructive' : 'text-primary')} />
