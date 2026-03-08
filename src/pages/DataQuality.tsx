@@ -482,6 +482,9 @@ export default function DataQuality() {
           {/* Sire Deduplication */}
           <SireDeduplication />
 
+          {/* Missing Record Gaps */}
+          <MissingRecordGaps />
+
           {/* Edit panel */}
           {editTarget && (
             <RecordEditPanel
