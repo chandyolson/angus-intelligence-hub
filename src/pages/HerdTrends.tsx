@@ -164,6 +164,30 @@ export default function HerdTrends() {
     return { openByYearGroup: chartData, openGroups: sortedGroups, openYears: sortedYears, openGroupTable: tableRows };
   }, [records]);
 
+  // ── Cow Sire (Dam Line) Distribution ──
+  const damSireData = useMemo(() => {
+    if (!animals) return [];
+    const blairActive = animals.filter(a => a.operation === 'Blair' && a.status?.toLowerCase() === 'active');
+    const countMap = new Map<string, number>();
+    let otherCount = 0;
+
+    blairActive.forEach(a => {
+      const ds = a.dam_sire?.trim();
+      if (!ds) return;
+      countMap.set(ds, (countMap.get(ds) || 0) + 1);
+    });
+
+    const rows: { name: string; count: number }[] = [];
+    countMap.forEach((count, name) => {
+      if (count >= 5) rows.push({ name, count });
+      else otherCount += count;
+    });
+
+    rows.sort((a, b) => b.count - a.count);
+    if (otherCount > 0) rows.push({ name: 'Other', count: otherCount });
+    return rows;
+  }, [animals]);
+
   const CHART_COLORS = ['#22c55e', '#3b82f6', '#f97316', '#a855f7', '#eab308', '#ec4899', '#14b8a6', '#f43f5e'];
 
   if (lr || la) return (
@@ -205,6 +229,39 @@ export default function HerdTrends() {
         </CardContent>
       </Card>
 
+      {/* ── Cow Sire (Dam Line) Distribution ── */}
+      <h2 className="text-[15px] font-semibold text-foreground">Cow Sire Distribution (Dam Line)</h2>
+      {damSireData.length > 0 && (
+        <Card className="bg-card border-border">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">
+              Active Herd by Dam Sire
+            </CardTitle>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Genetic makeup of active Blair cows by dam line. Minimum 5 active cows per sire; smaller groups combined into "Other."
+            </p>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={Math.max(damSireData.length * 36, 200)}>
+              <BarChart layout="vertical" data={damSireData} margin={{ left: 110, right: 50 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis type="number" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} />
+                <YAxis dataKey="name" type="category" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} width={105} />
+                <Tooltip
+                  contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }}
+                  formatter={(value: number) => [`${value} cows`, 'Count']}
+                />
+                <Bar dataKey="count" radius={[0, 4, 4, 0]}>
+                  {damSireData.map((d, i) => (
+                    <Cell key={i} fill={d.name === 'Other' ? 'hsl(var(--muted-foreground))' : CHART_COLORS[i % CHART_COLORS.length]} />
+                  ))}
+                  <LabelList dataKey="count" position="right" style={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Section: Fetal Sex Accuracy */}
       <h2 className="text-[15px] font-semibold text-foreground">Fetal Sex Accuracy</h2>
