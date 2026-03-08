@@ -73,9 +73,9 @@ export function useAnimal(lifetimeId: string) {
   return useQuery({
     queryKey: ['animal', lifetimeId],
     queryFn: async () => {
-      const { data, error } = await supabase.from('animals').select('*').eq('lifetime_id', lifetimeId).single();
+      const { data, error } = await supabase.from('animals').select('*').eq('lifetime_id', lifetimeId).maybeSingle();
       if (error) throw error;
-      return data as unknown as Animal;
+      return data as unknown as Animal | null;
     },
     enabled: !!lifetimeId,
   });
