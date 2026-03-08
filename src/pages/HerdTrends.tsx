@@ -77,15 +77,37 @@ export default function HerdTrends() {
     return { ageBuckets: data, avgAge: avg, agedPct: pct };
   }, [animals]);
 
+  // ── Birth Weight & Gestation by Year ──
+  const bwGestByYear = useMemo(() => {
+    if (!records) return [];
+    const yearMap = new Map<number, { bws: number[]; gests: number[] }>();
+    records.forEach(r => {
+      if (!r.breeding_year) return;
+      const entry = yearMap.get(r.breeding_year) || { bws: [], gests: [] };
+      if (r.calf_bw != null && r.calf_bw > 0) entry.bws.push(r.calf_bw);
+      if (r.gestation_days != null && r.gestation_days >= 250 && r.gestation_days <= 310) entry.gests.push(r.gestation_days);
+      yearMap.set(r.breeding_year, entry);
+    });
+    const rows: { year: number; avgBW: number | null; avgGest: number | null }[] = [];
+    yearMap.forEach((d, year) => {
+      rows.push({
+        year,
+        avgBW: d.bws.length >= 5 ? Math.round((d.bws.reduce((a, b) => a + b, 0) / d.bws.length) * 10) / 10 : null,
+        avgGest: d.gests.length >= 5 ? Math.round((d.gests.reduce((a, b) => a + b, 0) / d.gests.length) * 10) / 10 : null,
+      });
+    });
+    return rows.sort((a, b) => a.year - b.year);
+  }, [records]);
+
   const CHART_COLORS = ['#22c55e', '#3b82f6', '#f97316', '#a855f7', '#eab308', '#ec4899', '#14b8a6', '#f43f5e'];
 
-  if (la) return (
+  if (la || lr) return (
     <div className="space-y-6">
       <ShimmerSkeleton className="h-8 w-48" />
       <ShimmerSkeleton className="h-96" />
     </div>
   );
-  if (re) return <ErrorBox />;
+  if (re || rr) return <ErrorBox />;
 
   return (
     <div className="space-y-6">
