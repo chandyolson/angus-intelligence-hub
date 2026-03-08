@@ -13,6 +13,7 @@ import { ShimmerCard } from '@/components/ui/shimmer-skeleton';
 import { ErrorBox } from '@/components/ui/error-box';
 import { RecordEditPanel, MarkReviewedDialog } from '@/components/data-quality/RecordEditPanel';
 import { SireDeduplication } from '@/components/data-quality/SireDeduplication';
+import { MissingRecordGaps } from '@/components/data-quality/MissingRecordGaps';
 import { cn } from '@/lib/utils';
 
 type Severity = 'critical' | 'high' | 'medium' | 'low';
@@ -480,6 +481,9 @@ export default function DataQuality() {
 
           {/* Sire Deduplication */}
           <SireDeduplication />
+
+          {/* Missing Record Gaps */}
+          <MissingRecordGaps />
 
           {/* Edit panel */}
           {editTarget && (
