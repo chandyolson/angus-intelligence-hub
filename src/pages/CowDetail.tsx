@@ -218,6 +218,42 @@ export default function CowDetail() {
         </div>
       )}
 
+      {/* Performance Summary */}
+      <Card className="bg-card border-border">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">Performance Summary</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="space-y-2">
+            {notes.map((n, i) => (
+              <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
+                <span className="text-primary mt-0.5">•</span>{n}
+              </li>
+            ))}
+          </ul>
+        </CardContent>
+      </Card>
+
+      {/* Birth Weight Trend */}
+      <Card className="bg-card border-border">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">Birth Weight Trend</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {bwTrend.length < 2 ? <EmptyState message="Not enough data for trend chart." /> : (
+            <ResponsiveContainer width="100%" height={240}>
+              <LineChart data={bwTrend}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(218, 42%, 20%)" />
+                <XAxis dataKey="year" tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 11 }} />
+                <YAxis tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 11 }} unit=" lbs" />
+                <Tooltip content={<CustomTooltip />} />
+                <Line type="monotone" dataKey="bw" stroke="hsl(40, 63%, 49%)" strokeWidth={2} dot={{ r: 4 }} name="Birth Weight" />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Calving History */}
       <Card className="bg-card border-border">
         <CardHeader className="pb-2">
@@ -276,42 +312,6 @@ export default function CowDetail() {
               </Table>
             </div>
           )}
-        </CardContent>
-      </Card>
-
-      {/* Birth Weight Trend */}
-      <Card className="bg-card border-border">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">Birth Weight Trend</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {bwTrend.length < 2 ? <EmptyState message="Not enough data for trend chart." /> : (
-            <ResponsiveContainer width="100%" height={240}>
-              <LineChart data={bwTrend}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(218, 42%, 20%)" />
-                <XAxis dataKey="year" tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 11 }} />
-                <YAxis tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 11 }} unit=" lbs" />
-                <Tooltip content={<CustomTooltip />} />
-                <Line type="monotone" dataKey="bw" stroke="hsl(40, 63%, 49%)" strokeWidth={2} dot={{ r: 4 }} name="Birth Weight" />
-              </LineChart>
-            </ResponsiveContainer>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Performance Summary */}
-      <Card className="bg-card border-border">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">Performance Summary</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-2">
-            {notes.map((n, i) => (
-              <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
-                <span className="text-primary mt-0.5">•</span>{n}
-              </li>
-            ))}
-          </ul>
         </CardContent>
       </Card>
     </div>
