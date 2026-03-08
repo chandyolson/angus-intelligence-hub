@@ -141,9 +141,10 @@ export default function SireAnalysis() {
     return n > 0 ? Math.round((total / n) * 10) / 10 : 0;
   }, [bwData]);
 
-  // Scatter: gestation vs BW (Blair only, calf_sire, 260-295 gestation range)
+  // Scatter: gestation vs BW with survival coloring (Blair only, calf_sire, 260-295 gestation range)
   const scatterData = useMemo(() => {
     if (!records) return { points: [], herdAvgGest: 0, herdAvgBW: 0 };
+    // First pass: collect gestation & BW data
     const sireMap = new Map<string, { gests: number[]; bws: number[] }>();
     records.forEach(r => {
       if ((r as any).operation !== 'Blair') return;
@@ -157,13 +158,27 @@ export default function SireAnalysis() {
       entry.bws.push(r.calf_bw);
       sireMap.set(sire, entry);
     });
-    const points: { name: string; gestation: number; bw: number; count: number }[] = [];
+    // Second pass: collect survival data by calf_sire
+    const survivalMap = new Map<string, { alive: number; total: number }>();
+    records.forEach(r => {
+      if ((r as any).operation !== 'Blair') return;
+      const sire = r.calf_sire;
+      if (!sire || !r.calf_status) return;
+      const entry = survivalMap.get(sire) || { alive: 0, total: 0 };
+      entry.total++;
+      if (r.calf_status.toLowerCase() === 'alive') entry.alive++;
+      survivalMap.set(sire, entry);
+    });
+    const points: { name: string; gestation: number; bw: number; count: number; survivalPct: number | null; survivalCount: number }[] = [];
     let allGest = 0, allBW = 0, allN = 0;
     sireMap.forEach((data, sire) => {
       if (data.gests.length < 10) return;
       const avgG = Math.round((data.gests.reduce((a, b) => a + b, 0) / data.gests.length) * 10) / 10;
       const avgB = Math.round((data.bws.reduce((a, b) => a + b, 0) / data.bws.length) * 10) / 10;
-      points.push({ name: sire, gestation: avgG, bw: avgB, count: data.gests.length });
+      const surv = survivalMap.get(sire);
+      const survivalPct = surv && surv.total >= 5 ? Math.round((surv.alive / surv.total) * 1000) / 10 : null;
+      const survivalCount = surv?.total ?? 0;
+      points.push({ name: sire, gestation: avgG, bw: avgB, count: data.gests.length, survivalPct, survivalCount });
       allGest += avgG * data.gests.length;
       allBW += avgB * data.bws.length;
       allN += data.gests.length;
@@ -302,9 +317,10 @@ export default function SireAnalysis() {
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-4 mb-3 text-[10px]">
-              <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded-full" style={{ background: 'hsl(142, 71%, 45%)' }} /> Ideal Range</span>
-              <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded-full" style={{ background: 'hsl(48, 96%, 53%)' }} /> Monitor</span>
-              <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded-full" style={{ background: 'hsl(0, 72%, 51%)' }} /> High Dystocia Risk</span>
+              <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded-full" style={{ background: 'hsl(142, 71%, 45%)' }} /> 100% Survival</span>
+              <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded-full" style={{ background: 'hsl(48, 96%, 53%)' }} /> 97–99% Survival</span>
+              <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded-full" style={{ background: 'hsl(0, 72%, 51%)' }} /> &lt;97% Survival</span>
+              <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded-full" style={{ background: 'hsl(var(--muted-foreground))' }} /> Insufficient Data</span>
             </div>
             <ResponsiveContainer width="100%" height={440}>
               <ScatterChart margin={{ left: 10, right: 30, bottom: 30, top: 10 }}>
@@ -342,29 +358,21 @@ export default function SireAnalysis() {
                         <p className="text-primary font-medium">{d.name}</p>
                         <p className="text-muted-foreground">Gestation: {d.gestation} days</p>
                         <p className="text-muted-foreground">Avg BW: {d.bw} lbs</p>
+                        <p className="text-muted-foreground">Survival: {d.survivalPct != null ? `${d.survivalPct}%` : '—'}</p>
                         <p className="text-muted-foreground">Calves: {d.count}</p>
                       </div>
                     );
                   }}
                 />
-                <Scatter data={scatterData.points.map(p => ({
-                  ...p,
-                  fill: p.gestation >= scatterData.herdAvgGest && p.bw >= scatterData.herdAvgBW
-                    ? 'hsl(0, 72%, 51%)'
-                    : p.gestation < scatterData.herdAvgGest && p.bw < scatterData.herdAvgBW
-                      ? 'hsl(142, 71%, 45%)'
-                      : 'hsl(48, 96%, 53%)',
-                }))} fill="hsl(var(--primary))">
-                  {scatterData.points.map((p, i) => (
-                    <Cell key={i} fill={
-                      p.gestation >= scatterData.herdAvgGest && p.bw >= scatterData.herdAvgBW
-                        ? 'hsl(0, 72%, 51%)'
-                        : p.gestation < scatterData.herdAvgGest && p.bw < scatterData.herdAvgBW
-                          ? 'hsl(142, 71%, 45%)'
-                          : 'hsl(48, 96%, 53%)'
-                    } />
-                  ))}
-                  
+                <Scatter data={scatterData.points} fill="hsl(var(--primary))">
+                  {scatterData.points.map((p, i) => {
+                    const fill = p.survivalPct == null
+                      ? 'hsl(var(--muted-foreground))'
+                      : p.survivalPct >= 100 ? 'hsl(142, 71%, 45%)'
+                      : p.survivalPct >= 97 ? 'hsl(48, 96%, 53%)'
+                      : 'hsl(0, 72%, 51%)';
+                    return <Cell key={i} fill={fill} />;
+                  })}
                 </Scatter>
               </ScatterChart>
             </ResponsiveContainer>
