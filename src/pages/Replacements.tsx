@@ -415,6 +415,300 @@ export default function Replacements() {
           )}
         </CardContent>
       </Card>
+
+      {/* Section 3 — Heifer Pregnancy Rate by Management Group */}
+      <HeiferGroupSection records={records} />
+
+      {/* Section 4 — Sire Selection for Heifers */}
+      <SireHeiferSection records={records} allAnimals={allAnimals} />
     </div>
+  );
+}
+
+const HEIFER_GROUPS = ['homeheifers', 'homeheifer', 'regheifers', 'purchasedheifers', 'purchasedheifer', 'showheifers', 'lateheifers'];
+const isHeiferGroup = (g: string | null) => g != null && HEIFER_GROUPS.includes(g.toLowerCase().replace(/\s+/g, ''));
+
+const GROUP_COLORS: Record<string, string> = {
+  homeheifers: '#22c55e', homeheifer: '#22c55e',
+  regheifers: '#3b82f6',
+  purchasedheifers: '#f97316', purchasedheifer: '#f97316',
+  showheifers: '#a855f7',
+  lateheifers: '#eab308',
+};
+const groupColor = (g: string) => GROUP_COLORS[g.toLowerCase().replace(/\s+/g, '')] ?? '#94a3b8';
+
+function HeiferGroupSection({ records }: { records: any[] | undefined }) {
+  const { chartData, tableData, groups, years } = useMemo(() => {
+    if (!records) return { chartData: [], tableData: [], groups: [] as string[], years: [] as number[] };
+
+    const heiferRecs = records.filter(r => isHeiferGroup(r.ultrasound_group) && r.breeding_year);
+
+    // Per group per year
+    type Bucket = { ai: number; aiTotal: number; secondAi: number; total: number };
+    const map = new Map<string, Bucket>(); // key = `group|year`
+
+    heiferRecs.forEach(r => {
+      const g = r.ultrasound_group!;
+      const key = `${g}|${r.breeding_year}`;
+      let b = map.get(key);
+      if (!b) { b = { ai: 0, aiTotal: 0, secondAi: 0, total: 0 }; map.set(key, b); }
+      b.total++;
+      if (r.ai_date_1) {
+        b.aiTotal++;
+        if (r.preg_stage?.toLowerCase() === 'ai') b.ai++;
+      }
+      if (r.preg_stage?.toLowerCase() === 'second ai') b.secondAi++;
+    });
+
+    const allGroups = [...new Set(heiferRecs.map(r => r.ultrasound_group!))].sort();
+    const allYears = [...new Set(heiferRecs.map(r => r.breeding_year as number))].sort();
+
+    // Chart data: one row per year, one bar per group (overall preg rate)
+    const cData = allYears.map(year => {
+      const row: any = { year };
+      allGroups.forEach(g => {
+        const b = map.get(`${g}|${year}`);
+        if (b && b.total >= 3) {
+          const pregRate = ((b.ai + b.secondAi) / b.aiTotal) * 100;
+          row[g] = Math.round(pregRate * 10) / 10;
+        }
+      });
+      return row;
+    });
+
+    // Table data
+    const tData: any[] = [];
+    allGroups.forEach(g => {
+      allYears.forEach(year => {
+        const b = map.get(`${g}|${year}`);
+        if (!b || b.total < 3) return;
+        const firstAi = b.aiTotal > 0 ? Math.round((b.ai / b.aiTotal) * 1000) / 10 : 0;
+        const overallPreg = b.aiTotal > 0 ? Math.round(((b.ai + b.secondAi) / b.aiTotal) * 1000) / 10 : 0;
+        const openRate = Math.round(((b.total - b.ai - b.secondAi) / b.total) * 1000) / 10;
+        tData.push({ group: g, year, firstAi, overallPreg, openRate, n: b.total });
+      });
+    });
+
+    return { chartData: cData, tableData: tData, groups: allGroups, years: allYears };
+  }, [records]);
+
+  if (!chartData.length) return null;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Baby className="h-5 w-5 text-primary" /> Heifer Pregnancy Rate by Management Group
+        </CardTitle>
+        <p className="text-sm text-muted-foreground">Overall AI pregnancy rate (AI + Second AI) by heifer group per breeding year.</p>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <ResponsiveContainer width="100%" height={360}>
+          <BarChart data={chartData} margin={{ top: 10, right: 20, left: 10, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <XAxis dataKey="year" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
+            <YAxis domain={[0, 100]} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} label={{ value: 'Preg Rate %', angle: -90, position: 'insideLeft', fill: 'hsl(var(--muted-foreground))' }} />
+            <RTooltip
+              contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8 }}
+              labelStyle={{ color: 'hsl(var(--foreground))' }}
+              formatter={(v: any, name: string) => [`${v}%`, name]}
+            />
+            <Legend wrapperStyle={{ color: 'hsl(var(--foreground))' }} />
+            {groups.map(g => (
+              <Bar key={g} dataKey={g} fill={groupColor(g)} radius={[3, 3, 0, 0]} />
+            ))}
+          </BarChart>
+        </ResponsiveContainer>
+
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Group</TableHead>
+                <TableHead>Year</TableHead>
+                <TableHead>1st AI %</TableHead>
+                <TableHead>Overall Preg %</TableHead>
+                <TableHead>Open %</TableHead>
+                <TableHead>n</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {tableData.map((r, i) => (
+                <TableRow key={i}>
+                  <TableCell className="font-medium">{r.group}</TableCell>
+                  <TableCell>{r.year}</TableCell>
+                  <TableCell>{r.firstAi}%</TableCell>
+                  <TableCell>{r.overallPreg}%</TableCell>
+                  <TableCell className={r.openRate > 15 ? 'text-red-400 font-semibold' : ''}>{r.openRate}%</TableCell>
+                  <TableCell className="text-muted-foreground">{r.n}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function SireHeiferSection({ records, allAnimals }: { records: any[] | undefined; allAnimals: any[] | undefined }) {
+  const { scatterData, comparisonData } = useMemo(() => {
+    if (!records || !allAnimals) return { scatterData: [], comparisonData: [] };
+
+    const animalYearBorn = new Map<string, number>();
+    allAnimals.forEach(a => { if (a.lifetime_id && a.year_born) animalYearBorn.set(a.lifetime_id, a.year_born); });
+
+    const heiferRecs = records.filter(r => isHeiferGroup(r.ultrasound_group) && r.ai_sire_1 && r.ai_date_1);
+    const matureRecs = records.filter(r => !isHeiferGroup(r.ultrasound_group) && r.ai_sire_1 && r.ai_date_1);
+
+    type SireBucket = { ai: number; aiTotal: number; bws: number[]; alive: number; calved: number };
+    const heiferBySire = new Map<string, SireBucket>();
+    const matureBySire = new Map<string, SireBucket>();
+
+    const addTo = (map: Map<string, SireBucket>, sire: string, r: any) => {
+      let b = map.get(sire);
+      if (!b) { b = { ai: 0, aiTotal: 0, bws: [], alive: 0, calved: 0 }; map.set(sire, b); }
+      b.aiTotal++;
+      if (r.preg_stage?.toLowerCase() === 'ai') b.ai++;
+      if (r.calf_bw != null && r.calf_bw > 0) b.bws.push(r.calf_bw);
+      if (r.calf_status) {
+        b.calved++;
+        if (r.calf_status.toLowerCase() === 'alive') b.alive++;
+      }
+    };
+
+    heiferRecs.forEach(r => addTo(heiferBySire, r.ai_sire_1!, r));
+    matureRecs.forEach(r => addTo(matureBySire, r.ai_sire_1!, r));
+
+    const scatter: { sire: string; avgBW: number; aiRate: number; count: number; quadrant: string }[] = [];
+    const comparison: any[] = [];
+
+    heiferBySire.forEach((hb, sire) => {
+      if (hb.aiTotal < 10) return;
+      const hAiRate = Math.round((hb.ai / hb.aiTotal) * 1000) / 10;
+      const hAvgBW = hb.bws.length > 0 ? Math.round((hb.bws.reduce((a, b) => a + b, 0) / hb.bws.length) * 10) / 10 : 0;
+      const hSurv = hb.calved > 0 ? Math.round((hb.alive / hb.calved) * 1000) / 10 : 0;
+
+      // Determine quadrant: median splits
+      scatter.push({ sire, avgBW: hAvgBW, aiRate: hAiRate, count: hb.aiTotal, quadrant: '' });
+
+      // Mature comparison
+      const mb = matureBySire.get(sire);
+      const mAiRate = mb && mb.aiTotal > 0 ? Math.round((mb.ai / mb.aiTotal) * 1000) / 10 : null;
+      const mAvgBW = mb && mb.bws.length > 0 ? Math.round((mb.bws.reduce((a, b) => a + b, 0) / mb.bws.length) * 10) / 10 : null;
+      const mSurv = mb && mb.calved > 0 ? Math.round((mb.alive / mb.calved) * 1000) / 10 : null;
+
+      comparison.push({
+        sire,
+        heiferN: hb.aiTotal,
+        heiferAI: hAiRate,
+        heiferBW: hAvgBW,
+        heiferSurv: hSurv,
+        matureN: mb?.aiTotal ?? 0,
+        matureAI: mAiRate,
+        matureBW: mAvgBW,
+        matureSurv: mSurv,
+      });
+    });
+
+    // Assign quadrants
+    if (scatter.length > 0) {
+      const medBW = [...scatter].sort((a, b) => a.avgBW - b.avgBW)[Math.floor(scatter.length / 2)]?.avgBW ?? 80;
+      const medAI = [...scatter].sort((a, b) => a.aiRate - b.aiRate)[Math.floor(scatter.length / 2)]?.aiRate ?? 50;
+      scatter.forEach(s => {
+        if (s.avgBW > medBW && s.aiRate < medAI) s.quadrant = 'bad'; // high BW + low conception
+        else if (s.avgBW <= medBW && s.aiRate >= medAI) s.quadrant = 'ideal';
+        else s.quadrant = 'neutral';
+      });
+    }
+
+    return { scatterData: scatter, comparisonData: comparison.sort((a, b) => b.heiferAI - a.heiferAI) };
+  }, [records, allAnimals]);
+
+  if (!scatterData.length) return null;
+
+  const dotColor = (q: string) => q === 'bad' ? '#ef4444' : q === 'ideal' ? '#22c55e' : '#eab308';
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Baby className="h-5 w-5 text-primary" /> Sire Selection for Heifers
+        </CardTitle>
+        <p className="text-sm text-muted-foreground">
+          AI sires with 10+ heifer breedings. Ideal = low BW + high conception (green). Red = high BW + low conception.
+        </p>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <ResponsiveContainer width="100%" height={380}>
+          <ScatterChart margin={{ top: 20, right: 30, bottom: 20, left: 10 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <XAxis
+              type="number" dataKey="avgBW" name="Avg Heifer BW"
+              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+              label={{ value: 'Avg Heifer Birth Weight (lbs)', position: 'insideBottom', offset: -5, fill: 'hsl(var(--muted-foreground))' }}
+            />
+            <YAxis
+              type="number" dataKey="aiRate" name="AI Rate" domain={[0, 100]}
+              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+              label={{ value: 'AI Conception %', angle: -90, position: 'insideLeft', fill: 'hsl(var(--muted-foreground))' }}
+            />
+            <ZAxis type="number" dataKey="count" range={[60, 400]} name="Breedings" />
+            <RTooltip
+              contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8 }}
+              labelStyle={{ color: 'hsl(var(--foreground))' }}
+              formatter={(v: any, name: string) => {
+                if (name === 'Avg Heifer BW') return [`${v} lbs`, 'Avg BW'];
+                if (name === 'AI Rate') return [`${v}%`, 'AI Rate'];
+                if (name === 'Breedings') return [v, 'Records'];
+                return [v, name];
+              }}
+              labelFormatter={(_, payload) => payload?.[0]?.payload?.sire ?? ''}
+            />
+            <Scatter data={scatterData} shape="circle">
+              {scatterData.map((s, i) => (
+                <Cell key={i} fill={dotColor(s.quadrant)} fillOpacity={0.8} />
+              ))}
+              <LabelList dataKey="sire" position="top" style={{ fill: 'hsl(var(--muted-foreground))', fontSize: 9 }} />
+            </Scatter>
+          </ScatterChart>
+        </ResponsiveContainer>
+
+        {/* Comparison Table */}
+        <div className="overflow-x-auto">
+          <p className="text-sm font-medium text-foreground mb-2">Heifer vs Mature Cow Performance by Sire</p>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Sire</TableHead>
+                <TableHead>Heifer n</TableHead>
+                <TableHead>Heifer AI %</TableHead>
+                <TableHead>Heifer BW</TableHead>
+                <TableHead>Heifer Surv %</TableHead>
+                <TableHead>Mature n</TableHead>
+                <TableHead>Mature AI %</TableHead>
+                <TableHead>Mature BW</TableHead>
+                <TableHead>Mature Surv %</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {comparisonData.map((r: any) => (
+                <TableRow key={r.sire}>
+                  <TableCell className="font-medium">{r.sire}</TableCell>
+                  <TableCell>{r.heiferN}</TableCell>
+                  <TableCell>{r.heiferAI}%</TableCell>
+                  <TableCell>{r.heiferBW > 0 ? `${r.heiferBW} lbs` : '—'}</TableCell>
+                  <TableCell>{r.heiferSurv > 0 ? `${r.heiferSurv}%` : '—'}</TableCell>
+                  <TableCell className="text-muted-foreground">{r.matureN || '—'}</TableCell>
+                  <TableCell className="text-muted-foreground">{r.matureAI != null ? `${r.matureAI}%` : '—'}</TableCell>
+                  <TableCell className="text-muted-foreground">{r.matureBW != null ? `${r.matureBW} lbs` : '—'}</TableCell>
+                  <TableCell className="text-muted-foreground">{r.matureSurv != null ? `${r.matureSurv}%` : '—'}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
