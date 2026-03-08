@@ -32,7 +32,8 @@ const App = () => (
       <BrowserRouter>
         <Layout>
           <Routes>
-            <Route path="/" element={<Dashboard />} />
+            <Route path="/" element={<Overview />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/roster" element={<CowRoster />} />
             <Route path="/cow/:lifetime_id" element={<CowDetail />} />
             <Route path="/rankings" element={<Rankings />} />
