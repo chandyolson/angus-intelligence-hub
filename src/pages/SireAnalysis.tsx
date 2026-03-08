@@ -236,30 +236,8 @@ function CombinedSireTable({
 
 export default function SireAnalysis() {
   const { data: records, isLoading, error } = useBreedingCalvingRecords();
-  const [sort1st, setSort1st] = useState<{ key: SortKey; asc: boolean }>({ key: 'rate', asc: false });
-  const [sort2nd, setSort2nd] = useState<{ key: SortKey; asc: boolean }>({ key: 'rate', asc: false });
-
   const firstServiceRows = useMemo(() => records ? computeServiceTable(records, '1st') : [], [records]);
   const secondServiceRows = useMemo(() => records ? computeServiceTable(records, '2nd') : [], [records]);
-
-  const topPerformer = useMemo(() => {
-    const eligible = firstServiceRows.filter(s => s.sampleSize >= 25);
-    if (eligible.length === 0) return null;
-    return eligible.reduce((a, b) => a.rate > b.rate ? a : b);
-  }, [firstServiceRows]);
-
-  const mostUsedBelowAvg = useMemo(() => {
-    const eligible = firstServiceRows.filter(s => s.rate < 88);
-    if (eligible.length === 0) return null;
-    return eligible.reduce((a, b) => a.sampleSize > b.sampleSize ? a : b);
-  }, [firstServiceRows]);
-
-  const handleSort1st = (key: SortKey) => {
-    setSort1st(prev => prev.key === key ? { key, asc: !prev.asc } : { key, asc: false });
-  };
-  const handleSort2nd = (key: SortKey) => {
-    setSort2nd(prev => prev.key === key ? { key, asc: !prev.asc } : { key, asc: false });
-  };
 
   // Gestation by calf_sire
   const gestationData = useMemo(() => {
