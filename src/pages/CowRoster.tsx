@@ -35,6 +35,7 @@ interface CowRow {
 type SortKey = keyof CowRow;
 
 function buildCowRows(animals: Animal[], records: BreedingCalvingRecord[]): CowRow[] {
+  // Group all blair_combined records by lifetime_id
   const byLid = new Map<string, BreedingCalvingRecord[]>();
   records.forEach(r => {
     if (!r.lifetime_id) return;
@@ -45,38 +46,60 @@ function buildCowRows(animals: Animal[], records: BreedingCalvingRecord[]): CowR
 
   return animals.map(a => {
     const recs = byLid.get(a.lifetime_id ?? '') || [];
-    const withCalf = recs.filter(r => r.calf_status && r.calf_status.toLowerCase() !== 'open');
-    const totalCalves = withCalf.length;
-    const bws = withCalf.map(r => r.calf_bw).filter((v): v is number => v != null && v > 0);
-    const avgBw = bws.length > 0 ? Math.round(bws.reduce((a, b) => a + b, 0) / bws.length) : 0;
-    const withAiDate1 = recs.filter(r => r.ai_date_1 != null);
-    const aiConceived = recs.filter(r => r.preg_stage?.toLowerCase() === 'ai' || r.preg_stage?.toLowerCase() === 'second ai');
-    const conceptionRate = withAiDate1.length > 0 ? (aiConceived.length / withAiDate1.length) * 100 : 0;
-    const firstServiceConceived = recs.filter(r => r.preg_stage?.toLowerCase() === 'ai');
-    const firstServiceRate = withAiDate1.length > 0 ? (firstServiceConceived.length / withAiDate1.length) * 100 : 0;
-    const withAiDate2 = recs.filter(r => r.ai_date_2 != null);
-    const secondServiceConceived = recs.filter(r => r.preg_stage?.toLowerCase() === 'second ai');
-    const secondServiceRate = withAiDate2.length > 0 ? (secondServiceConceived.length / withAiDate2.length) * 100 : 0;
-    const liveCalves = withCalf.filter(r => r.calf_status?.toLowerCase() === 'alive').length;
-    const survivalRate = withCalf.length > 0 ? (liveCalves / withCalf.length) * 100 : 0;
-    const composite = computeCompositeFromRecords(recs, a.year_born);
+    // Calving records = rows where calving_date is populated
+    const calvingRecs = recs.filter(r => r.calving_date != null);
+    const totalCalves = calvingRecs.length;
 
-    const sire = a.sire || null;
-    const damSire = a.dam_sire || null;
+    // Birth weight — exclude null and zero
+    const bws = calvingRecs.map(r => r.calf_bw).filter(v => v != null && v > 0) as number[];
+    const avgBw = bws.length > 0
+      ? Math.round(bws.reduce((a, b) => a + b, 0) / bws.length)
+      : 0;
+
+    // AI conception rates
+    const withAiDate1 = recs.filter(r => r.ai_date_1 != null);
+    const withAiDate2 = recs.filter(r => r.ai_date_2 != null);
+    const firstServiceConceived = recs.filter(r =>
+      r.preg_stage?.toLowerCase() === 'ai'
+    );
+    const secondServiceConceived = recs.filter(r =>
+      r.preg_stage?.toLowerCase() === 'second ai'
+    );
+    const aiConceived = [...firstServiceConceived, ...secondServiceConceived];
+    const conceptionRate = withAiDate1.length > 0
+      ? (aiConceived.length / withAiDate1.length) * 100
+      : 0;
+    const firstServiceRate = withAiDate1.length > 0
+      ? (firstServiceConceived.length / withAiDate1.length) * 100
+      : 0;
+    const secondServiceRate = withAiDate2.length > 0
+      ? (secondServiceConceived.length / withAiDate2.length) * 100
+      : 0;
+
+    // Calf survival — alive calves / all calves with a recorded status
+    const calvingWithStatus = calvingRecs.filter(r => r.calf_status != null);
+    const aliveCalves = calvingWithStatus.filter(r =>
+      r.calf_status?.toLowerCase() === 'alive'
+    );
+    const survivalRate = calvingWithStatus.length > 0
+      ? (aliveCalves.length / calvingWithStatus.length) * 100
+      : 0;
+
+    const composite = computeCompositeFromRecords(recs, a.year_born);
 
     return {
       lifetime_id: a.lifetime_id ?? '',
       tag: a.tag,
       year_born: a.year_born,
-      sire,
-      dam_sire: damSire,
+      sire: a.sire || null,
+      dam_sire: a.dam_sire || null,
       status: a.status,
       total_calves: totalCalves,
       avg_bw: avgBw,
-      ai_conception_rate: Math.round(conceptionRate * 10) / 10,
-      first_service_rate: Math.round(firstServiceRate * 10) / 10,
-      second_service_rate: Math.round(secondServiceRate * 10) / 10,
-      calf_survival_rate: Math.round(survivalRate * 10) / 10,
+      ai_conception_rate: Math.round(conceptionRate),
+      first_service_rate: Math.round(firstServiceRate),
+      second_service_rate: Math.round(secondServiceRate),
+      calf_survival_rate: Math.round(survivalRate),
       composite_score: composite,
     };
   });
