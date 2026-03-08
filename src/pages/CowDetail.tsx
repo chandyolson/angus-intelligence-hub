@@ -126,7 +126,7 @@ export default function CowDetail() {
   const sortedCalving = useMemo(() => calvingRecords ? [...calvingRecords].sort((a, b) => (a.breeding_year ?? 0) - (b.breeding_year ?? 0)) : [], [calvingRecords]);
   const sortedUltrasound = useMemo(() => ultrasoundRecords ? [...ultrasoundRecords].sort((a, b) => (a.ultrasound_date ?? '').localeCompare(b.ultrasound_date ?? '')) : [], [ultrasoundRecords]);
 
-  const loading = la || lr || lu;
+  const loading = la || lr;
 
   if (loading) return (
     <div className="space-y-4">
