@@ -50,9 +50,9 @@ const badgeStyle = (badge: string) => {
 };
 
 const getBadge = (rate: number): SireRow['badge'] => {
-  if (rate >= 95) return 'ELITE';
-  if (rate >= 88) return 'STRONG';
-  if (rate >= 80) return 'AVERAGE';
+  if (rate >= 70) return 'ELITE';
+  if (rate >= 55) return 'STRONG';
+  if (rate >= 45) return 'AVERAGE';
   return 'BELOW AVG';
 };
 
