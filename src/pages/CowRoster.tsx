@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBreedingCalvingRecords } from '@/hooks/useCattleData';
+import { useOperation } from '@/hooks/useOperationContext';
 import { Animal, BreedingCalvingRecord } from '@/types/cattle';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
