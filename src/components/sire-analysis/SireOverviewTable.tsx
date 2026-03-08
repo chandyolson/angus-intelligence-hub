@@ -140,8 +140,8 @@ const rateColor = (rate: number) => {
 };
 
 const bwColor = (bw: number) => {
-  if (bw >= 70 && bw <= 85) return 'hsl(142, 71%, 45%)';
-  if ((bw >= 65 && bw < 70) || (bw > 85 && bw <= 90)) return 'hsl(48, 96%, 53%)';
+  if (bw >= 65 && bw <= 85) return 'hsl(142, 71%, 45%)';
+  if ((bw >= 60 && bw < 65) || (bw > 85 && bw <= 90)) return 'hsl(48, 96%, 53%)';
   return 'hsl(0, 72%, 51%)';
 };
 
