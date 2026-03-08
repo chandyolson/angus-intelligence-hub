@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useAnimal, useCowBreedingRecords, useUltrasoundRecords, useBreedingCalvingRecords, useActiveAnimals } from '@/hooks/useCattleData';
+import { useAnimal, useCowBreedingRecords, useBreedingCalvingRecords, useActiveAnimals } from '@/hooks/useCattleData';
 import { BreedingCalvingRecord } from '@/types/cattle';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
