@@ -53,6 +53,7 @@ export default function Culling() {
   const { data: records, isLoading: loadingRecords } = useBlairCombined();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
+  const [priorityFilter, setPriorityFilter] = useState<string | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>('flagCount');
   const [sortAsc, setSortAsc] = useState(false);
 
