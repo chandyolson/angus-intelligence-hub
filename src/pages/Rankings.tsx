@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useActiveAnimals, useBreedingCalvingRecords } from '@/hooks/useCattleData';
 import { exportToCSV, computeCompositeFromRecords } from '@/lib/calculations';
+import { CowLookup } from '@/components/rankings/CowLookup';
 import { Animal, BreedingCalvingRecord } from '@/types/cattle';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -340,7 +341,10 @@ export default function Rankings() {
         </CardContent>
       </Card>
 
-      {/* Section 1: Rankings */}
+      {/* Cow Lookup */}
+      <CowLookup animals={animals ?? []} records={records ?? []} cullFlags={cullFlags} />
+
+      {/* Section 3: Rankings */}
       <Card className="bg-card border-border">
         <CardHeader className="pb-2 flex flex-row items-center justify-between">
           <CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">Composite Score Rankings</CardTitle>
