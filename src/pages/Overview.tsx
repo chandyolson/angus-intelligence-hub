@@ -170,21 +170,23 @@ export default function Overview() {
         <>
           {/* KPI Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-            <KPICard icon={Users} label="Active Cows" value={kpis.activeCowCount.toLocaleString()} />
-            <KPICard icon={Crosshair} label="Avg 1st Service AI Rate" value={`${kpis.firstServiceRate}%`} />
-            <KPICard icon={Baby} label="Avg Calf Survival Rate" value={`${kpis.survivalRate}%`} />
+            <KPICard icon={Users} label="Active Cows" value={kpis.activeCowCount.toLocaleString()} onClick={() => navigate('/cow-roster')} />
+            <KPICard icon={Crosshair} label="Avg 1st Service AI Rate" value={`${kpis.firstServiceRate}%`} onClick={() => navigate('/rankings')} />
+            <KPICard icon={Baby} label="Avg Calf Survival Rate" value={`${kpis.survivalRate}%`} onClick={() => navigate('/rankings')} />
             <KPICard
               icon={Clock} label="Avg Calving Interval"
               value={`${kpis.avgInterval} days`}
               flagRed={kpis.avgInterval > 365}
               flagText={kpis.avgInterval > 365 ? `${kpis.avgInterval - 365} days over target` : undefined}
+              onClick={() => navigate('/calving-interval')}
             />
-            <KPICard icon={HeartPulse} label="Avg Gestation" value={`${kpis.avgGestation} days`} />
+            <KPICard icon={HeartPulse} label="Avg Gestation" value={`${kpis.avgGestation} days`} onClick={() => navigate('/gestation')} />
             <KPICard
               icon={Ban} label={`${kpis.openSeason} Open Rate`}
               value={`${kpis.openRate}%`}
               flagRed={kpis.openRate > 10}
               flagText={kpis.openRate > 10 ? 'Above 10% threshold' : undefined}
+              onClick={() => navigate('/open-cows')}
             />
           </div>
 
@@ -298,12 +300,15 @@ export default function Overview() {
 
 /* ─── Sub-components ─── */
 
-function KPICard({ icon: Icon, label, value, flagRed, flagText }: {
+function KPICard({ icon: Icon, label, value, flagRed, flagText, onClick }: {
   icon: React.ElementType; label: string; value: string;
-  flagRed?: boolean; flagText?: string;
+  flagRed?: boolean; flagText?: string; onClick?: () => void;
 }) {
   return (
-    <Card className={cn('bg-card border-l-4', flagRed ? 'border-destructive/60' : 'border-primary/40')}>
+    <Card
+      className={cn('bg-card border-l-4 transition-colors', flagRed ? 'border-destructive/60' : 'border-primary/40', onClick && 'cursor-pointer hover:ring-1 hover:ring-primary/40')}
+      onClick={onClick}
+    >
       <CardContent className="p-4">
         <div className="flex items-center gap-2 mb-2">
           <Icon className={cn('h-4 w-4', flagRed ? 'text-destructive' : 'text-primary')} />
