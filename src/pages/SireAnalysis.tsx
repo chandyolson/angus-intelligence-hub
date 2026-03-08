@@ -550,7 +550,7 @@ export default function SireAnalysis() {
                           : 'hsl(48, 96%, 53%)'
                     } />
                   ))}
-                  <LabelList dataKey="name" position="top" style={{ fill: 'hsl(var(--muted-foreground))', fontSize: 9 }} />
+                  
                 </Scatter>
               </ScatterChart>
             </ResponsiveContainer>
