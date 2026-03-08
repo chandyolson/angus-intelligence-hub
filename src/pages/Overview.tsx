@@ -196,6 +196,7 @@ export default function Overview() {
               flagText={kpis.openRate > 10 ? 'Above 10% threshold' : undefined}
               onClick={() => navigate('/open-cows')}
             />
+            <KPICard icon={Scale} label="Avg Calf Birth Weight" value={`${kpis.avgCalfBW} lbs`} onClick={() => navigate('/birth-weight')} />
           </div>
 
           {/* Two side-by-side cards */}
