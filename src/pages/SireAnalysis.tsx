@@ -477,22 +477,49 @@ export default function SireAnalysis() {
         </Card>
       )}
 
-      {/* Gestation vs Birth Weight Scatter */}
-      {scatterData.length > 0 && (
+      {/* Gestation vs Birth Weight Quadrant Scatter */}
+      {scatterData.points.length > 0 && (
         <Card className="bg-card border-border">
           <CardHeader className="pb-2">
             <CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">Gestation vs Birth Weight by Sire</CardTitle>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Dot size = sample size · Quadrants based on herd averages ({scatterData.herdAvgGest}d / {scatterData.herdAvgBW} lbs). Blair operation only.
+            </p>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={380}>
+            <div className="flex flex-wrap gap-4 mb-3 text-[10px]">
+              <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded-full" style={{ background: 'hsl(142, 71%, 45%)' }} /> Ideal Range</span>
+              <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded-full" style={{ background: 'hsl(48, 96%, 53%)' }} /> Monitor</span>
+              <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded-full" style={{ background: 'hsl(0, 72%, 51%)' }} /> High Dystocia Risk</span>
+            </div>
+            <ResponsiveContainer width="100%" height={440}>
               <ScatterChart margin={{ left: 10, right: 30, bottom: 30, top: 10 }}>
+                {/* Quadrant background rectangles */}
+                <defs>
+                  <linearGradient id="qGreen" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="hsl(142,71%,45%)" stopOpacity={0.08} /><stop offset="100%" stopColor="hsl(142,71%,45%)" stopOpacity={0.08} /></linearGradient>
+                  <linearGradient id="qYellow" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="hsl(48,96%,53%)" stopOpacity={0.08} /><stop offset="100%" stopColor="hsl(48,96%,53%)" stopOpacity={0.08} /></linearGradient>
+                  <linearGradient id="qRed" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="hsl(0,72%,51%)" stopOpacity={0.08} /><stop offset="100%" stopColor="hsl(0,72%,51%)" stopOpacity={0.08} /></linearGradient>
+                </defs>
+                {/* Quadrant labels rendered via ReferenceArea */}
+                <ReferenceArea x1={scatterData.herdAvgGest} x2={295} y1={scatterData.herdAvgBW} y2={120} fill="url(#qRed)" fillOpacity={1}
+                  label={{ value: 'High Dystocia Risk', fill: 'hsl(0, 72%, 51%)', fontSize: 10, position: 'insideTopRight' }} />
+                <ReferenceArea x1={260} x2={scatterData.herdAvgGest} y1={scatterData.herdAvgBW} y2={120} fill="url(#qYellow)" fillOpacity={1}
+                  label={{ value: 'Monitor', fill: 'hsl(48, 96%, 53%)', fontSize: 10, position: 'insideTopLeft' }} />
+                <ReferenceArea x1={scatterData.herdAvgGest} x2={295} y1={50} y2={scatterData.herdAvgBW} fill="url(#qYellow)" fillOpacity={1}
+                  label={{ value: 'Monitor', fill: 'hsl(48, 96%, 53%)', fontSize: 10, position: 'insideBottomRight' }} />
+                <ReferenceArea x1={260} x2={scatterData.herdAvgGest} y1={50} y2={scatterData.herdAvgBW} fill="url(#qGreen)" fillOpacity={1}
+                  label={{ value: 'Ideal Range', fill: 'hsl(142, 71%, 45%)', fontSize: 10, position: 'insideBottomLeft' }} />
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="gestation" name="Gestation (d)" type="number" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                <XAxis dataKey="gestation" name="Gestation (d)" type="number" domain={[260, 295]} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
                   label={{ value: 'Avg Gestation (days)', position: 'bottom', offset: 15, fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} />
                 <YAxis dataKey="bw" name="Birth Weight (lbs)" type="number" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
                   label={{ value: 'Avg BW (lbs)', angle: -90, position: 'insideLeft', fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} />
-                <ZAxis dataKey="count" range={[60, 500]} name="Sample Size" />
-                <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }}
+                <ZAxis dataKey="count" range={[80, 600]} name="Sample Size" />
+                <ReferenceLine x={scatterData.herdAvgGest} stroke="hsl(var(--foreground))" strokeDasharray="5 5"
+                  label={{ value: `${scatterData.herdAvgGest}d`, fill: 'hsl(var(--muted-foreground))', fontSize: 10, position: 'top' }} />
+                <ReferenceLine y={scatterData.herdAvgBW} stroke="hsl(var(--foreground))" strokeDasharray="5 5"
+                  label={{ value: `${scatterData.herdAvgBW} lbs`, fill: 'hsl(var(--muted-foreground))', fontSize: 10, position: 'right' }} />
+                <Tooltip
                   content={({ active, payload }) => {
                     if (!active || !payload?.[0]) return null;
                     const d = payload[0].payload;
@@ -501,12 +528,28 @@ export default function SireAnalysis() {
                         <p className="text-primary font-medium">{d.name}</p>
                         <p className="text-muted-foreground">Gestation: {d.gestation} days</p>
                         <p className="text-muted-foreground">Avg BW: {d.bw} lbs</p>
-                        <p className="text-muted-foreground">Sample: {d.count} records</p>
+                        <p className="text-muted-foreground">Calves: {d.count}</p>
                       </div>
                     );
                   }}
                 />
-                <Scatter data={scatterData} fill="hsl(var(--primary))">
+                <Scatter data={scatterData.points.map(p => ({
+                  ...p,
+                  fill: p.gestation >= scatterData.herdAvgGest && p.bw >= scatterData.herdAvgBW
+                    ? 'hsl(0, 72%, 51%)'
+                    : p.gestation < scatterData.herdAvgGest && p.bw < scatterData.herdAvgBW
+                      ? 'hsl(142, 71%, 45%)'
+                      : 'hsl(48, 96%, 53%)',
+                }))} fill="hsl(var(--primary))">
+                  {scatterData.points.map((p, i) => (
+                    <Cell key={i} fill={
+                      p.gestation >= scatterData.herdAvgGest && p.bw >= scatterData.herdAvgBW
+                        ? 'hsl(0, 72%, 51%)'
+                        : p.gestation < scatterData.herdAvgGest && p.bw < scatterData.herdAvgBW
+                          ? 'hsl(142, 71%, 45%)'
+                          : 'hsl(48, 96%, 53%)'
+                    } />
+                  ))}
                   <LabelList dataKey="name" position="top" style={{ fill: 'hsl(var(--muted-foreground))', fontSize: 9 }} />
                 </Scatter>
               </ScatterChart>
