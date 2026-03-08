@@ -86,7 +86,7 @@ export function MissingRecordGaps() {
         }
 
         // Check 3: pregnant but no calving next year
-        if (d.pregStage && pregnantStages.has(d.pregStage) && yr + 1 <= currentYear) {
+        if (d.pregStage && pregnantStages.has(d.pregStage.toLowerCase().trim()) && yr + 1 <= currentYear) {
           const nextYear = years.get(yr + 1);
           if (!d.hasCalving && (!nextYear || !nextYear.hasCalving)) {
             results.push({ check: 'Pregnant, no calf recorded', checkKey: 'no-calf', lifetime_id: lid, tag, breeding_year: yr, lastKnown: `Preg: ${d.pregStage}` });
