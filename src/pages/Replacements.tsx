@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Baby, Download, Search, ArrowUpDown } from 'lucide-react';
+import { Baby, Download, Search, ArrowUpDown, ChevronDown } from 'lucide-react';
 import { useAnimals, useBlairCombined } from '@/hooks/useCattleData';
 import { exportToCSV } from '@/lib/calculations';
 import { useNavigate } from 'react-router-dom';
