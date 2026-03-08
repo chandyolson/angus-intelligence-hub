@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAnimal, useCowBreedingRecords, useBreedingCalvingRecords, useActiveAnimals } from '@/hooks/useCattleData';
 import { BreedingCalvingRecord } from '@/types/cattle';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -76,6 +76,7 @@ function calfStatusColor(status: string | null) {
 }
 
 export default function CowDetail() {
+  const navigate = useNavigate();
   const { lifetime_id } = useParams<{ lifetime_id: string }>();
   const decodedId = decodeURIComponent(lifetime_id || '');
   const { data: animal, isLoading: la, error: animalError } = useAnimal(decodedId);
@@ -141,14 +142,14 @@ export default function CowDetail() {
 
   if (animalError || calvingError) return (
     <div className="space-y-4">
-      <Link to="/roster" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="h-4 w-4" /> Back to Cow List</Link>
+      <button onClick={() => navigate(-1)} className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="h-4 w-4" /> Back</button>
       <ErrorBox />
     </div>
   );
 
   if (!animal) return (
     <div className="space-y-4">
-      <Link to="/roster" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="h-4 w-4" /> Back to Cow List</Link>
+      <button onClick={() => navigate(-1)} className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="h-4 w-4" /> Back</button>
       <EmptyState message="Animal not found." />
     </div>
   );
@@ -170,9 +171,9 @@ export default function CowDetail() {
 
   return (
     <div className="space-y-6">
-      <Link to="/roster" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-        <ArrowLeft className="h-4 w-4" /> Back to Roster
-      </Link>
+      <button onClick={() => navigate(-1)} className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+        <ArrowLeft className="h-4 w-4" /> Back
+      </button>
 
       {/* Header Card */}
       <Card className="bg-card border-border">
