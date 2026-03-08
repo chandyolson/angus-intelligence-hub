@@ -29,7 +29,7 @@ interface SireOverviewRow {
   gradeLetter: string;
 }
 
-type SortKey = keyof Pick<SireOverviewRow, 'sire' | 'totalUses' | 'rate1st' | 'rate2nd' | 'overallRate' | 'avgBW' | 'avgGest' | 'survivalPct' | 'grade'>;
+type SortKey = keyof Pick<SireOverviewRow, 'sire' | 'totalUses' | 'totalCalves' | 'rate1st' | 'rate2nd' | 'overallRate' | 'avgBW' | 'avgGest' | 'survivalPct' | 'grade'>;
 
 function computeSireOverview(records: BreedingCalvingRecord[]): SireOverviewRow[] {
   // Filter Blair only
