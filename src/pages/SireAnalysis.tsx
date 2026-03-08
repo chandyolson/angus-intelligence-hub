@@ -403,6 +403,9 @@ export default function SireAnalysis() {
 
       {/* Combined Service Table */}
       <CombinedSireTable firstRows={firstServiceRows} secondRows={secondServiceRows} />
+      <p className="text-xs text-muted-foreground -mt-4 px-1">
+        💡 Herd average first service rate: {herdAvg1stService}%. Thresholds reflect Blair Bros historical performance.
+      </p>
 
       {/* Gestation Length by Sire */}
       {gestationData.length > 0 && (
