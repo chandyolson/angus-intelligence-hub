@@ -28,7 +28,13 @@ export function AppSidebar() {
 
   const sections: NavSection[] = [
     { title: 'Overview', icon: LayoutDashboard, url: '/' },
-    { title: 'Data Quality', icon: ShieldAlert, url: '/data-quality', badge: qualityCount, badgeColor: 'bg-destructive text-destructive-foreground' },
+    {
+      title: 'Data Management', icon: ShieldAlert,
+      children: [
+        { title: 'Data Quality', url: '/data-quality', icon: ShieldAlert },
+        { title: 'Group Reconciliation', url: '/reconciliation', icon: Users },
+      ],
+    },
     { title: 'Sire Analysis', icon: FlaskConical, url: '/sires' },
     {
       title: 'Cow Performance', icon: Beef,
@@ -44,7 +50,7 @@ export function AppSidebar() {
     { title: 'Herd Trends', icon: TrendingUp, url: '/herd-trends' },
     { title: 'Gestation', icon: HeartPulse, url: '/gestation' },
     { title: 'Birth Weight', icon: Weight, url: '/birth-weight' },
-    { title: 'Group Reconciliation', icon: Users, url: '/reconciliation' },
+    
   ];
 
   const toggle = (title: string) =>
