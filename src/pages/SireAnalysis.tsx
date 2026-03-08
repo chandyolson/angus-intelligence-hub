@@ -20,6 +20,17 @@ interface SireRow {
   badge: 'ELITE' | 'STRONG' | 'AVERAGE' | 'BELOW AVG';
 }
 
+interface CombinedSireRow {
+  sire: string;
+  rate1st: number;
+  n1st: number;
+  rate2nd: number;
+  n2nd: number;
+  avgBW: number;
+  survivalRate: number;
+  badge: 'ELITE' | 'STRONG' | 'AVERAGE' | 'BELOW AVG';
+}
+
 type SortKey = 'rate' | 'sampleSize' | 'avgBW';
 
 const rateColor = (rate: number) => {
