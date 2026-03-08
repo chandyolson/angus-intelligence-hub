@@ -137,21 +137,53 @@ export default function Rankings() {
   const QUARTILE_COLORS = ['hsl(0, 72%, 51%)', 'hsl(25, 95%, 53%)', 'hsl(48, 96%, 53%)', 'hsl(142, 71%, 45%)'];
   const QUARTILE_LABELS = ['Bottom 25%', '25–50%', '50–75%', 'Top 25%'];
 
-  const quartileDistribution = useMemo(() => {
-    const withScore = ranked.filter(r => r.composite_score > 0);
-    const sorted = [...withScore].sort((a, b) => a.composite_score - b.composite_score);
-    const n = sorted.length;
-    if (n === 0) return QUARTILE_LABELS.map((l, i) => ({ bucket: l, count: 0, pct: 0, fill: QUARTILE_COLORS[i] }));
-    const buckets = [0, 0, 0, 0];
-    sorted.forEach((_, idx) => {
-      const q = Math.min(Math.floor((idx / n) * 4), 3);
-      buckets[q]++;
-    });
-    return QUARTILE_LABELS.map((l, i) => ({ bucket: l, count: buckets[i], pct: n > 0 ? Math.round((buckets[i] / n) * 100) : 0, fill: QUARTILE_COLORS[i] }));
-  }, [ranked]);
+  // Chart 1: Histogram of value_score in 10 buckets
+  const HISTOGRAM_COLORS = [
+    'hsl(0, 72%, 51%)',    // 0-10
+    'hsl(10, 80%, 50%)',   // 10-20
+    'hsl(20, 85%, 50%)',   // 20-30
+    'hsl(30, 90%, 50%)',   // 30-40
+    'hsl(40, 95%, 50%)',   // 40-50
+    'hsl(50, 95%, 48%)',   // 50-60
+    'hsl(60, 90%, 45%)',   // 60-70
+    'hsl(80, 70%, 45%)',   // 70-80
+    'hsl(110, 60%, 42%)',  // 80-90
+    'hsl(142, 71%, 45%)',  // 90-100
+  ];
 
-  const componentDistributions = useMemo(() => {
+  const histogramData = useMemo(() => {
     if (!animals) return [];
+    const scored = animals.filter(a => a.value_score != null && (a.value_score as number) > 0);
+    const buckets = Array.from({ length: 10 }, (_, i) => ({
+      range: `${i * 10}–${(i + 1) * 10}`,
+      count: 0,
+      fill: HISTOGRAM_COLORS[i],
+    }));
+    scored.forEach(a => {
+      const s = a.value_score as number;
+      const idx = Math.min(Math.floor(s / 10), 9);
+      buckets[idx].count++;
+    });
+    return buckets;
+  }, [animals]);
+
+  // Chart 2: Avg component score per value_score quartile
+  const componentByQuartile = useMemo(() => {
+    if (!animals) return [];
+    const scored = animals
+      .filter(a => a.value_score != null && (a.value_score as number) > 0)
+      .sort((a, b) => (a.value_score as number) - (b.value_score as number));
+    const n = scored.length;
+    if (n === 0) return [];
+
+    const getQuartile = (idx: number) => {
+      const pct = idx / n;
+      if (pct < 0.25) return 0;
+      if (pct < 0.5) return 1;
+      if (pct < 0.75) return 2;
+      return 3;
+    };
+
     const components: { key: keyof Animal; label: string; weight: string }[] = [
       { key: 'c1_conception_score', label: 'C1 Conception Score', weight: '30%' },
       { key: 'c2_survival_score', label: 'C2 Calf Survival Rate', weight: '25%' },
@@ -160,18 +192,31 @@ export default function Rankings() {
       { key: 'c5_gestation_score', label: 'C5 Avg Gestation', weight: '5%' },
       { key: 'c6_birthweight_score', label: 'C6 Birth Weight', weight: '5%' },
     ];
+
     return components.map(comp => {
-      const vals = animals
-        .filter(a => a.status?.toLowerCase() === 'active' && a[comp.key] != null && (a[comp.key] as number) > 0)
-        .map(a => a[comp.key] as number)
-        .sort((a, b) => a - b);
-      const n = vals.length;
-      const buckets = [0, 0, 0, 0];
-      vals.forEach((_, idx) => { buckets[Math.min(Math.floor((idx / n) * 4), 3)]++; });
-      return {
-        ...comp,
-        data: QUARTILE_LABELS.map((l, i) => ({ bucket: l, count: buckets[i], fill: QUARTILE_COLORS[i] })),
-      };
+      const sums = [0, 0, 0, 0];
+      const counts = [0, 0, 0, 0];
+
+      scored.forEach((a, idx) => {
+        const val = a[comp.key] as number | null;
+        if (val != null && val > 0) {
+          const q = getQuartile(idx);
+          sums[q] += val;
+          counts[q]++;
+        }
+      });
+
+      const data = QUARTILE_LABELS.map((label, i) => ({
+        quartile: label,
+        avg: counts[i] > 0 ? Math.round(sums[i] / counts[i]) : 0,
+        fill: QUARTILE_COLORS[i],
+      }));
+
+      const topAvg = data[3].avg;
+      const bottomAvg = data[0].avg;
+      const gap = topAvg - bottomAvg;
+
+      return { ...comp, data, gap };
     });
   }, [animals]);
 
