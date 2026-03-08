@@ -194,6 +194,47 @@ export default function HerdTrends() {
         </Card>
       )}
 
+      {/* ── Birth Weight & Gestation by Year ── */}
+      {bwGestByYear.length > 0 && (
+        <>
+          <h2 className="text-[15px] font-semibold text-foreground">Birth Weight & Gestation by Year</h2>
+          <Card className="bg-card border-border">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">
+                Avg Birth Weight & Gestation Length by Breeding Year
+              </CardTitle>
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Left axis = avg birth weight (lbs) · Right axis = avg gestation length (days). Min 5 records per year.
+              </p>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={340}>
+                <ComposedChart data={bwGestByYear} margin={{ top: 10, right: 50, left: 10, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="year" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} />
+                  <YAxis yAxisId="bw" tick={{ fill: 'hsl(142, 71%, 45%)', fontSize: 11 }}
+                    label={{ value: 'Avg BW (lbs)', angle: -90, position: 'insideLeft', fill: 'hsl(142, 71%, 45%)', fontSize: 11 }} />
+                  <YAxis yAxisId="gest" orientation="right" tick={{ fill: 'hsl(var(--primary))', fontSize: 11 }}
+                    label={{ value: 'Avg Gestation (days)', angle: 90, position: 'insideRight', fill: 'hsl(var(--primary))', fontSize: 11 }} />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }}
+                    formatter={(value: number | null, name: string) => {
+                      if (value == null) return ['—', name];
+                      return name === 'avgBW' ? [`${value} lbs`, 'Avg Birth Weight'] : [`${value} days`, 'Avg Gestation'];
+                    }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: 11 }} formatter={(v: string) => v === 'avgBW' ? 'Avg Birth Weight (lbs)' : 'Avg Gestation (days)'} />
+                  <Line yAxisId="bw" type="monotone" dataKey="avgBW" stroke="hsl(142, 71%, 45%)" strokeWidth={2}
+                    dot={{ r: 4, fill: 'hsl(142, 71%, 45%)' }} connectNulls />
+                  <Line yAxisId="gest" type="monotone" dataKey="avgGest" stroke="hsl(var(--primary))" strokeWidth={2}
+                    dot={{ r: 4, fill: 'hsl(var(--primary))' }} connectNulls />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </>
+      )}
+
     </div>
   );
 }
