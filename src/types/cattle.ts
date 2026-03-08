@@ -28,6 +28,14 @@ export interface Animal {
   tag_color: string | null;
   snyder_auto_number: number | null;
   snyder_system_id: number | null;
+  c1_conception_score: number | null;
+  c2_survival_score: number | null;
+  c3_interval_score: number | null;
+  c4_calves_per_year_score: number | null;
+  c5_gestation_score: number | null;
+  c6_birthweight_score: number | null;
+  value_score: number | null;
+  value_score_percentile: number | null;
 }
 
 export interface BreedingCalvingRecord {
