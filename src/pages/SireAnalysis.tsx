@@ -31,7 +31,7 @@ interface CombinedSireRow {
   badge: 'ELITE' | 'STRONG' | 'AVERAGE' | 'BELOW AVG';
 }
 
-type SortKey = 'rate' | 'sampleSize' | 'avgBW';
+
 
 const rateColor = (rate: number) => {
   if (rate >= 95) return 'hsl(142, 71%, 45%)';
