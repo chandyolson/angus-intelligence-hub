@@ -23,46 +23,32 @@ const rateColor = (rate: number) => {
   return 'hsl(0, 72%, 51%)';
 };
 
-function computeServiceTable(
-  records: BreedingCalvingRecord[],
-  service: '1st' | '2nd',
-  minRecords = 10
-): SireRow[] {
+function computeSimpleServiceRows(records: BreedingCalvingRecord[]): SireRow[] {
   const sireMap = new Map<string, { aiDates: number; conceived: number; bws: number[]; alive: number; withCalf: number }>();
-  const isCleanup = (s: string) => s.toLowerCase().includes('cleanup');
-
   records.forEach(r => {
-    const sire = service === '1st' ? r.ai_sire_1 : r.ai_sire_2;
-    const aiDate = service === '1st' ? r.ai_date_1 : r.ai_date_2;
-    const targetStage = service === '1st' ? 'ai' : 'second ai';
-
-    if (!sire || isCleanup(sire) || !aiDate) return;
-
+    const sire = r.ai_sire_1;
+    if (!sire || !r.ai_date_1) return;
     const entry = sireMap.get(sire) || { aiDates: 0, conceived: 0, bws: [], alive: 0, withCalf: 0 };
     entry.aiDates++;
-    if (r.preg_stage?.toLowerCase() === targetStage) entry.conceived++;
-
-    // Calf-side stats (only from records where this sire is the calf_sire too, or from all records of this sire)
+    if (r.preg_stage?.toLowerCase() === 'ai') entry.conceived++;
     if (r.calf_status && r.calf_status.toLowerCase() !== 'open') {
       entry.withCalf++;
       if (r.calf_status.toLowerCase() === 'alive') entry.alive++;
       if (r.calf_bw != null && r.calf_bw > 0) entry.bws.push(r.calf_bw);
     }
-
     sireMap.set(sire, entry);
   });
-
   const rows: SireRow[] = [];
   sireMap.forEach((data, sire) => {
-    if (data.aiDates < minRecords) return;
+    if (data.aiDates < 10) return;
     const rate = Math.round((data.conceived / data.aiDates) * 1000) / 10;
     const avgBW = data.bws.length > 0 ? Math.round(data.bws.reduce((a, b) => a + b, 0) / data.bws.length) : 0;
     const survivalRate = data.withCalf > 0 ? Math.round((data.alive / data.withCalf) * 1000) / 10 : 0;
-    rows.push({ sire, rate, sampleSize: data.aiDates, avgBW, survivalRate, badge: getBadge(rate) });
+    rows.push({ sire, rate, sampleSize: data.aiDates, avgBW, survivalRate });
   });
-
   return rows;
 }
+
 
 type CombinedSortKey = 'rate1st' | 'rate2nd' | 'n1st' | 'avgBW';
 
