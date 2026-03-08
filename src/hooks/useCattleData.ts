@@ -61,10 +61,17 @@ export function useBreedingCalvingRecords() {
 export function useUltrasoundRecords(lifetimeId?: string) {
   return useQuery({
     queryKey: ['ultrasound_records', lifetimeId],
-    queryFn: () =>
-      lifetimeId
-        ? fetchAllRows<UltrasoundRecord>('ultrasound', { column: 'lifetime_id', value: lifetimeId })
-        : fetchAllRows<UltrasoundRecord>('ultrasound'),
+    queryFn: async () => {
+      try {
+        const result = lifetimeId
+          ? await fetchAllRows<UltrasoundRecord>('ultrasound', { column: 'lifetime_id', value: lifetimeId })
+          : await fetchAllRows<UltrasoundRecord>('ultrasound');
+        return result;
+      } catch {
+        // ultrasound table may not exist
+        return [] as UltrasoundRecord[];
+      }
+    },
     enabled: lifetimeId !== undefined,
   });
 }
@@ -73,9 +80,9 @@ export function useAnimal(lifetimeId: string) {
   return useQuery({
     queryKey: ['animal', lifetimeId],
     queryFn: async () => {
-      const { data, error } = await supabase.from('animals').select('*').eq('lifetime_id', lifetimeId).single();
+      const { data, error } = await supabase.from('animals').select('*').eq('lifetime_id', lifetimeId).maybeSingle();
       if (error) throw error;
-      return data as unknown as Animal;
+      return data as unknown as Animal | null;
     },
     enabled: !!lifetimeId,
   });
@@ -93,15 +100,19 @@ export function useRecordCounts() {
   return useQuery({
     queryKey: ['record_counts'],
     queryFn: async () => {
-      const [animals, bcr, ultrasound] = await Promise.all([
+      const [animals, bcr] = await Promise.all([
         supabase.from('animals').select('*', { count: 'exact', head: true }),
         supabase.from('blair_combined').select('*', { count: 'exact', head: true }),
-        (supabase.from as any)('ultrasound').select('*', { count: 'exact', head: true }),
       ]);
+      let ultrasoundCount = 0;
+      try {
+        const ultrasound = await (supabase.from as any)('ultrasound').select('*', { count: 'exact', head: true });
+        ultrasoundCount = ultrasound.count ?? 0;
+      } catch { /* table may not exist */ }
       return {
         animals: animals.count ?? 0,
         breeding_calving: bcr.count ?? 0,
-        ultrasound: ultrasound.count ?? 0,
+        ultrasound: ultrasoundCount,
       };
     },
   });
