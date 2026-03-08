@@ -266,7 +266,7 @@ export default function CowDetail() {
                   {sortedUltrasound.map((r, i) => (
                     <TableRow key={i} className="border-border text-[13px]" style={{ backgroundColor: i % 2 === 1 ? '#0E1528' : undefined }}>
                       <TableCell className="text-xs">{r.ultrasound_date ?? '—'}</TableCell><TableCell className={pregColor(r.preg_stage)}>{r.preg_stage ?? '—'}</TableCell>
-                      <TableCell>{r.dog ?? '—'}</TableCell><TableCell>{r.calf_sex ?? '—'}</TableCell><TableCell className="text-xs text-muted-foreground">{r.notes ?? '—'}</TableCell>
+                      <TableCell>{r.dog ?? '—'}</TableCell><TableCell>{r.fetal_sex ?? '—'}</TableCell><TableCell className="text-xs text-muted-foreground">{r.ultrasound_notes ?? '—'}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
