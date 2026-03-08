@@ -56,10 +56,21 @@ export default function SireAnalysis() {
   // Dynamic herd average 1st service rate: COUNT(preg_stage='AI') / COUNT(ai_date_1 IS NOT NULL)
   const herdAvg1stService = useMemo(() => {
     if (!records) return 0;
-    const withAiDate1 = records.filter(r => r.ai_date_1 != null);
+    const blair = records.filter(r => (r as any).operation === 'Blair');
+    const withAiDate1 = blair.filter(r => r.ai_date_1 != null);
     if (withAiDate1.length === 0) return 0;
     const aiConceived = withAiDate1.filter(r => r.preg_stage?.toLowerCase() === 'ai').length;
     return Math.round((aiConceived / withAiDate1.length) * 1000) / 10;
+  }, [records]);
+
+  // Dynamic herd average 2nd service rate
+  const herdAvg2ndService = useMemo(() => {
+    if (!records) return { rate: 0, count: 0 };
+    const blair = records.filter(r => (r as any).operation === 'Blair');
+    const withAiDate2 = blair.filter(r => r.ai_date_2 != null);
+    if (withAiDate2.length === 0) return { rate: 0, count: 0 };
+    const conceived = withAiDate2.filter(r => r.preg_stage?.toLowerCase() === 'second ai').length;
+    return { rate: Math.round((conceived / withAiDate2.length) * 1000) / 10, count: withAiDate2.length };
   }, [records]);
 
   const topPerformer = useMemo(() => {
