@@ -109,7 +109,7 @@ export default function BreedingTab() {
       if (!r.ai_date_1 || !r.ai_sire_1) return;
       const entry = bySire.get(r.ai_sire_1) || { total: 0, ai: 0 };
       entry.total++;
-      if (r.preg_stage === 'AI') entry.ai++;
+      if (r.preg_stage?.toLowerCase().trim() === 'ai') entry.ai++;
       bySire.set(r.ai_sire_1, entry);
     });
     return Array.from(bySire.entries())
