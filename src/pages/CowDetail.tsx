@@ -76,6 +76,7 @@ function calfStatusColor(status: string | null) {
 }
 
 export default function CowDetail() {
+  const navigate = useNavigate();
   const { lifetime_id } = useParams<{ lifetime_id: string }>();
   const decodedId = decodeURIComponent(lifetime_id || '');
   const { data: animal, isLoading: la, error: animalError } = useAnimal(decodedId);
