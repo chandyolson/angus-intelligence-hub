@@ -238,6 +238,15 @@ export default function SireAnalysis() {
   const firstServiceRows = useMemo(() => records ? computeServiceTable(records, '1st') : [], [records]);
   const secondServiceRows = useMemo(() => records ? computeServiceTable(records, '2nd') : [], [records]);
 
+  // Dynamic herd average 1st service rate: COUNT(preg_stage='AI') / COUNT(ai_date_1 IS NOT NULL)
+  const herdAvg1stService = useMemo(() => {
+    if (!records) return 0;
+    const withAiDate1 = records.filter(r => r.ai_date_1 != null);
+    if (withAiDate1.length === 0) return 0;
+    const aiConceived = withAiDate1.filter(r => r.preg_stage?.toLowerCase() === 'ai').length;
+    return Math.round((aiConceived / withAiDate1.length) * 1000) / 10;
+  }, [records]);
+
   const topPerformer = useMemo(() => {
     const eligible = firstServiceRows.filter(s => s.sampleSize >= 25);
     if (eligible.length === 0) return null;
@@ -245,7 +254,7 @@ export default function SireAnalysis() {
   }, [firstServiceRows]);
 
   const mostUsedBelowAvg = useMemo(() => {
-    const eligible = firstServiceRows.filter(s => s.rate < 88);
+    const eligible = firstServiceRows.filter(s => s.rate < 55);
     if (eligible.length === 0) return null;
     return eligible.reduce((a, b) => a.sampleSize > b.sampleSize ? a : b);
   }, [firstServiceRows]);
