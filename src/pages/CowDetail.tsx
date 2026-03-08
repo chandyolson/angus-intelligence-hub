@@ -80,7 +80,19 @@ export default function CowDetail() {
   const decodedId = decodeURIComponent(lifetime_id || '');
   const { data: animal, isLoading: la, error: animalError } = useAnimal(decodedId);
   const { data: calvingRecords, isLoading: lr, error: calvingError } = useCowBreedingRecords(decodedId);
-  const { data: ultrasoundRecords, isLoading: lu, error: ultraError } = useUltrasoundRecords(decodedId);
+  // Derive ultrasound records from blair_combined data
+  const ultrasoundRecords = useMemo(() => {
+    if (!calvingRecords) return [];
+    return calvingRecords
+      .filter(r => r.ultrasound_date)
+      .map(r => ({
+        ultrasound_date: r.ultrasound_date,
+        preg_stage: r.preg_stage,
+        dog: r.dog,
+        fetal_sex: r.fetal_sex,
+        ultrasound_notes: r.ultrasound_notes,
+      }));
+  }, [calvingRecords]);
   const { data: allRecords } = useBreedingCalvingRecords();
   const { data: activeAnimals } = useActiveAnimals('Blair');
 
