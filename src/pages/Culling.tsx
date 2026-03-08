@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Scissors, Download, AlertTriangle, Eye, Activity, Search, ArrowUpDown } from 'lucide-react';
-import { useActiveAnimals, useBlairCombined } from '@/hooks/useCattleData';
+import { Scissors, Download, Search, ArrowUpDown, GitBranch } from 'lucide-react';
+import { useActiveAnimals, useAnimals, useBlairCombined } from '@/hooks/useCattleData';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, ResponsiveContainer, Cell, Line, ComposedChart, Scatter } from 'recharts';
 import { exportToCSV } from '@/lib/calculations';
 import { useNavigate } from 'react-router-dom';
 
@@ -48,6 +49,7 @@ function linearSlope(ys: number[]): number {
 
 export default function Culling() {
   const { data: animals, isLoading: loadingAnimals } = useActiveAnimals();
+  const { data: allAnimals } = useAnimals();
   const { data: records, isLoading: loadingRecords } = useBlairCombined();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
@@ -341,6 +343,130 @@ export default function Culling() {
           )}
         </CardContent>
       </Card>
+
+      {/* Sire Line Longevity */}
+      <SireLineLongevity allAnimals={allAnimals} records={records} currentYear={currentYear} />
     </div>
+  );
+}
+
+function SireLineLongevity({ allAnimals, records, currentYear }: {
+  allAnimals: any[] | undefined;
+  records: any[] | undefined;
+  currentYear: number;
+}) {
+  const data = useMemo(() => {
+    if (!allAnimals || !records) return [];
+
+    // Count lifetime calves per cow from blair_combined
+    const calvesByLid = new Map<string, number>();
+    records.forEach(r => {
+      if (!r.lifetime_id || !r.calving_date) return;
+      calvesByLid.set(r.lifetime_id, (calvesByLid.get(r.lifetime_id) || 0) + 1);
+    });
+
+    // Last ultrasound year per cow (for inactive cows as proxy for last active year)
+    const lastUltraYear = new Map<string, number>();
+    records.forEach(r => {
+      if (!r.lifetime_id || !r.breeding_year) return;
+      const prev = lastUltraYear.get(r.lifetime_id) || 0;
+      if (r.breeding_year > prev) lastUltraYear.set(r.lifetime_id, r.breeding_year);
+    });
+
+    // Group by sire
+    const bySire = new Map<string, typeof allAnimals>();
+    allAnimals.forEach(a => {
+      if (!a.sire || !a.year_born) return;
+      const arr = bySire.get(a.sire) || [];
+      arr.push(a);
+      bySire.set(a.sire, arr);
+    });
+
+    const rows: { sire: string; avgTenure: number; avgCalves: number; pctActive: number; count: number }[] = [];
+
+    bySire.forEach((cows, sire) => {
+      if (cows.length < 10) return;
+
+      let tenureSum = 0;
+      let calvesSum = 0;
+      let activeCount = 0;
+
+      cows.forEach((c: any) => {
+        const isActive = c.status?.toLowerCase() === 'active';
+        if (isActive) {
+          tenureSum += currentYear - c.year_born;
+          activeCount++;
+        } else {
+          const lastYear = lastUltraYear.get(c.lifetime_id ?? '') || currentYear;
+          tenureSum += lastYear - c.year_born;
+        }
+        calvesSum += calvesByLid.get(c.lifetime_id ?? '') || 0;
+      });
+
+      rows.push({
+        sire,
+        avgTenure: Math.round((tenureSum / cows.length) * 10) / 10,
+        avgCalves: Math.round((calvesSum / cows.length) * 10) / 10,
+        pctActive: Math.round((activeCount / cows.length) * 100),
+        count: cows.length,
+      });
+    });
+
+    return rows.sort((a, b) => b.avgTenure - a.avgTenure);
+  }, [allAnimals, records, currentYear]);
+
+  if (!data.length) return null;
+
+  // Determine color thresholds using medians
+  const medTenure = [...data].sort((a, b) => a.avgTenure - b.avgTenure)[Math.floor(data.length / 2)]?.avgTenure ?? 5;
+  const medCalves = [...data].sort((a, b) => a.avgCalves - b.avgCalves)[Math.floor(data.length / 2)]?.avgCalves ?? 3;
+
+  const getColor = (row: typeof data[0]) => {
+    if (row.avgTenure >= medTenure && row.avgCalves >= medCalves) return '#22c55e'; // green
+    if (row.avgTenure < medTenure && row.avgCalves < medCalves) return '#ef4444'; // red
+    return '#eab308'; // yellow
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <GitBranch className="h-5 w-5 text-primary" /> Cow Sire Line Longevity
+        </CardTitle>
+        <p className="text-sm text-muted-foreground">
+          Average herd tenure and lifetime calves by sire line (min 10 daughters). Green = high tenure + high calves. Red = short tenure + few calves.
+        </p>
+      </CardHeader>
+      <CardContent>
+        <ResponsiveContainer width="100%" height={Math.max(400, data.length * 36)}>
+          <ComposedChart layout="vertical" data={data} margin={{ top: 5, right: 40, left: 10, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <XAxis type="number" domain={[0, 'auto']} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} label={{ value: 'Avg Tenure (yrs)', position: 'insideBottom', offset: -2, fill: 'hsl(var(--muted-foreground))' }} />
+            <YAxis dataKey="sire" type="category" width={130} tick={{ fill: 'hsl(var(--foreground))', fontSize: 11 }} />
+            <RTooltip
+              contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8 }}
+              labelStyle={{ color: 'hsl(var(--foreground))' }}
+              formatter={(value: any, name: string) => {
+                if (name === 'avgTenure') return [`${value} yrs`, 'Avg Tenure'];
+                if (name === 'avgCalves') return [value, 'Avg Calves'];
+                return [value, name];
+              }}
+            />
+            <Bar dataKey="avgTenure" barSize={20} radius={[0, 4, 4, 0]}
+              label={({ x, y, width, value, index }: any) => (
+                <text x={x + width + 4} y={y + 14} fill="hsl(var(--muted-foreground))" fontSize={10}>
+                  n={data[index]?.count} | {data[index]?.pctActive}% active
+                </text>
+              )}
+            >
+              {data.map((row, i) => (
+                <Cell key={i} fill={getColor(row)} fillOpacity={0.75} />
+              ))}
+            </Bar>
+            <Scatter dataKey="avgCalves" fill="hsl(var(--foreground))" shape="circle" legendType="circle" />
+          </ComposedChart>
+        </ResponsiveContainer>
+      </CardContent>
+    </Card>
   );
 }
