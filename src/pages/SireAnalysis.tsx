@@ -358,29 +358,21 @@ export default function SireAnalysis() {
                         <p className="text-primary font-medium">{d.name}</p>
                         <p className="text-muted-foreground">Gestation: {d.gestation} days</p>
                         <p className="text-muted-foreground">Avg BW: {d.bw} lbs</p>
+                        <p className="text-muted-foreground">Survival: {d.survivalPct != null ? `${d.survivalPct}%` : '—'}</p>
                         <p className="text-muted-foreground">Calves: {d.count}</p>
                       </div>
                     );
                   }}
                 />
-                <Scatter data={scatterData.points.map(p => ({
-                  ...p,
-                  fill: p.gestation >= scatterData.herdAvgGest && p.bw >= scatterData.herdAvgBW
-                    ? 'hsl(0, 72%, 51%)'
-                    : p.gestation < scatterData.herdAvgGest && p.bw < scatterData.herdAvgBW
-                      ? 'hsl(142, 71%, 45%)'
-                      : 'hsl(48, 96%, 53%)',
-                }))} fill="hsl(var(--primary))">
-                  {scatterData.points.map((p, i) => (
-                    <Cell key={i} fill={
-                      p.gestation >= scatterData.herdAvgGest && p.bw >= scatterData.herdAvgBW
-                        ? 'hsl(0, 72%, 51%)'
-                        : p.gestation < scatterData.herdAvgGest && p.bw < scatterData.herdAvgBW
-                          ? 'hsl(142, 71%, 45%)'
-                          : 'hsl(48, 96%, 53%)'
-                    } />
-                  ))}
-                  
+                <Scatter data={scatterData.points} fill="hsl(var(--primary))">
+                  {scatterData.points.map((p, i) => {
+                    const fill = p.survivalPct == null
+                      ? 'hsl(var(--muted-foreground))'
+                      : p.survivalPct >= 100 ? 'hsl(142, 71%, 45%)'
+                      : p.survivalPct >= 97 ? 'hsl(48, 96%, 53%)'
+                      : 'hsl(0, 72%, 51%)';
+                    return <Cell key={i} fill={fill} />;
+                  })}
                 </Scatter>
               </ScatterChart>
             </ResponsiveContainer>
