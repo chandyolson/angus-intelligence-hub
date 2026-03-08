@@ -403,23 +403,8 @@ export default function SireAnalysis() {
         )}
       </div>
 
-      {/* 1st Service Table */}
-      <SireServiceTable
-        title="First Service AI Rate"
-        rows={firstServiceRows}
-        sortKey={sort1st.key}
-        sortAsc={sort1st.asc}
-        onSort={handleSort1st}
-      />
-
-      {/* 2nd Service Table */}
-      <SireServiceTable
-        title="Second Service AI Rate"
-        rows={secondServiceRows}
-        sortKey={sort2nd.key}
-        sortAsc={sort2nd.asc}
-        onSort={handleSort2nd}
-      />
+      {/* Combined Service Table */}
+      <CombinedSireTable firstRows={firstServiceRows} secondRows={secondServiceRows} />
 
       {/* Gestation Length by Sire */}
       {gestationData.length > 0 && (
