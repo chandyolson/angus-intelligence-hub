@@ -58,7 +58,7 @@ export function MissingRecordGaps() {
     });
 
     const results: GapRecord[] = [];
-    const pregnantStages = new Set(['AI', 'Second AI', 'Early', 'Middle', 'Late', 'Short', 'Medium', 'Long']);
+    const pregnantStages = new Set(['ai', 'second ai', 'early', 'middle', 'late', 'very late', 'short', 'medium', 'long']);
 
     activeLids.forEach(lid => {
       const tag = tagMap.get(lid) ?? '—';
