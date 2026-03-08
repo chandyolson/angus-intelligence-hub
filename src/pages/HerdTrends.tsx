@@ -164,6 +164,30 @@ export default function HerdTrends() {
     return { openByYearGroup: chartData, openGroups: sortedGroups, openYears: sortedYears, openGroupTable: tableRows };
   }, [records]);
 
+  // ── Cow Sire (Dam Line) Distribution ──
+  const damSireData = useMemo(() => {
+    if (!animals) return [];
+    const blairActive = animals.filter(a => a.operation === 'Blair' && a.status?.toLowerCase() === 'active');
+    const countMap = new Map<string, number>();
+    let otherCount = 0;
+
+    blairActive.forEach(a => {
+      const ds = a.dam_sire?.trim();
+      if (!ds) return;
+      countMap.set(ds, (countMap.get(ds) || 0) + 1);
+    });
+
+    const rows: { name: string; count: number }[] = [];
+    countMap.forEach((count, name) => {
+      if (count >= 5) rows.push({ name, count });
+      else otherCount += count;
+    });
+
+    rows.sort((a, b) => b.count - a.count);
+    if (otherCount > 0) rows.push({ name: 'Other', count: otherCount });
+    return rows;
+  }, [animals]);
+
   const CHART_COLORS = ['#22c55e', '#3b82f6', '#f97316', '#a855f7', '#eab308', '#ec4899', '#14b8a6', '#f43f5e'];
 
   if (lr || la) return (
