@@ -85,7 +85,7 @@ function buildCowRows(animals: Animal[], records: BreedingCalvingRecord[]): CowR
 export default function CowRoster() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('Active');
   const [yearFilter, setYearFilter] = useState('all');
   const [sireFilter, setSireFilter] = useState('all');
   const [operationFilter, setOperationFilter] = useState('Blair');
