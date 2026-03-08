@@ -88,15 +88,17 @@ export default function BirthWeight() {
     };
   }, [records, tagMap]);
 
-  // Section 4: BW by Year
+  // Section 4: BW by Calving Year
   const yearData = useMemo(() => {
     if (!records) return [];
     const map = new Map<number, number[]>();
     records.forEach(r => {
-      if (!r.breeding_year || r.calf_bw == null || r.calf_bw <= 0) return;
-      const arr = map.get(r.breeding_year) || [];
+      if (!r.calving_date || r.calf_bw == null || r.calf_bw <= 0) return;
+      const calvingYear = new Date(r.calving_date).getFullYear();
+      if (isNaN(calvingYear)) return;
+      const arr = map.get(calvingYear) || [];
       arr.push(r.calf_bw);
-      map.set(r.breeding_year, arr);
+      map.set(calvingYear, arr);
     });
     return [...map.entries()]
       .sort(([a], [b]) => a - b)
@@ -170,7 +172,7 @@ export default function BirthWeight() {
           <CardTitle className="flex items-center gap-2">
             <Weight className="h-5 w-5 text-primary" /> Birth Weight by Year
           </CardTitle>
-          <p className="text-sm text-muted-foreground">Herd average calf birth weight trend over time.</p>
+          <p className="text-sm text-muted-foreground">Herd average calf birth weight trend by calving year.</p>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={320}>
