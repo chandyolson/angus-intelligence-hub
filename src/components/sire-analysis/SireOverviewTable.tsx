@@ -256,7 +256,7 @@ export default function SireOverviewTable({ records }: { records: BreedingCalvin
       <CardContent className="p-0">
         <div className="max-h-[600px] overflow-auto">
           <Table>
-            <TableHeader>
+            <TableHeader className="sticky top-0 z-10">
               <TableRow className="bg-sidebar border-border hover:bg-sidebar">
                 {columns.map(col => (
                   <TableHead
