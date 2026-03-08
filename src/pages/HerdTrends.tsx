@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
 import { ShimmerSkeleton } from '@/components/ui/shimmer-skeleton';
 import { ErrorBox } from '@/components/ui/error-box';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LabelList, Line, ComposedChart } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LabelList, Line, ComposedChart, Legend } from 'recharts';
 
 function normalize(sex: string | null): string | null {
   if (!sex) return null;
