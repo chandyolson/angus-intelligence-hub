@@ -107,12 +107,18 @@ function buildCowRows(animals: Animal[], records: BreedingCalvingRecord[]): CowR
 }
 
 export default function CowRoster() {
+  const { operation: globalOperation } = useOperation();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('Active');
   const [yearFilter, setYearFilter] = useState('all');
   const [sireFilter, setSireFilter] = useState('all');
-  const [operationFilter, setOperationFilter] = useState('Blair');
+  const [operationFilter, setOperationFilter] = useState(globalOperation === 'Both' ? 'all' : globalOperation);
+  // Sync local filter with global operation changes
+  useEffect(() => {
+    setOperationFilter(globalOperation === 'Both' ? 'all' : globalOperation);
+    setPage(0);
+  }, [globalOperation]);
   const [sortKey, setSortKey] = useState<SortKey>('composite_score');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [page, setPage] = useState(0);
