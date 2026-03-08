@@ -4,7 +4,7 @@ import { BreedingCalvingRecord } from '@/types/cattle';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ShimmerSkeleton } from '@/components/ui/shimmer-skeleton';
 import { ErrorBox } from '@/components/ui/error-box';
-import { Trophy, AlertTriangle } from 'lucide-react';
+import { Trophy, AlertTriangle, TrendingUp } from 'lucide-react';
 import AdvancedSireSection from '@/components/sire-analysis/AdvancedSireSection';
 import SireOverviewTable from '@/components/sire-analysis/SireOverviewTable';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ReferenceArea, ResponsiveContainer, Cell, ScatterChart, Scatter, ZAxis, LabelList, ComposedChart, Line } from 'recharts';
