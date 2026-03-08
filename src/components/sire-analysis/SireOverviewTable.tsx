@@ -167,6 +167,7 @@ const MIN_METRIC = 5;
 const columns: { key: SortKey; label: string }[] = [
   { key: 'sire', label: 'Sire Name' },
   { key: 'totalUses', label: 'Total Uses' },
+  { key: 'totalCalves', label: 'Calves Born' },
   { key: 'rate1st', label: '1st Service %' },
   { key: 'rate2nd', label: '2nd Service %' },
   { key: 'overallRate', label: 'Overall AI %' },
