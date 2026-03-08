@@ -325,7 +325,9 @@ export default function SireOverviewTable({ records }: { records: BreedingCalvin
 
                   {/* Grade */}
                   <TableCell>
-                    <Badge variant="outline" className={`text-[10px] ${gradeStyle(r.gradeLetter)}`}>{r.gradeLetter}</Badge>
+                    {r.gradeLetter !== '—' ? (
+                      <Badge variant="outline" className={`text-[10px] ${gradeStyle(r.gradeLetter)}`}>{r.gradeLetter}</Badge>
+                    ) : <span className="text-muted-foreground">—</span>}
                   </TableCell>
                 </TableRow>
               ))}
