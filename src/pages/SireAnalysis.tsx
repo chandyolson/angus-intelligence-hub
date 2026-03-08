@@ -326,36 +326,36 @@ export default function SireAnalysis() {
     return n > 0 ? Math.round((total / n) * 10) / 10 : 0;
   }, [bwData]);
 
-  // Scatter: gestation vs BW
+  // Scatter: gestation vs BW (Blair only, calf_sire, 260-295 gestation range)
   const scatterData = useMemo(() => {
-    if (!records) return [];
+    if (!records) return { points: [], herdAvgGest: 0, herdAvgBW: 0 };
     const sireMap = new Map<string, { gests: number[]; bws: number[] }>();
     records.forEach(r => {
+      if ((r as any).operation !== 'Blair') return;
       const sire = r.calf_sire;
-      if (!sire || sire.toLowerCase().includes('cleanup')) return;
-      let gd = r.gestation_days;
-      if (gd == null || gd < 250 || gd > 310) {
-        if (r.calving_date && r.ai_date_1 && r.preg_stage?.toLowerCase() === 'ai') {
-          const diff = Math.round((new Date(r.calving_date).getTime() - new Date(r.ai_date_1).getTime()) / 86400000);
-          if (diff >= 250 && diff <= 310) gd = diff;
-        }
-      }
+      if (!sire) return;
+      const gd = r.gestation_days;
+      if (gd == null || gd < 260 || gd > 295) return;
+      if (r.calf_bw == null || r.calf_bw <= 0) return;
       const entry = sireMap.get(sire) || { gests: [], bws: [] };
-      if (gd != null && gd >= 250 && gd <= 310) entry.gests.push(gd);
-      if (r.calf_bw != null && r.calf_bw > 0) entry.bws.push(r.calf_bw);
+      entry.gests.push(gd);
+      entry.bws.push(r.calf_bw);
       sireMap.set(sire, entry);
     });
-    const rows: { name: string; gestation: number; bw: number; count: number }[] = [];
+    const points: { name: string; gestation: number; bw: number; count: number }[] = [];
+    let allGest = 0, allBW = 0, allN = 0;
     sireMap.forEach((data, sire) => {
-      if (data.gests.length < 10 || data.bws.length < 10) return;
-      rows.push({
-        name: sire,
-        gestation: Math.round((data.gests.reduce((a, b) => a + b, 0) / data.gests.length) * 10) / 10,
-        bw: Math.round((data.bws.reduce((a, b) => a + b, 0) / data.bws.length) * 10) / 10,
-        count: data.gests.length,
-      });
+      if (data.gests.length < 10) return;
+      const avgG = Math.round((data.gests.reduce((a, b) => a + b, 0) / data.gests.length) * 10) / 10;
+      const avgB = Math.round((data.bws.reduce((a, b) => a + b, 0) / data.bws.length) * 10) / 10;
+      points.push({ name: sire, gestation: avgG, bw: avgB, count: data.gests.length });
+      allGest += avgG * data.gests.length;
+      allBW += avgB * data.bws.length;
+      allN += data.gests.length;
     });
-    return rows;
+    const herdAvgGest = allN > 0 ? Math.round((allGest / allN) * 10) / 10 : 0;
+    const herdAvgBW = allN > 0 ? Math.round((allBW / allN) * 10) / 10 : 0;
+    return { points, herdAvgGest, herdAvgBW };
   }, [records]);
 
   if (isLoading) return (
