@@ -34,9 +34,8 @@ interface CombinedSireRow {
 
 
 const rateColor = (rate: number) => {
-  if (rate >= 95) return 'hsl(142, 71%, 45%)';
-  if (rate >= 88) return 'hsl(82, 85%, 45%)';
-  if (rate >= 80) return 'hsl(48, 96%, 53%)';
+  if (rate >= 70) return 'hsl(142, 71%, 45%)';
+  if (rate >= 55) return 'hsl(48, 96%, 53%)';
   return 'hsl(0, 72%, 51%)';
 };
 
