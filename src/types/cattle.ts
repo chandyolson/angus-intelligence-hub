@@ -150,6 +150,7 @@ export interface BlairCombinedRecord {
   ultrasound_notes: string | null;
   memo: string | null;
   group: string | null;
+  ultrasound_group: string | null;
   project_record_id: string | null;
   gestation_days: number | null;
 }
