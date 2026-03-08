@@ -116,7 +116,7 @@ export function AppSidebar() {
                     <span className="flex-1 text-left">{section.title}</span>
                     <ChevronDown className={cn('h-3.5 w-3.5 transition-transform duration-200', isOpen && 'rotate-180')} />
                   </button>
-                  <div className={cn('overflow-hidden transition-all duration-200', isOpen ? 'max-h-40' : 'max-h-0')}>
+                  <div className={cn('overflow-hidden transition-all duration-200', isOpen ? 'max-h-60' : 'max-h-0')}>
                     <div className="ml-4 pl-3 border-l border-border/50 space-y-0.5 py-1">
                       {section.children.map(child => renderItem(child.url, child.icon, child.title))}
                     </div>
