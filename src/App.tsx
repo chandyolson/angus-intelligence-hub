@@ -11,6 +11,14 @@ import Rankings from "@/pages/Rankings";
 import SireAnalysis from "@/pages/SireAnalysis";
 import AIAssistant from "@/pages/AIAssistant";
 import DataQuality from "@/pages/DataQuality";
+import CalvingInterval from "@/pages/CalvingInterval";
+import OpenCows from "@/pages/OpenCows";
+import HerdTrends from "@/pages/HerdTrends";
+import Gestation from "@/pages/Gestation";
+import BirthWeight from "@/pages/BirthWeight";
+import Culling from "@/pages/Culling";
+import Replacements from "@/pages/Replacements";
+import Reconciliation from "@/pages/Reconciliation";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +38,14 @@ const App = () => (
             <Route path="/sires" element={<SireAnalysis />} />
             <Route path="/assistant" element={<AIAssistant />} />
             <Route path="/data-quality" element={<DataQuality />} />
+            <Route path="/calving-interval" element={<CalvingInterval />} />
+            <Route path="/open-cows" element={<OpenCows />} />
+            <Route path="/herd-trends" element={<HerdTrends />} />
+            <Route path="/gestation" element={<Gestation />} />
+            <Route path="/birth-weight" element={<BirthWeight />} />
+            <Route path="/culling" element={<Culling />} />
+            <Route path="/replacements" element={<Replacements />} />
+            <Route path="/reconciliation" element={<Reconciliation />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Layout>

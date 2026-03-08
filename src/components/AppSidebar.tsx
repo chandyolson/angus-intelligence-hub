@@ -1,26 +1,73 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LayoutDashboard, List, Trophy, FlaskConical, Menu, X, Bot, ShieldAlert } from 'lucide-react';
+import {
+  LayoutDashboard, ShieldAlert, FlaskConical, Beef, TrendingUp,
+  Baby, Weight, Scissors, HeartPulse, Users, Menu, X, ChevronDown,
+  Bot, BarChart3, Clock, Ban,
+} from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useRecordCounts } from '@/hooks/useCattleData';
+import { useDataQualityCount } from '@/hooks/useDataQualityCount';
+import { cn } from '@/lib/utils';
 
-const navItems = [
-  { title: 'Dashboard', url: '/', icon: LayoutDashboard },
-  { title: 'Cow Roster', url: '/roster', icon: List },
-  { title: 'Rankings & Culling', url: '/rankings', icon: Trophy },
-  { title: 'Sire Analysis', url: '/sires', icon: FlaskConical },
-  { title: 'Data Quality', url: '/data-quality', icon: ShieldAlert },
-  { title: 'AI Assistant', url: '/assistant', icon: Bot },
-];
+interface NavSection {
+  title: string;
+  icon: React.ElementType;
+  url?: string;
+  badge?: number;
+  badgeColor?: string;
+  children?: { title: string; url: string; icon: React.ElementType }[];
+}
 
 export function AppSidebar() {
   const { data: counts } = useRecordCounts();
+  const qualityCount = useDataQualityCount();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({ 'Cow Performance': true });
   const navigate = useNavigate();
+
+  const sections: NavSection[] = [
+    { title: 'Overview', icon: LayoutDashboard, url: '/' },
+    { title: 'Data Quality', icon: ShieldAlert, url: '/data-quality', badge: qualityCount, badgeColor: 'bg-destructive text-destructive-foreground' },
+    { title: 'Sire Analysis', icon: FlaskConical, url: '/sires' },
+    {
+      title: 'Cow Performance', icon: Beef,
+      children: [
+        { title: 'Composite Score', url: '/rankings', icon: BarChart3 },
+        { title: 'Calving Interval', url: '/calving-interval', icon: Clock },
+        { title: 'Open Cows', url: '/open-cows', icon: Ban },
+      ],
+    },
+    { title: 'Herd Trends', icon: TrendingUp, url: '/herd-trends' },
+    { title: 'Gestation', icon: HeartPulse, url: '/gestation' },
+    { title: 'Birth Weight', icon: Weight, url: '/birth-weight' },
+    { title: 'Culling & Retention', icon: Scissors, url: '/culling' },
+    { title: 'Replacement Heifers', icon: Baby, url: '/replacements' },
+    { title: 'Group Reconciliation', icon: Users, url: '/reconciliation' },
+  ];
+
+  const toggle = (title: string) =>
+    setOpenSections(prev => ({ ...prev, [title]: !prev[title] }));
+
+  const renderItem = (url: string, icon: React.ElementType, title: string) => {
+    const Icon = icon;
+    return (
+      <NavLink
+        key={url}
+        to={url}
+        end={url === '/'}
+        className="flex items-center gap-3 px-3 py-2 rounded-md text-[13px] text-muted-foreground hover:bg-hover hover:text-foreground transition-colors"
+        activeClassName="!bg-primary/10 !text-primary border-l-2 !border-primary font-medium"
+        onClick={() => setMobileOpen(false)}
+      >
+        <Icon className="h-4 w-4 shrink-0" />
+        <span>{title}</span>
+      </NavLink>
+    );
+  };
 
   return (
     <>
-      {/* Mobile hamburger */}
       <button
         onClick={() => setMobileOpen(true)}
         className="fixed top-3 left-3 z-[60] p-2 rounded-md bg-sidebar text-foreground border border-border lg:hidden"
@@ -29,18 +76,17 @@ export function AppSidebar() {
         <Menu className="h-5 w-5" />
       </button>
 
-      {/* Overlay for mobile */}
       {mobileOpen && (
         <div className="fixed inset-0 bg-black/50 z-[55] lg:hidden" onClick={() => setMobileOpen(false)} />
       )}
 
-      <aside className={`
-        fixed left-0 top-0 h-screen flex flex-col z-[60] border-r border-border transition-all duration-200
-        w-[220px]
-        max-lg:${mobileOpen ? 'translate-x-0' : '-translate-x-full'}
-        lg:translate-x-0
-      `} style={{ background: 'linear-gradient(180deg, hsl(224, 52%, 8%) 0%, hsl(190, 40%, 12%) 60%, hsl(40, 50%, 14%) 100%)' }}>
-        {/* Mobile close */}
+      <aside
+        className={cn(
+          'fixed left-0 top-0 h-screen flex flex-col z-[60] border-r border-border transition-all duration-200 w-[220px]',
+          mobileOpen ? 'translate-x-0' : 'max-lg:-translate-x-full lg:translate-x-0',
+        )}
+        style={{ background: 'linear-gradient(180deg, hsl(224, 52%, 8%) 0%, hsl(190, 40%, 12%) 60%, hsl(40, 50%, 14%) 100%)' }}
+      >
         <button
           onClick={() => setMobileOpen(false)}
           className="absolute top-3 right-3 p-1 rounded text-muted-foreground hover:text-foreground lg:hidden"
@@ -50,29 +96,53 @@ export function AppSidebar() {
 
         {/* Branding */}
         <div className="px-5 py-6 border-b border-border cursor-pointer" onClick={() => navigate('/')}>
-          <div className="flex items-center gap-2">
-            <div>
-              <h1 className="text-lg font-bold text-primary leading-tight drop-shadow-[0_0_8px_hsl(40,63%,49%,0.6)]">AI²</h1>
-              <p className="text-[10px] text-muted-foreground tracking-wide uppercase">Blair Bros Angus</p>
-            </div>
-          </div>
+          <h1 className="text-lg font-bold text-primary leading-tight drop-shadow-[0_0_8px_hsl(40,63%,49%,0.6)]">AI²</h1>
+          <p className="text-[10px] text-muted-foreground tracking-wide uppercase">Blair Bros Angus</p>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-3 py-4 space-y-1">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.url}
-              to={item.url}
-              end={item.url === '/'}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm text-muted-foreground hover:bg-hover hover:text-foreground transition-colors"
-              activeClassName="!bg-primary/10 !text-primary border-l-2 !border-primary font-medium"
-              onClick={() => setMobileOpen(false)}
-            >
-              <item.icon className="h-4 w-4 shrink-0" />
-              <span>{item.title}</span>
-            </NavLink>
-          ))}
+        <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto scrollbar-thin">
+          {sections.map((section) => {
+            if (section.children) {
+              const isOpen = openSections[section.title] ?? false;
+              return (
+                <div key={section.title}>
+                  <button
+                    onClick={() => toggle(section.title)}
+                    className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-[13px] text-muted-foreground hover:bg-hover hover:text-foreground transition-colors"
+                  >
+                    <section.icon className="h-4 w-4 shrink-0" />
+                    <span className="flex-1 text-left">{section.title}</span>
+                    <ChevronDown className={cn('h-3.5 w-3.5 transition-transform duration-200', isOpen && 'rotate-180')} />
+                  </button>
+                  <div className={cn('overflow-hidden transition-all duration-200', isOpen ? 'max-h-40' : 'max-h-0')}>
+                    <div className="ml-4 pl-3 border-l border-border/50 space-y-0.5 py-1">
+                      {section.children.map(child => renderItem(child.url, child.icon, child.title))}
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
+            return (
+              <div key={section.title} className="relative">
+                {renderItem(section.url!, section.icon, section.title)}
+                {section.badge != null && section.badge > 0 && (
+                  <span className={cn(
+                    'absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center',
+                    section.badgeColor,
+                  )}>
+                    {section.badge}
+                  </span>
+                )}
+              </div>
+            );
+          })}
+
+          {/* AI Assistant at bottom of nav */}
+          <div className="pt-2 mt-2 border-t border-border/50">
+            {renderItem('/assistant', Bot, 'AI Assistant')}
+          </div>
         </nav>
 
         {/* Live counts */}
