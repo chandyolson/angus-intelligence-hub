@@ -6,7 +6,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Download, Search, TrendingUp, AlertTriangle } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Download, Search, TrendingUp, AlertTriangle, ArrowUp, ArrowDown, BarChart3 } from 'lucide-react';
 import { ShimmerSkeleton } from '@/components/ui/shimmer-skeleton';
 import { ErrorBox } from '@/components/ui/error-box';
 import { useNavigate } from 'react-router-dom';
@@ -189,6 +190,27 @@ export default function CalvingInterval() {
     })), `open_cows_${new Date().toISOString().split('T')[0]}.csv`);
   };
 
+  // Summary stats for cards
+  const summaryStats = useMemo(() => {
+    if (intervalRows.length === 0) return null;
+    const sorted = [...intervalRows].sort((a, b) => a.avgInterval - b.avgInterval);
+    const lowest = sorted[0];
+    const highest = sorted[sorted.length - 1];
+    const avg = Math.round(intervalRows.reduce((s, r) => s + r.avgInterval, 0) / intervalRows.length);
+    const avgCows = intervalRows.filter(r => Math.abs(r.avgInterval - avg) <= 10);
+    return { lowest, highest, avg, avgCows };
+  }, [intervalRows]);
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogTitle, setDialogTitle] = useState('');
+  const [dialogCows, setDialogCows] = useState<IntervalRow[]>([]);
+
+  const openDialog = (title: string, cows: IntervalRow[]) => {
+    setDialogTitle(title);
+    setDialogCows(cows);
+    setDialogOpen(true);
+  };
+
   if (la || lr) return (
     <div className="space-y-6">
       <ShimmerSkeleton className="h-8 w-60" />
@@ -200,6 +222,94 @@ export default function CalvingInterval() {
   return (
     <div className="space-y-6">
       <h1 className="text-[20px] font-semibold text-foreground">Calving Interval Analysis</h1>
+
+      {/* Summary Cards */}
+      {summaryStats && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card
+            className="bg-card border-l-4 border-destructive/60 cursor-pointer hover:ring-1 hover:ring-destructive/40 transition-all"
+            onClick={() => openDialog(
+              `Highest Interval — ${summaryStats.highest.tag || summaryStats.highest.lifetime_id}`,
+              [summaryStats.highest]
+            )}
+          >
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <ArrowUp className="h-4 w-4 text-destructive" />
+                <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Highest Interval</span>
+              </div>
+              <p className="text-2xl font-bold text-destructive">{summaryStats.highest.avgInterval} days</p>
+              <p className="text-xs text-muted-foreground mt-1">{summaryStats.highest.tag || summaryStats.highest.lifetime_id}</p>
+            </CardContent>
+          </Card>
+
+          <Card
+            className="bg-card border-l-4 border-success/60 cursor-pointer hover:ring-1 hover:ring-success/40 transition-all"
+            onClick={() => openDialog(
+              `Lowest Interval — ${summaryStats.lowest.tag || summaryStats.lowest.lifetime_id}`,
+              [summaryStats.lowest]
+            )}
+          >
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <ArrowDown className="h-4 w-4 text-success" />
+                <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Lowest Interval</span>
+              </div>
+              <p className="text-2xl font-bold text-success">{summaryStats.lowest.avgInterval} days</p>
+              <p className="text-xs text-muted-foreground mt-1">{summaryStats.lowest.tag || summaryStats.lowest.lifetime_id}</p>
+            </CardContent>
+          </Card>
+
+          <Card
+            className="bg-card border-l-4 border-primary/40 cursor-pointer hover:ring-1 hover:ring-primary/40 transition-all"
+            onClick={() => openDialog(
+              `Cows Near Herd Average (${summaryStats.avg} ± 10 days)`,
+              summaryStats.avgCows
+            )}
+          >
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <BarChart3 className="h-4 w-4 text-primary" />
+                <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Herd Average</span>
+              </div>
+              <p className="text-2xl font-bold text-foreground">{summaryStats.avg} days</p>
+              <p className="text-xs text-muted-foreground mt-1">{summaryStats.avgCows.length} cows within ±10 days</p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Dialog for showing cows */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-lg max-h-[70vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle className="text-sm">{dialogTitle}</DialogTitle>
+          </DialogHeader>
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-sidebar border-border hover:bg-sidebar">
+                <TableHead className="text-[12px]">Tag</TableHead>
+                <TableHead className="text-[12px]">Lifetime ID</TableHead>
+                <TableHead className="text-[12px]">Avg Interval</TableHead>
+                <TableHead className="text-[12px]">Latest</TableHead>
+                <TableHead className="text-[12px]">Records</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {dialogCows.map(r => (
+                <TableRow key={r.lifetime_id} className="border-border text-[13px] cursor-pointer hover:bg-muted/30"
+                  onClick={() => { setDialogOpen(false); navigate(`/cow/${encodeURIComponent(r.lifetime_id)}`); }}>
+                  <TableCell className="font-medium text-foreground">{r.tag || '—'}</TableCell>
+                  <TableCell className="text-muted-foreground text-xs">{r.lifetime_id}</TableCell>
+                  <TableCell className={intervalColor(r.avgInterval)}>{r.avgInterval} d</TableCell>
+                  <TableCell className={intervalColor(r.latestInterval)}>{r.latestInterval} d</TableCell>
+                  <TableCell>{r.records}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </DialogContent>
+      </Dialog>
 
       {/* Section 1: Calving Interval per Cow */}
       <Card className="bg-card border-border">
