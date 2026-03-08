@@ -94,7 +94,7 @@ export default function CowDetail() {
       }));
   }, [calvingRecords]);
   const { data: allRecords } = useBreedingCalvingRecords();
-  const { data: activeAnimals } = useActiveAnimals('Blair');
+  const { data: activeAnimals } = useActiveAnimals();
 
   const kpis = useMemo(() => calvingRecords ? computeCowKPIs(calvingRecords, animal?.year_born) : null, [calvingRecords, animal]);
 

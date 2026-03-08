@@ -154,6 +154,7 @@ export type Database = {
           gestation_days: number | null
           lifetime_id: string | null
           memo: string | null
+          operation: string | null
           preg_stage: string | null
           ultrasound_date: string | null
           ultrasound_group: string | null
@@ -178,6 +179,7 @@ export type Database = {
           gestation_days?: number | null
           lifetime_id?: string | null
           memo?: string | null
+          operation?: string | null
           preg_stage?: string | null
           ultrasound_date?: string | null
           ultrasound_group?: string | null
@@ -202,6 +204,7 @@ export type Database = {
           gestation_days?: number | null
           lifetime_id?: string | null
           memo?: string | null
+          operation?: string | null
           preg_stage?: string | null
           ultrasound_date?: string | null
           ultrasound_group?: string | null

@@ -110,7 +110,7 @@ function computeSireMetrics(sire: string, records: BreedingCalvingRecord[]): Sir
 type ViewMode = 'top-bottom' | 'top50' | 'bottom50' | 'all';
 
 export default function Rankings() {
-  const { data: animals, isLoading: la, error: animalsError } = useActiveAnimals('Blair');
+  const { data: animals, isLoading: la, error: animalsError } = useActiveAnimals();
   const { data: records, isLoading: lr, error: recordsError } = useBreedingCalvingRecords();
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<ViewMode>('top-bottom');

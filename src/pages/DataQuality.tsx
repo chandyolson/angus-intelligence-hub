@@ -83,7 +83,7 @@ export default function DataQuality() {
     const animalByLid = new Map<string, typeof animals[0]>();
     animals.forEach(a => { if (a.lifetime_id) animalByLid.set(a.lifetime_id, a); });
 
-    const blairActive = animals.filter(a => a.operation === 'Blair' && a.status?.toLowerCase() === 'active');
+    const blairActive = animals.filter(a => a.status?.toLowerCase() === 'active');
 
     const dupKey = new Map<string, number>();
     combined.forEach(r => {
