@@ -34,6 +34,7 @@ function computeRankedCows(animals: Animal[], records: BreedingCalvingRecord[]):
 
   const rows = animals.map(a => {
     const recs = byLid.get(a.lifetime_id ?? '') || [];
+    const calvingRecs = recs.filter(r => r.calving_date != null);
     const withCalf = recs.filter(r => r.calf_status && r.calf_status.toLowerCase() !== 'open');
     const bws = withCalf.map(r => r.calf_bw).filter((v): v is number => v != null && v > 0);
     const avgBw = bws.length > 0 ? Math.round(bws.reduce((a, b) => a + b, 0) / bws.length) : 0;
@@ -43,19 +44,28 @@ function computeRankedCows(animals: Animal[], records: BreedingCalvingRecord[]):
     const liveCalves = withCalf.filter(r => r.calf_status?.toLowerCase() === 'alive').length;
     const survivalRate = withCalf.length > 0 ? Math.round((liveCalves / withCalf.length) * 1000) / 10 : 0;
     const composite = computeCompositeFromRecords(recs, a.year_born);
-    return { lifetime_id: a.lifetime_id ?? '', tag: a.tag, year_born: a.year_born, sire: a.sire, total_calves: withCalf.length, ai_conception_rate: conceptionRate, calf_survival_rate: survivalRate, avg_bw: avgBw, composite_score: composite, rank: 0, quartile: 'AVERAGE' as const };
+    return { lifetime_id: a.lifetime_id ?? '', tag: a.tag, year_born: a.year_born, sire: a.sire, total_calves: calvingRecs.length, ai_conception_rate: conceptionRate, calf_survival_rate: survivalRate, avg_bw: avgBw, composite_score: composite, rank: 0, quartile: 'AVERAGE' as const };
   });
 
-  rows.sort((a, b) => b.composite_score - a.composite_score);
-  const withScore = rows.filter(r => r.composite_score > 0);
-  const q25 = withScore[Math.floor(withScore.length * 0.75)]?.composite_score ?? 0;
-  const q50 = withScore[Math.floor(withScore.length * 0.5)]?.composite_score ?? 0;
-  const q75 = withScore[Math.floor(withScore.length * 0.25)]?.composite_score ?? 0;
+  // Only rank cows with 2+ calving records
+  const scoreable = rows.filter(r => r.total_calves >= 2 && r.composite_score > 0);
+  scoreable.sort((a, b) => b.composite_score - a.composite_score);
+  const q25 = scoreable[Math.floor(scoreable.length * 0.75)]?.composite_score ?? 0;
+  const q50 = scoreable[Math.floor(scoreable.length * 0.5)]?.composite_score ?? 0;
+  const q75 = scoreable[Math.floor(scoreable.length * 0.25)]?.composite_score ?? 0;
 
-  return rows.map((r, i) => ({
-    ...r, rank: i + 1,
-    quartile: r.composite_score >= q75 ? 'ELITE' : r.composite_score >= q50 ? 'STRONG' : r.composite_score >= q25 ? 'AVERAGE' : 'CULL WATCH',
-  }));
+  const getQuartile = (score: number, calves: number): RankedCow['quartile'] => {
+    if (calves < 2 || score <= 0) return 'AVERAGE';
+    if (score >= q75) return 'ELITE';
+    if (score >= q50) return 'STRONG';
+    if (score >= q25) return 'AVERAGE';
+    return 'CULL WATCH';
+  };
+
+  return rows
+    .filter(r => r.total_calves >= 2)
+    .sort((a, b) => b.composite_score - a.composite_score)
+    .map((r, i) => ({ ...r, rank: i + 1, quartile: getQuartile(r.composite_score, r.total_calves) }));
 }
 
 function computeCullFlags(ranked: RankedCow[], records: BreedingCalvingRecord[]): CullFlag[] {
@@ -121,6 +131,12 @@ export default function Rankings() {
 
   const activeCowCount = useMemo(() => animals?.length ?? 0, [animals]);
   const uniqueFlaggedIds = useMemo(() => new Set(cullFlags.map(f => f.lifetime_id)), [cullFlags]);
+  const excludedCount = useMemo(() => {
+    if (!animals || !records) return 0;
+    const byLid = new Map<string, number>();
+    records.forEach(r => { if (r.lifetime_id && r.calving_date) byLid.set(r.lifetime_id, (byLid.get(r.lifetime_id) || 0) + 1); });
+    return animals.filter(a => (byLid.get(a.lifetime_id ?? '') || 0) < 2).length;
+  }, [animals, records]);
 
   const sires = useMemo(() => {
     if (!records) return [];
@@ -288,8 +304,8 @@ export default function Rankings() {
       <TableCell>{cow.ai_conception_rate}%</TableCell>
        <TableCell>{cow.total_calves === 0 || cow.calf_survival_rate == null ? '—' : `${cow.calf_survival_rate}%`}</TableCell>
       <TableCell>{cow.avg_bw || '—'}</TableCell>
-      <TableCell><span className={`px-2 py-0.5 rounded text-xs font-semibold ${scoreColor(cow.composite_score)}`}>{cow.composite_score}</span></TableCell>
-      <TableCell><Badge variant="outline" className={`text-xs ${quartileStyle(cow.quartile)}`}>{cow.quartile}</Badge></TableCell>
+      <TableCell><span className={`px-2 py-0.5 rounded text-xs font-semibold ${cow.composite_score > 0 ? scoreColor(cow.composite_score) : ''}`}>{cow.composite_score > 0 ? cow.composite_score : '—'}</span></TableCell>
+      <TableCell>{cow.composite_score > 0 ? <Badge variant="outline" className={`text-xs ${quartileStyle(cow.quartile)}`}>{cow.quartile}</Badge> : <span className="text-muted-foreground text-xs">—</span>}</TableCell>
     </TableRow>
   );
 
@@ -414,6 +430,11 @@ export default function Rankings() {
               <TableBody>{renderRankingRows()}</TableBody>
             </Table>
           </div>
+          {excludedCount > 0 && (
+            <p className="text-xs text-muted-foreground mt-3">
+              {excludedCount} cow{excludedCount !== 1 ? 's' : ''} excluded — fewer than 2 calving records
+            </p>
+          )}
         </CardContent>
       </Card>
 
