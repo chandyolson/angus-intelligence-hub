@@ -53,6 +53,7 @@ export default function Culling() {
   const { data: records, isLoading: loadingRecords } = useBlairCombined();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
+  const [priorityFilter, setPriorityFilter] = useState<string | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>('flagCount');
   const [sortAsc, setSortAsc] = useState(false);
 
@@ -142,7 +143,9 @@ export default function Culling() {
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    let list = q ? evaluated.filter(c => c.tag.toLowerCase().includes(q) || c.lid.toLowerCase().includes(q)) : evaluated;
+    let list = evaluated;
+    if (priorityFilter) list = list.filter(c => c.priority === priorityFilter);
+    if (q) list = list.filter(c => c.tag.toLowerCase().includes(q) || c.lid.toLowerCase().includes(q));
 
     const priorityOrder = { URGENT: 0, REVIEW: 1, MONITOR: 2 };
     list = [...list].sort((a, b) => {
@@ -161,7 +164,7 @@ export default function Culling() {
       return sortAsc ? cmp : -cmp;
     });
     return list;
-  }, [evaluated, search, sortKey, sortAsc]);
+  }, [evaluated, search, sortKey, sortAsc, priorityFilter]);
 
   const summary = useMemo(() => {
     let urgent = 0, review = 0, monitor = 0;
@@ -214,25 +217,37 @@ export default function Culling() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <Card>
+        <Card
+          className={`cursor-pointer transition-all hover:ring-2 hover:ring-destructive/50 ${priorityFilter === 'URGENT' ? 'ring-2 ring-destructive' : ''}`}
+          onClick={() => setPriorityFilter(priorityFilter === 'URGENT' ? null : 'URGENT')}
+        >
           <CardContent className="pt-6 text-center">
             <p className="text-3xl font-bold text-destructive">{summary.urgent}</p>
             <p className="text-sm text-muted-foreground">URGENT</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card
+          className={`cursor-pointer transition-all hover:ring-2 hover:ring-yellow-500/50 ${priorityFilter === 'REVIEW' ? 'ring-2 ring-yellow-500' : ''}`}
+          onClick={() => setPriorityFilter(priorityFilter === 'REVIEW' ? null : 'REVIEW')}
+        >
           <CardContent className="pt-6 text-center">
             <p className="text-3xl font-bold text-yellow-500">{summary.review}</p>
             <p className="text-sm text-muted-foreground">REVIEW</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card
+          className={`cursor-pointer transition-all hover:ring-2 hover:ring-muted-foreground/50 ${priorityFilter === 'MONITOR' ? 'ring-2 ring-muted-foreground' : ''}`}
+          onClick={() => setPriorityFilter(priorityFilter === 'MONITOR' ? null : 'MONITOR')}
+        >
           <CardContent className="pt-6 text-center">
             <p className="text-3xl font-bold text-muted-foreground">{summary.monitor}</p>
             <p className="text-sm text-muted-foreground">MONITOR</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card
+          className={`cursor-pointer transition-all hover:ring-2 hover:ring-primary/50 ${priorityFilter === null ? '' : ''}`}
+          onClick={() => setPriorityFilter(null)}
+        >
           <CardContent className="pt-6 text-center">
             <p className="text-3xl font-bold text-foreground">{summary.total}</p>
             <p className="text-sm text-muted-foreground">Total Flagged</p>
