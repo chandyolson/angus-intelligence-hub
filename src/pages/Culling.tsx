@@ -164,7 +164,7 @@ export default function Culling() {
       return sortAsc ? cmp : -cmp;
     });
     return list;
-  }, [evaluated, search, sortKey, sortAsc]);
+  }, [evaluated, search, sortKey, sortAsc, priorityFilter]);
 
   const summary = useMemo(() => {
     let urgent = 0, review = 0, monitor = 0;
