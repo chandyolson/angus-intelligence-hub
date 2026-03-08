@@ -98,37 +98,60 @@ function computeServiceTable(
   return rows;
 }
 
-function SireServiceTable({
-  title,
-  rows,
-  sortKey,
-  sortAsc,
-  onSort,
+type CombinedSortKey = 'rate1st' | 'rate2nd' | 'n1st' | 'avgBW';
+
+function CombinedSireTable({
+  firstRows,
+  secondRows,
 }: {
-  title: string;
-  rows: SireRow[];
-  sortKey: SortKey;
-  sortAsc: boolean;
-  onSort: (key: SortKey) => void;
+  firstRows: SireRow[];
+  secondRows: SireRow[];
 }) {
+  const [sortKey, setSortKey] = useState<CombinedSortKey>('rate1st');
+  const [sortAsc, setSortAsc] = useState(false);
+
+  const combinedRows = useMemo<CombinedSireRow[]>(() => {
+    const sireSet = new Set<string>();
+    firstRows.forEach(r => sireSet.add(r.sire));
+    secondRows.forEach(r => sireSet.add(r.sire));
+
+    const first = new Map(firstRows.map(r => [r.sire, r]));
+    const second = new Map(secondRows.map(r => [r.sire, r]));
+
+    return [...sireSet].map(sire => {
+      const f = first.get(sire);
+      const s = second.get(sire);
+      const primaryRate = f?.rate ?? s?.rate ?? 0;
+      return {
+        sire,
+        rate1st: f?.rate ?? 0,
+        n1st: f?.sampleSize ?? 0,
+        rate2nd: s?.rate ?? 0,
+        n2nd: s?.sampleSize ?? 0,
+        avgBW: f?.avgBW ?? s?.avgBW ?? 0,
+        survivalRate: f?.survivalRate ?? s?.survivalRate ?? 0,
+        badge: getBadge(primaryRate),
+      };
+    });
+  }, [firstRows, secondRows]);
+
   const sorted = useMemo(() => {
-    const s = [...rows];
+    const s = [...combinedRows];
     s.sort((a, b) => sortAsc ? (a[sortKey] as number) - (b[sortKey] as number) : (b[sortKey] as number) - (a[sortKey] as number));
     return s;
-  }, [rows, sortKey, sortAsc]);
+  }, [combinedRows, sortKey, sortAsc]);
 
-  const arrow = (key: SortKey) => sortKey === key ? (sortAsc ? ' ↑' : ' ↓') : '';
+  const handleSort = (key: CombinedSortKey) => {
+    if (sortKey === key) setSortAsc(!sortAsc);
+    else { setSortKey(key); setSortAsc(false); }
+  };
 
-  const sortCols: { key: SortKey; label: string }[] = [
-    { key: 'rate', label: 'Rate' },
-    { key: 'sampleSize', label: 'Usage' },
-    { key: 'avgBW', label: 'BW' },
-  ];
+  const arrow = (key: CombinedSortKey) => sortKey === key ? (sortAsc ? ' ↑' : ' ↓') : '';
 
-  if (rows.length === 0) return (
+  if (combinedRows.length === 0) return (
     <Card className="bg-card border-border">
       <CardHeader className="pb-2">
-        <CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">{title}</CardTitle>
+        <CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">AI Conception Rates by Sire</CardTitle>
       </CardHeader>
       <CardContent><EmptyState message="No sires with sufficient records." /></CardContent>
     </Card>
@@ -137,12 +160,17 @@ function SireServiceTable({
   return (
     <Card className="bg-card border-border">
       <CardHeader className="pb-2 flex flex-row items-center justify-between">
-        <CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">{title}</CardTitle>
+        <CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">AI Conception Rates by Sire</CardTitle>
         <div className="flex gap-1">
-          {sortCols.map(col => (
+          {[
+            { key: 'rate1st' as CombinedSortKey, label: '1st Rate' },
+            { key: 'rate2nd' as CombinedSortKey, label: '2nd Rate' },
+            { key: 'n1st' as CombinedSortKey, label: 'Usage' },
+            { key: 'avgBW' as CombinedSortKey, label: 'BW' },
+          ].map(col => (
             <button
               key={col.key}
-              onClick={() => onSort(col.key)}
+              onClick={() => handleSort(col.key)}
               className={`px-3 py-1 text-xs rounded transition-colors ${sortKey === col.key ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground hover:text-foreground'}`}
             >
               {col.label}{arrow(col.key)}
@@ -156,26 +184,41 @@ function SireServiceTable({
             <TableHeader>
               <TableRow className="bg-sidebar border-border hover:bg-sidebar">
                 <TableHead className="text-[12px]">Sire</TableHead>
-                <TableHead className="text-[12px] cursor-pointer" onClick={() => onSort('rate')}>Conception Rate{arrow('rate')}</TableHead>
-                <TableHead className="text-[12px] cursor-pointer" onClick={() => onSort('sampleSize')}>Sample Size{arrow('sampleSize')}</TableHead>
-                <TableHead className="text-[12px] cursor-pointer" onClick={() => onSort('avgBW')}>Avg BW (lbs){arrow('avgBW')}</TableHead>
+                <TableHead className="text-[12px] cursor-pointer" onClick={() => handleSort('rate1st')}>1st Service{arrow('rate1st')}</TableHead>
+                <TableHead className="text-[12px] cursor-pointer" onClick={() => handleSort('n1st')}>n (1st){arrow('n1st')}</TableHead>
+                <TableHead className="text-[12px] cursor-pointer" onClick={() => handleSort('rate2nd')}>2nd Service{arrow('rate2nd')}</TableHead>
+                <TableHead className="text-[12px]">n (2nd)</TableHead>
+                <TableHead className="text-[12px] cursor-pointer" onClick={() => handleSort('avgBW')}>Avg BW{arrow('avgBW')}</TableHead>
                 <TableHead className="text-[12px]">Survival %</TableHead>
                 <TableHead className="text-[12px]">Grade</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {sorted.map((s, i) => (
-                <TableRow key={s.sire} className="border-border text-[13px]" style={{ backgroundColor: i % 2 === 1 ? '#0E1528' : undefined }}>
+                <TableRow key={s.sire} className="border-border text-[13px]" style={{ backgroundColor: i % 2 === 1 ? 'hsl(var(--sidebar-background))' : undefined }}>
                   <TableCell className="font-medium text-foreground">{s.sire}</TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      <div className="relative w-16 h-3 rounded-full bg-muted overflow-hidden">
-                        <div className="absolute inset-y-0 left-0 rounded-full" style={{ width: `${Math.min(s.rate, 100)}%`, backgroundColor: rateColor(s.rate) }} />
+                    {s.n1st > 0 ? (
+                      <div className="flex items-center gap-2">
+                        <div className="relative w-14 h-3 rounded-full bg-muted overflow-hidden">
+                          <div className="absolute inset-y-0 left-0 rounded-full" style={{ width: `${Math.min(s.rate1st, 100)}%`, backgroundColor: rateColor(s.rate1st) }} />
+                        </div>
+                        <span className="font-semibold text-xs" style={{ color: rateColor(s.rate1st) }}>{s.rate1st}%</span>
                       </div>
-                      <span className="font-semibold text-xs" style={{ color: rateColor(s.rate) }}>{s.rate}%</span>
-                    </div>
+                    ) : <span className="text-muted-foreground">—</span>}
                   </TableCell>
-                  <TableCell>{s.sampleSize}</TableCell>
+                  <TableCell className="text-muted-foreground">{s.n1st || '—'}</TableCell>
+                  <TableCell>
+                    {s.n2nd > 0 ? (
+                      <div className="flex items-center gap-2">
+                        <div className="relative w-14 h-3 rounded-full bg-muted overflow-hidden">
+                          <div className="absolute inset-y-0 left-0 rounded-full" style={{ width: `${Math.min(s.rate2nd, 100)}%`, backgroundColor: rateColor(s.rate2nd) }} />
+                        </div>
+                        <span className="font-semibold text-xs" style={{ color: rateColor(s.rate2nd) }}>{s.rate2nd}%</span>
+                      </div>
+                    ) : <span className="text-muted-foreground">—</span>}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">{s.n2nd || '—'}</TableCell>
                   <TableCell>{s.avgBW > 0 ? s.avgBW : '—'}</TableCell>
                   <TableCell>{s.survivalRate}%</TableCell>
                   <TableCell>
