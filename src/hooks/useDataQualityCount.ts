@@ -7,28 +7,21 @@ export function useDataQualityCount() {
 
   return useMemo(() => {
     if (!animals || !combined) return 0;
+    let count = 0;
 
-    const currentYear = new Date().getFullYear();
-    const cutoff = new Date();
-    cutoff.setMonth(cutoff.getMonth() - 18);
-    const cutoffStr = cutoff.toISOString().slice(0, 10);
+    // Critical: null lifetime_id
+    count += animals.filter(a => !a.lifetime_id).length;
+    count += combined.filter(r => !r.lifetime_id).length;
 
-    const recent = combined.filter(r => {
-      const latestDate = r.calving_date ?? r.ai_date_1 ?? r.ultrasound_date;
-      return latestDate != null && latestDate >= cutoffStr;
-    });
+    // Critical: calving before AI
+    count += combined.filter(r => r.calving_date && r.ai_date_1 && r.calving_date < r.ai_date_1).length;
 
-    const blairActive = animals.filter(a => a.operation === 'Blair' && a.status?.toLowerCase() === 'active');
-    const lidsWithCalving = new Set<string>();
-    const lidsInCombined = new Set<string>();
-    recent.forEach(r => {
-      if (r.lifetime_id && r.calving_date) lidsWithCalving.add(r.lifetime_id);
-      if (r.lifetime_id) lidsInCombined.add(r.lifetime_id);
-    });
+    // High: calving without birth weight
+    count += combined.filter(r => r.calving_date && r.calf_bw == null).length;
 
-    const neverCalved = blairActive.filter(a => a.lifetime_id && a.year_born != null && a.year_born <= currentYear - 2 && !lidsWithCalving.has(a.lifetime_id)).length;
-    const neverBred = blairActive.filter(a => a.lifetime_id && !lidsInCombined.has(a.lifetime_id)).length;
+    // High: abnormal gestation
+    count += combined.filter(r => r.gestation_days != null && (r.gestation_days < 260 || r.gestation_days > 295)).length;
 
-    return neverCalved + neverBred;
+    return count;
   }, [animals, combined]);
 }
