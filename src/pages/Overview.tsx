@@ -29,6 +29,7 @@ const ChartTooltip = ({ active, payload, label }: any) => {
 };
 
 export default function Overview() {
+  const navigate = useNavigate();
   const { data: animals, isLoading: loadingAnimals, error: animalsError } = useAnimals();
   const { data: combined, isLoading: loadingCombined, error: combinedError } = useBlairCombined();
   const loading = loadingAnimals || loadingCombined;
