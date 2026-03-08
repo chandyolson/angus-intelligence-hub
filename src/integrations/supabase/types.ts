@@ -350,6 +350,69 @@ export type Database = {
         }
         Relationships: []
       }
+      corrections_log: {
+        Row: {
+          breeding_year: number | null
+          corrected_at: string
+          field_name: string
+          id: number
+          lifetime_id: string | null
+          new_value: string | null
+          note: string | null
+          original_value: string | null
+          table_name: string
+        }
+        Insert: {
+          breeding_year?: number | null
+          corrected_at?: string
+          field_name: string
+          id?: never
+          lifetime_id?: string | null
+          new_value?: string | null
+          note?: string | null
+          original_value?: string | null
+          table_name: string
+        }
+        Update: {
+          breeding_year?: number | null
+          corrected_at?: string
+          field_name?: string
+          id?: never
+          lifetime_id?: string | null
+          new_value?: string | null
+          note?: string | null
+          original_value?: string | null
+          table_name?: string
+        }
+        Relationships: []
+      }
+      reviewed_flags: {
+        Row: {
+          breeding_year: number | null
+          id: number
+          lifetime_id: string
+          note: string | null
+          reviewed_at: string
+          rule: string
+        }
+        Insert: {
+          breeding_year?: number | null
+          id?: never
+          lifetime_id: string
+          note?: string | null
+          reviewed_at?: string
+          rule: string
+        }
+        Update: {
+          breeding_year?: number | null
+          id?: never
+          lifetime_id?: string
+          note?: string | null
+          reviewed_at?: string
+          rule?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
