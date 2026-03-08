@@ -70,10 +70,16 @@ export default function Culling() {
       recsByLid.set(r.lifetime_id, arr);
     });
 
-    return animals.map(animal => {
+    return animals.filter(animal => {
       const lid = animal.lifetime_id ?? '';
       const cowRecs = recsByLid.get(lid) || [];
-      const flags: number[] = [];
+      // Exclude cows with fewer than 2 calving records
+      const calvingCount = cowRecs.filter(r => r.calving_date != null).length;
+      if (calvingCount < 2) return false;
+      return true;
+    }).map(animal => {
+      const lid = animal.lifetime_id ?? '';
+      const cowRecs = recsByLid.get(lid) || [];
       const age = animal.year_born ? currentYear - animal.year_born : 0;
 
       // FLAG 1 — Any open event

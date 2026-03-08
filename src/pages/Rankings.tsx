@@ -303,8 +303,8 @@ export default function Rankings() {
       <TableCell>{cow.ai_conception_rate}%</TableCell>
        <TableCell>{cow.total_calves === 0 || cow.calf_survival_rate == null ? '—' : `${cow.calf_survival_rate}%`}</TableCell>
       <TableCell>{cow.avg_bw || '—'}</TableCell>
-      <TableCell><span className={`px-2 py-0.5 rounded text-xs font-semibold ${scoreColor(cow.composite_score)}`}>{cow.composite_score}</span></TableCell>
-      <TableCell><Badge variant="outline" className={`text-xs ${quartileStyle(cow.quartile)}`}>{cow.quartile}</Badge></TableCell>
+      <TableCell><span className={`px-2 py-0.5 rounded text-xs font-semibold ${cow.composite_score > 0 ? scoreColor(cow.composite_score) : ''}`}>{cow.composite_score > 0 ? cow.composite_score : '—'}</span></TableCell>
+      <TableCell>{cow.composite_score > 0 ? <Badge variant="outline" className={`text-xs ${quartileStyle(cow.quartile)}`}>{cow.quartile}</Badge> : <span className="text-muted-foreground text-xs">—</span>}</TableCell>
     </TableRow>
   );
 
