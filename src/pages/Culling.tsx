@@ -143,7 +143,9 @@ export default function Culling() {
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    let list = q ? evaluated.filter(c => c.tag.toLowerCase().includes(q) || c.lid.toLowerCase().includes(q)) : evaluated;
+    let list = evaluated;
+    if (priorityFilter) list = list.filter(c => c.priority === priorityFilter);
+    if (q) list = list.filter(c => c.tag.toLowerCase().includes(q) || c.lid.toLowerCase().includes(q));
 
     const priorityOrder = { URGENT: 0, REVIEW: 1, MONITOR: 2 };
     list = [...list].sort((a, b) => {
