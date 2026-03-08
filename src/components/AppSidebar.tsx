@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, ShieldAlert, FlaskConical, Beef, TrendingUp,
   Baby, Weight, Scissors, HeartPulse, Users, Menu, X, ChevronDown,
-  Bot, BarChart3, Clock, Ban,
+  Bot, BarChart3, Clock, Ban, ClipboardList,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useRecordCounts } from '@/hooks/useCattleData';
