@@ -57,6 +57,7 @@ export interface BreedingCalvingRecord {
   cow_sire: string | null;
   project_record_id: string | null;
   group: string | null;
+  ultrasound_group: string | null;
   memo: string | null;
   ultrasound_notes: string | null;
   gestation_days: number | null;
