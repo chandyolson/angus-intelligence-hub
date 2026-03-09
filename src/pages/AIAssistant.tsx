@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import { Send, Trash2, Bot, Loader2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { buildHerdContext, fetchCowContext } from '@/lib/herdContext';
+import { useOperation } from '@/hooks/useOperationContext';
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 
