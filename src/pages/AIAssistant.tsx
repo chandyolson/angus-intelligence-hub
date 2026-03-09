@@ -126,11 +126,13 @@ async function streamChat({
 }
 
 export default function AIAssistant() {
+  const { operation } = useOperation();
   const [messages, setMessages] = useState<Msg[]>([WELCOME_MSG]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [contextStatus, setContextStatus] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = useCallback(() => {
