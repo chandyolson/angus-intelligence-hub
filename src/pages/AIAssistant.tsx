@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import { Send, Trash2, Bot, Loader2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { buildHerdContext, fetchCowContext } from '@/lib/herdContext';
+import { useOperation } from '@/hooks/useOperationContext';
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 
@@ -125,6 +126,7 @@ async function streamChat({
 }
 
 export default function AIAssistant() {
+  const { operation } = useOperation();
   const [messages, setMessages] = useState<Msg[]>([WELCOME_MSG]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -149,7 +151,7 @@ export default function AIAssistant() {
     setContextStatus('Loading herd data...');
     let herdCtx = '';
     try {
-      herdCtx = await buildHerdContext();
+      herdCtx = await buildHerdContext(operation);
     } catch {
       herdCtx = '(Failed to load herd data from Supabase)';
     }
