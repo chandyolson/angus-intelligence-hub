@@ -151,7 +151,7 @@ export default function AIAssistant() {
     setContextStatus('Loading herd data...');
     let herdCtx = '';
     try {
-      herdCtx = await buildHerdContext();
+      herdCtx = await buildHerdContext(operation);
     } catch {
       herdCtx = '(Failed to load herd data from Supabase)';
     }
