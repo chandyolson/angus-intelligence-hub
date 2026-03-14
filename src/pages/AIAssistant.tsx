@@ -2,10 +2,8 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Send, Trash2, Bot, Loader2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { buildHerdContext, fetchCowContext } from '@/lib/herdContext';
-import { useOperation } from '@/hooks/useOperationContext';
 
-const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
+const HF_URL = 'https://chandyo-ai2-cattle-api.hf.space/ask';
 
 type Msg = { role: 'user' | 'assistant'; content: string; timestamp: Date };
 
@@ -50,87 +48,10 @@ const SUGGESTED_QUESTIONS = [
   },
 ];
 
-const SYSTEM_PROMPT = `You are an expert cattle ranch management AI assistant for Blair Bros Angus operation.
-You have been given a live data summary of their herd below. Use this data to answer questions precisely and practically.
-
-Rules:
-- Always cite specific numbers from the data when answering
-- If asked about a specific cow by tag number and that cow is not in the top/bottom 10 lists, say you can see summary data but offer to give general guidance
-- Give practical ranch management recommendations, not just statistics
-- If the data shows a concerning trend, flag it proactively
-- Keep answers concise but complete — ranchers are busy
-- Use plain language, not academic language
-- When comparing sires, be direct about which performs better and why it matters economically
-- Format your responses with markdown for readability (bold key numbers, use bullet lists)`;
-
-async function streamChat({
-  messages,
-  system,
-  onDelta,
-  onDone,
-  onError,
-}: {
-  messages: { role: string; content: string }[];
-  system: string;
-  onDelta: (text: string) => void;
-  onDone: () => void;
-  onError: (err: string) => void;
-}) {
-  try {
-    const resp = await fetch(CHAT_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-      },
-      body: JSON.stringify({ messages, system }),
-    });
-
-    if (!resp.ok) {
-      const errBody = await resp.json().catch(() => ({ error: 'Unknown error' }));
-      onError(errBody.error || `Error ${resp.status}`);
-      return;
-    }
-
-    if (!resp.body) { onError('No response body'); return; }
-
-    const reader = resp.body.getReader();
-    const decoder = new TextDecoder();
-    let buf = '';
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buf += decoder.decode(value, { stream: true });
-
-      let idx: number;
-      while ((idx = buf.indexOf('\n')) !== -1) {
-        let line = buf.slice(0, idx);
-        buf = buf.slice(idx + 1);
-        if (line.endsWith('\r')) line = line.slice(0, -1);
-        if (line.startsWith(':') || line.trim() === '') continue;
-        if (!line.startsWith('data: ')) continue;
-        const json = line.slice(6).trim();
-        if (json === '[DONE]') { onDone(); return; }
-        try {
-          const parsed = JSON.parse(json);
-          const content = parsed.choices?.[0]?.delta?.content;
-          if (content) onDelta(content);
-        } catch { /* partial json, skip */ }
-      }
-    }
-    onDone();
-  } catch (e) {
-    onError(e instanceof Error ? e.message : 'Network error');
-  }
-}
-
 export default function AIAssistant() {
-  const { operation } = useOperation();
   const [messages, setMessages] = useState<Msg[]>([WELCOME_MSG]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [contextStatus, setContextStatus] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -147,58 +68,32 @@ export default function AIAssistant() {
     setInput('');
     setLoading(true);
 
-    // Build context
-    setContextStatus('Loading herd data...');
-    let herdCtx = '';
     try {
-      herdCtx = await buildHerdContext(operation);
-    } catch {
-      herdCtx = '(Failed to load herd data from Supabase)';
-    }
-
-    // Check for cow-specific lookup
-    const tagMatch = text.match(/\b(\d{2,4})\b/);
-    if (tagMatch) {
-      setContextStatus('Looking up cow records...');
-      try {
-        const cowCtx = await fetchCowContext(tagMatch[1]);
-        if (cowCtx) herdCtx += '\n' + cowCtx;
-      } catch { /* ignore */ }
-    }
-    setContextStatus('');
-
-    const systemWithData = `${SYSTEM_PROMPT}\n\nLIVE HERD DATA:\n${herdCtx}`;
-
-    // Build message history (last 6 pairs = 12 messages)
-    const allMsgs = [...messages, userMsg];
-    const historyMsgs = allMsgs.slice(-12).map(m => ({ role: m.role, content: m.content }));
-
-    let assistantSoFar = '';
-    const upsert = (chunk: string) => {
-      assistantSoFar += chunk;
-      setMessages(prev => {
-        const last = prev[prev.length - 1];
-        if (last?.role === 'assistant' && last === prev[prev.length - 1] && assistantSoFar.length > chunk.length) {
-          return prev.map((m, i) => i === prev.length - 1 ? { ...m, content: assistantSoFar } : m);
-        }
-        if (last?.role === 'user') {
-          return [...prev, { role: 'assistant' as const, content: assistantSoFar, timestamp: new Date() }];
-        }
-        return prev.map((m, i) => i === prev.length - 1 ? { ...m, content: assistantSoFar } : m);
+      const resp = await fetch(HF_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: text.trim() }),
       });
-      scrollToBottom();
-    };
 
-    await streamChat({
-      messages: historyMsgs,
-      system: systemWithData,
-      onDelta: upsert,
-      onDone: () => setLoading(false),
-      onError: (err) => {
-        setMessages(prev => [...prev, { role: 'assistant', content: `⚠️ ${err}`, timestamp: new Date() }]);
-        setLoading(false);
-      },
-    });
+      if (!resp.ok) {
+        throw new Error(`Error ${resp.status}`);
+      }
+
+      const data = await resp.json();
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: data.answer || 'No response received.',
+        timestamp: new Date(),
+      }]);
+    } catch (e) {
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: `⚠️ ${e instanceof Error ? e.message : 'Network error'}`,
+        timestamp: new Date(),
+      }]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const clearConversation = () => {
@@ -224,7 +119,7 @@ export default function AIAssistant() {
                 <p className="text-xs text-muted-foreground mt-0.5">
                   Ask anything about your herd — cows, sires, trends, culling candidates, or comparisons.
                 </p>
-                <p className="text-[10px] text-muted-foreground mt-1">Powered by AI · Reading live Supabase data</p>
+                <p className="text-[10px] text-muted-foreground mt-1">Powered by AI · Reading live herd data</p>
               </div>
               <button
                 onClick={clearConversation}
@@ -269,17 +164,11 @@ export default function AIAssistant() {
                   <span className="text-sm">🐂</span>
                 </div>
                 <div className="bg-card border border-border rounded-lg px-4 py-3">
-                  {contextStatus ? (
-                    <p className="text-xs text-muted-foreground flex items-center gap-2">
-                      <Loader2 className="h-3 w-3 animate-spin" />{contextStatus}
-                    </p>
-                  ) : (
-                    <div className="flex gap-1 items-center h-5">
-                      <span className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:0ms]" />
-                      <span className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:150ms]" />
-                      <span className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:300ms]" />
-                    </div>
-                  )}
+                  <div className="flex gap-1 items-center h-5">
+                    <span className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:0ms]" />
+                    <span className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:150ms]" />
+                    <span className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:300ms]" />
+                  </div>
                 </div>
               </div>
             )}
