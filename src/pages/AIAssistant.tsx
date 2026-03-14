@@ -3,7 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import { Send, Trash2, Bot, Loader2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
-const HF_URL = 'https://chandyo-ai2-cattle-api.hf.space/ask';
+const HF_ASK_URL = 'https://chandyo-ai2-cattle-api.hf.space/ask';
 
 type Msg = { role: 'user' | 'assistant'; content: string; timestamp: Date };
 
