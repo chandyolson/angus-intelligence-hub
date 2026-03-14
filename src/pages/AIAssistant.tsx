@@ -3,7 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import { Send, Trash2, Bot, Loader2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
-const HF_URL = 'https://chandyo-ai2-cattle-api.hf.space/ask';
+const HF_ASK_URL = 'https://chandyo-ai2-cattle-api.hf.space/ask';
 
 type Msg = { role: 'user' | 'assistant'; content: string; timestamp: Date };
 
@@ -75,12 +75,12 @@ export default function AIAssistant() {
         body: JSON.stringify({ question: text.trim() }),
       };
       console.log('=== AI Assistant Fetch Debug ===');
-      console.log('URL:', HF_URL);
+      console.log('URL:', HF_ASK_URL);
       console.log('Method:', fetchOpts.method);
       console.log('Headers:', fetchOpts.headers);
       console.log('Body:', fetchOpts.body);
-      console.log('Full fetch call: fetch("' + HF_URL + '", ', JSON.stringify(fetchOpts, null, 2), ')');
-      const resp = await fetch(HF_URL, fetchOpts);
+      console.log('Full fetch call: fetch("' + HF_ASK_URL + '", ', JSON.stringify(fetchOpts, null, 2), ')');
+      const resp = await fetch('https://chandyo-ai2-cattle-api.hf.space/ask', fetchOpts);
 
       if (!resp.ok) {
         throw new Error(`Error ${resp.status}`);
