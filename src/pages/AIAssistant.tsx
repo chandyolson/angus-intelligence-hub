@@ -69,11 +69,18 @@ export default function AIAssistant() {
     setLoading(true);
 
     try {
-      const resp = await fetch(HF_URL, {
+      const fetchOpts = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question: text.trim() }),
-      });
+      };
+      console.log('=== AI Assistant Fetch Debug ===');
+      console.log('URL:', HF_URL);
+      console.log('Method:', fetchOpts.method);
+      console.log('Headers:', fetchOpts.headers);
+      console.log('Body:', fetchOpts.body);
+      console.log('Full fetch call: fetch("' + HF_URL + '", ', JSON.stringify(fetchOpts, null, 2), ')');
+      const resp = await fetch(HF_URL, fetchOpts);
 
       if (!resp.ok) {
         throw new Error(`Error ${resp.status}`);
