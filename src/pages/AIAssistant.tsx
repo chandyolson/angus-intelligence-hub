@@ -1,15 +1,15 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Send, Trash2, Bot, Loader2 } from 'lucide-react';
+import { Send, Trash2, Bot } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-
-const HF_ASK_URL = 'https://chandyo-ai2-cattle-api.hf.space/ask';
+import { supabase } from '@/integrations/supabase/client';
+import { buildSummaryContext } from '@/lib/buildSummaryContext';
 
 type Msg = { role: 'user' | 'assistant'; content: string; timestamp: Date };
 
 const WELCOME_MSG: Msg = {
   role: 'assistant',
-  content: "Hello! I'm your Blair Herd Assistant. I have access to your full herd data — calving records, sire performance, pregnancy check results, and cow rankings. Ask me anything about your operation and I'll analyze the data and give you a straight answer.",
+  content: "Hello! I'm your Blair Herd Assistant powered by Claude. I have access to your full herd data — calving records, sire performance, pregnancy check results, and cow rankings. Ask me anything about your operation and I'll analyze the data and give you a straight answer.",
   timestamp: new Date(),
 };
 
@@ -69,24 +69,16 @@ export default function AIAssistant() {
     setLoading(true);
 
     try {
-      const fetchOpts = {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: text.trim() }),
-      };
-      console.log('=== AI Assistant Fetch Debug ===');
-      console.log('URL:', HF_ASK_URL);
-      console.log('Method:', fetchOpts.method);
-      console.log('Headers:', fetchOpts.headers);
-      console.log('Body:', fetchOpts.body);
-      console.log('Full fetch call: fetch("' + HF_ASK_URL + '", ', JSON.stringify(fetchOpts, null, 2), ')');
-      const resp = await fetch('https://chandyo-ai2-cattle-api.hf.space/ask', fetchOpts);
+      // Build summary context from Supabase
+      const context = await buildSummaryContext();
 
-      if (!resp.ok) {
-        throw new Error(`Error ${resp.status}`);
-      }
+      // Call Claude via edge function
+      const { data, error } = await supabase.functions.invoke('chat', {
+        body: { question: text.trim(), context },
+      });
 
-      const data = await resp.json();
+      if (error) throw error;
+
       setMessages(prev => [...prev, {
         role: 'assistant',
         content: data.answer || 'No response received.',
@@ -126,7 +118,7 @@ export default function AIAssistant() {
                 <p className="text-xs text-muted-foreground mt-0.5">
                   Ask anything about your herd — cows, sires, trends, culling candidates, or comparisons.
                 </p>
-                <p className="text-[10px] text-muted-foreground mt-1">Powered by AI · Reading live herd data</p>
+                <p className="text-[10px] text-muted-foreground mt-1">Powered by Claude · Reading live herd data</p>
               </div>
               <button
                 onClick={clearConversation}
