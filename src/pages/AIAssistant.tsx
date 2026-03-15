@@ -70,7 +70,7 @@ export default function AIAssistant() {
 
     try {
       // Build summary context from Supabase
-      const context = await buildSummaryContext();
+      const context = await buildSummaryContext(text.trim());
 
       // Call Claude via edge function
       const { data, error } = await supabase.functions.invoke('chat', {
