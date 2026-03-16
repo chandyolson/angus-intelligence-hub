@@ -7,6 +7,9 @@ interface BlairRow {
   calf_status: string | null;
   operation: string | null;
   lifetime_id: string | null;
+  calf_sire: string | null;
+  calf_bw: number | null;
+  gestation_days: number | null;
 }
 
 async function fetchAllBlairCombined(): Promise<BlairRow[]> {
