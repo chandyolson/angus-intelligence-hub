@@ -21,7 +21,9 @@ function getFollowUpQuestions(content: string): Set<string> {
 
   for (let i = lines.length - 1; i >= 0; i--) {
     const line = lines[i].trim();
-    const match = line.match(/^\d+[\.\)]\s*\**(.+?)\**\s*$/);
+    if (!line) continue; // skip blank lines
+    // Match: "1. Question?" or "1) Question?" with optional bold/italic wrapping
+    const match = line.match(/^\d+[\.\)]\s*[\*_]{0,3}(.+?)[\*_]{0,3}\s*$/);
     if (match) {
       questions.unshift(match[1].trim());
     } else if (questions.length > 0) {
