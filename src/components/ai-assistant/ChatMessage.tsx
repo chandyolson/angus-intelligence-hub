@@ -1,6 +1,5 @@
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { FollowUpChips } from './FollowUpChips';
 
 type Msg = { role: 'user' | 'assistant'; content: string; timestamp: Date };
 
@@ -12,7 +11,30 @@ interface ChatMessageProps {
 
 const fmt = (d: Date) => d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 
+/**
+ * Detects numbered follow-up questions at the end of content.
+ * Returns the set of question texts (without the number prefix).
+ */
+function getFollowUpQuestions(content: string): Set<string> {
+  const lines = content.trim().split('\n');
+  const questions: string[] = [];
+
+  for (let i = lines.length - 1; i >= 0; i--) {
+    const line = lines[i].trim();
+    const match = line.match(/^\d+[\.\)]\s*\**(.+?)\**\s*$/);
+    if (match) {
+      questions.unshift(match[1].trim());
+    } else if (questions.length > 0) {
+      break;
+    }
+  }
+
+  return questions.length >= 2 ? new Set(questions) : new Set();
+}
+
 export function ChatMessage({ msg, onSendFollowUp, loading }: ChatMessageProps) {
+  const followUps = msg.role === 'assistant' ? getFollowUpQuestions(msg.content) : new Set<string>();
+
   return (
     <div className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
       {msg.role === 'assistant' && (
@@ -52,9 +74,7 @@ export function ChatMessage({ msg, onSendFollowUp, loading }: ChatMessageProps) 
                     </td>
                   ),
                   tr: ({ children, ...props }) => (
-                    <tr className="even:bg-secondary/30" {...props}>
-                      {children}
-                    </tr>
+                    <tr className="even:bg-secondary/30" {...props}>{children}</tr>
                   ),
                   ul: ({ children }) => (
                     <ul className="list-disc pl-5 my-1.5 space-y-0.5">{children}</ul>
@@ -62,7 +82,27 @@ export function ChatMessage({ msg, onSendFollowUp, loading }: ChatMessageProps) 
                   ol: ({ children }) => (
                     <ol className="list-decimal pl-5 my-1.5 space-y-0.5">{children}</ol>
                   ),
-                  li: ({ children }) => <li className="text-foreground">{children}</li>,
+                  li: ({ children }) => {
+                    // Check if this list item's text matches a follow-up question
+                    const text = extractText(children);
+                    const cleanText = text.replace(/^\**|\**$/g, '').trim();
+                    const isFollowUp = followUps.has(cleanText);
+
+                    if (isFollowUp) {
+                      return (
+                        <li
+                          className="text-foreground cursor-pointer hover:text-primary hover:underline decoration-primary/50 underline-offset-2 transition-colors"
+                          onClick={() => !loading && onSendFollowUp(cleanText)}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => e.key === 'Enter' && !loading && onSendFollowUp(cleanText)}
+                        >
+                          {children}
+                        </li>
+                      );
+                    }
+                    return <li className="text-foreground">{children}</li>;
+                  },
                   p: ({ children }) => <p className="my-1">{children}</p>,
                   strong: ({ children }) => (
                     <strong className="font-semibold text-primary">{children}</strong>
@@ -83,11 +123,19 @@ export function ChatMessage({ msg, onSendFollowUp, loading }: ChatMessageProps) 
           )}
           <p className="text-[10px] text-muted-foreground mt-1.5">{fmt(msg.timestamp)}</p>
         </div>
-
-        {msg.role === 'assistant' && (
-          <FollowUpChips content={msg.content} onSend={onSendFollowUp} disabled={loading} />
-        )}
       </div>
     </div>
   );
+}
+
+/** Recursively extract plain text from React children */
+function extractText(children: React.ReactNode): string {
+  if (typeof children === 'string') return children;
+  if (typeof children === 'number') return String(children);
+  if (!children) return '';
+  if (Array.isArray(children)) return children.map(extractText).join('');
+  if (typeof children === 'object' && 'props' in children) {
+    return extractText((children as React.ReactElement).props.children);
+  }
+  return '';
 }
