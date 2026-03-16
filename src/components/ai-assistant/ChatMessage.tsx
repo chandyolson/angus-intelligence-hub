@@ -81,19 +81,24 @@ export function ChatMessage({ msg, onSendFollowUp, loading }: ChatMessageProps) 
                   ul: ({ children }) => (
                     <ul className="list-disc pl-5 my-1.5 space-y-0.5">{children}</ul>
                   ),
-                  ol: ({ children }) => (
-                    <ol className="list-decimal pl-5 my-1.5 space-y-0.5">{children}</ol>
-                  ),
+                  ol: ({ children }) => {
+                    // Check if this ordered list contains follow-up questions
+                    const hasFollowUps = followUps.size > 0;
+                    return (
+                      <ol className={`list-decimal pl-5 my-1.5 ${hasFollowUps ? 'space-y-1.5' : 'space-y-0.5'}`}>
+                        {children}
+                      </ol>
+                    );
+                  },
                   li: ({ children }) => {
-                    // Check if this list item's text matches a follow-up question
                     const text = extractText(children);
-                    const cleanText = text.replace(/^\**|\**$/g, '').trim();
+                    const cleanText = text.replace(/^[\*_]+|[\*_]+$/g, '').trim();
                     const isFollowUp = followUps.has(cleanText);
 
                     if (isFollowUp) {
                       return (
                         <li
-                          className="text-foreground cursor-pointer rounded-md px-2 py-1 -mx-2 hover:text-primary hover:bg-primary/10 active:bg-primary/20 active:ring-2 active:ring-primary/40 hover:underline decoration-primary/50 underline-offset-2 transition-all duration-150"
+                          className="list-none -ml-5 text-foreground cursor-pointer border border-border rounded-lg px-3 py-2 hover:border-primary hover:text-primary hover:bg-primary/10 active:bg-primary/20 active:ring-2 active:ring-primary/30 active:scale-[0.98] transition-all duration-150 select-none"
                           onClick={() => !loading && onSendFollowUp(cleanText)}
                           role="button"
                           tabIndex={0}
