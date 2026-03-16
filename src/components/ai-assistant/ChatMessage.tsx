@@ -60,9 +60,7 @@ export function ChatMessage({ msg, onSendFollowUp, loading }: ChatMessageProps) 
                 remarkPlugins={[remarkGfm]}
                 components={{
                   table: ({ children }) => (
-                    <div className="overflow-x-auto my-2 rounded border border-border">
-                      <table className="w-full text-xs border-collapse">{children}</table>
-                    </div>
+                    <TableWithExport>{children}</TableWithExport>
                   ),
                   thead: ({ children }) => (
                     <thead className="bg-secondary text-foreground">{children}</thead>
