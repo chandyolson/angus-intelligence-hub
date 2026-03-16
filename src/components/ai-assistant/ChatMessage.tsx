@@ -36,6 +36,78 @@ function getFollowUpQuestions(content: string): Set<string> {
   return questions.length >= 2 ? new Set(questions) : new Set();
 }
 
+function extractTableData(tableEl: HTMLTableElement): { headers: string[]; rows: string[][] } {
+  const headers: string[] = [];
+  const rows: string[][] = [];
+  tableEl.querySelectorAll('thead th').forEach(th => headers.push(th.textContent?.trim() ?? ''));
+  tableEl.querySelectorAll('tbody tr').forEach(tr => {
+    const row: string[] = [];
+    tr.querySelectorAll('td').forEach(td => row.push(td.textContent?.trim() ?? ''));
+    rows.push(row);
+  });
+  return { headers, rows };
+}
+
+function downloadCSV(tableEl: HTMLTableElement) {
+  const { headers, rows } = extractTableData(tableEl);
+  const csvContent = [headers, ...rows].map(r => r.map(c => `"${c.replace(/"/g, '""')}"`).join(',')).join('\n');
+  const blob = new Blob([csvContent], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'table-export.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+async function downloadPDF(tableEl: HTMLTableElement) {
+  const { headers, rows } = extractTableData(tableEl);
+  const { default: jsPDF } = await import('jspdf');
+  const { default: autoTable } = await import('jspdf-autotable');
+  const doc = new jsPDF({ orientation: headers.length > 5 ? 'landscape' : 'portrait' });
+  autoTable(doc, {
+    head: [headers],
+    body: rows,
+    styles: { fontSize: 9 },
+    headStyles: { fillColor: [55, 65, 81] },
+  });
+  doc.save('table-export.pdf');
+}
+
+function TableWithExport({ children }: { children: React.ReactNode }) {
+  const tableRef = useRef<HTMLTableElement>(null);
+
+  const handleCSV = useCallback(() => {
+    if (tableRef.current) downloadCSV(tableRef.current);
+  }, []);
+
+  const handlePDF = useCallback(() => {
+    if (tableRef.current) downloadPDF(tableRef.current);
+  }, []);
+
+  return (
+    <div className="group/table relative overflow-x-auto my-2 rounded border border-border">
+      <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover/table:opacity-100 transition-opacity z-10">
+        <button
+          onClick={handleCSV}
+          className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-secondary/80 hover:bg-secondary text-muted-foreground hover:text-foreground border border-border/50 backdrop-blur-sm transition-colors"
+          title="Download CSV"
+        >
+          <Download size={10} /> CSV
+        </button>
+        <button
+          onClick={handlePDF}
+          className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-secondary/80 hover:bg-secondary text-muted-foreground hover:text-foreground border border-border/50 backdrop-blur-sm transition-colors"
+          title="Download PDF"
+        >
+          <FileText size={10} /> PDF
+        </button>
+      </div>
+      <table ref={tableRef} className="w-full text-xs border-collapse">{children}</table>
+    </div>
+  );
+}
+
 export function ChatMessage({ msg, onSendFollowUp, loading }: ChatMessageProps) {
   const followUps = msg.role === 'assistant' ? getFollowUpQuestions(msg.content) : new Set<string>();
 
