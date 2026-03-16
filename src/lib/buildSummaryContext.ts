@@ -20,7 +20,7 @@ async function fetchAllBlairCombined(): Promise<BlairRow[]> {
   while (true) {
     const { data, error } = await supabase
       .from('blair_combined')
-      .select('ai_sire_1, preg_stage, breeding_year, calf_status, operation, lifetime_id')
+      .select('ai_sire_1, preg_stage, breeding_year, calf_status, operation, lifetime_id, calf_sire, calf_bw, gestation_days')
       .range(from, from + PAGE_SIZE - 1);
 
     if (error) throw error;
