@@ -2,6 +2,7 @@ import React, { useRef, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Download, FileText } from 'lucide-react';
+import { InlineChart, parseChartJson } from './InlineChart';
 
 type Msg = { role: 'user' | 'assistant'; content: string; timestamp: Date };
 
@@ -192,6 +193,24 @@ export function ChatMessage({ msg, onSendFollowUp, loading }: ChatMessageProps) 
                   h4: ({ children }) => (
                     <h4 className="font-semibold text-foreground mt-2 mb-1 text-[13px]">{children}</h4>
                   ),
+                  code: ({ className, children, ...props }) => {
+                    const match = /language-chart/.exec(className || '');
+                    if (match) {
+                      const chartConfig = parseChartJson(String(children).trim());
+                      if (chartConfig) return <InlineChart config={chartConfig} />;
+                    }
+                    // Check if it's an inline code or block
+                    const isInline = !className;
+                    if (isInline) {
+                      return <code className="bg-secondary/50 text-foreground px-1 py-0.5 rounded text-[12px]" {...props}>{children}</code>;
+                    }
+                    return (
+                      <code className={`block bg-secondary/50 text-foreground p-2 rounded text-[11px] overflow-x-auto ${className || ''}`} {...props}>
+                        {children}
+                      </code>
+                    );
+                  },
+                  pre: ({ children }) => <>{children}</>,
                 }}
               >
                 {msg.content}
