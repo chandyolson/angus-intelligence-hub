@@ -7,6 +7,9 @@ interface BlairRow {
   calf_status: string | null;
   operation: string | null;
   lifetime_id: string | null;
+  calf_sire: string | null;
+  calf_bw: number | null;
+  gestation_days: number | null;
 }
 
 async function fetchAllBlairCombined(): Promise<BlairRow[]> {
@@ -17,7 +20,7 @@ async function fetchAllBlairCombined(): Promise<BlairRow[]> {
   while (true) {
     const { data, error } = await supabase
       .from('blair_combined')
-      .select('ai_sire_1, preg_stage, breeding_year, calf_status, operation, lifetime_id')
+      .select('ai_sire_1, preg_stage, breeding_year, calf_status, operation, lifetime_id, calf_sire, calf_bw, gestation_days')
       .range(from, from + PAGE_SIZE - 1);
 
     if (error) throw error;
@@ -136,7 +139,34 @@ export async function buildSummaryContext(question?: string): Promise<string> {
     yearTable += `${yr} | ${v.total} | ${aiPct}% | ${v.open} | ${openPct}% | ${v.alive} | ${v.dead}\n`;
   }
 
-  let result = sireTable + yearTable;
+  // --- Calf Sire Summary (confirmed calves) ---
+  const calfSireMap = new Map<string, { calves: number; alive: number; dead: number; bwSum: number; bwCount: number; gestSum: number; gestCount: number }>();
+  for (const r of blair) {
+    if (!r.calf_sire) continue;
+    const entry = calfSireMap.get(r.calf_sire) || { calves: 0, alive: 0, dead: 0, bwSum: 0, bwCount: 0, gestSum: 0, gestCount: 0 };
+    entry.calves++;
+    if (r.calf_status === 'Alive') entry.alive++;
+    if (r.calf_status === 'Dead') entry.dead++;
+    if (r.calf_bw != null) { entry.bwSum += r.calf_bw; entry.bwCount++; }
+    if (r.gestation_days != null) { entry.gestSum += r.gestation_days; entry.gestCount++; }
+    calfSireMap.set(r.calf_sire, entry);
+  }
+
+  const calfSireEntries = [...calfSireMap.entries()]
+    .filter(([, v]) => v.calves >= 5)
+    .sort((a, b) => b[1].calves - a[1].calves);
+
+  let calfSireTable = '\n=== CALF SIRE SUMMARY — CONFIRMED CALVES (Blair, 5+ calves) ===\n';
+  calfSireTable += 'SIRE | TOTAL CALVES | ALIVE | DEAD | SURVIVAL% | AVG BW | AVG GEST\n';
+  calfSireTable += '-'.repeat(80) + '\n';
+  for (const [sire, v] of calfSireEntries) {
+    const surv = v.calves > 0 ? ((v.alive / v.calves) * 100).toFixed(1) : '—';
+    const avgBw = v.bwCount > 0 ? (v.bwSum / v.bwCount).toFixed(1) : '—';
+    const avgGest = v.gestCount > 0 ? (v.gestSum / v.gestCount).toFixed(1) : '—';
+    calfSireTable += `${sire} | ${v.calves} | ${v.alive} | ${v.dead} | ${surv}% | ${avgBw} | ${avgGest}\n`;
+  }
+
+  let result = sireTable + calfSireTable + yearTable;
 
   // --- Conditionally add culling data ---
   if (question && needsCullingContext(question)) {
