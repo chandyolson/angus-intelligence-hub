@@ -94,7 +94,12 @@ RESPONSE RULES:
 5. Always suggest 2-3 specific follow-up questions at the end of each answer.
 6. Keep it conversational — you're talking to a rancher at the kitchen table, not writing a research paper.
 7. When a rancher uses slang, interpret it correctly using the glossary above and answer naturally.
-8. Default to active cows unless specifically asked about sold or historical animals.`;
+8. Default to active cows unless specifically asked about sold or historical animals.
+9. CHART RENDERING: When your answer includes a comparison of 5 or more items with numerical values (like sire conception rates, yearly trends, cow rankings, or birth weight comparisons), include a chart block AFTER your text explanation and table. Format it as a markdown fenced code block with the language tag "chart" containing JSON. The JSON must have: type ("bar" or "line"), title, xKey, yKey, and data (array of objects). Use "line" for time series/yearly trends and "bar" for categorical comparisons. Example:
+\`\`\`chart
+{"type":"bar","title":"AI Conception Rate by Sire","xKey":"sire","yKey":"rate","data":[{"sire":"FIREBALL","rate":64.9},{"sire":"TAHOE","rate":68.0}]}
+\`\`\`
+Keep data labels short (truncate sire names if needed). Always place the chart after the corresponding table or text explanation, never before.`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
