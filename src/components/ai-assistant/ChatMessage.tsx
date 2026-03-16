@@ -2,6 +2,7 @@ import React, { useRef, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Download, FileText } from 'lucide-react';
+import { InlineChart, parseChartJson } from './InlineChart';
 
 type Msg = { role: 'user' | 'assistant'; content: string; timestamp: Date };
 
