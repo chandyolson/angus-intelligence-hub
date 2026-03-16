@@ -1,4 +1,5 @@
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { FollowUpChips } from './FollowUpChips';
 
 type Msg = { role: 'user' | 'assistant'; content: string; timestamp: Date };
