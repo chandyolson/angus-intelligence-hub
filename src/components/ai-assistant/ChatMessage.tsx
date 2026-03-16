@@ -91,7 +91,7 @@ export function ChatMessage({ msg, onSendFollowUp, loading }: ChatMessageProps) 
                     if (isFollowUp) {
                       return (
                         <li
-                          className="text-foreground cursor-pointer hover:text-primary hover:underline decoration-primary/50 underline-offset-2 transition-colors"
+                          className="text-foreground cursor-pointer rounded-md px-2 py-1 -mx-2 hover:text-primary hover:bg-primary/10 active:bg-primary/20 active:ring-2 active:ring-primary/40 hover:underline decoration-primary/50 underline-offset-2 transition-all duration-150"
                           onClick={() => !loading && onSendFollowUp(cleanText)}
                           role="button"
                           tabIndex={0}
