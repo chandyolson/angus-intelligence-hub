@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import ReactMarkdown from 'react-markdown';
 import { Send, Trash2, Bot } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { buildSummaryContext } from '@/lib/buildSummaryContext';
+import { ChatMessage } from '@/components/ai-assistant/ChatMessage';
 
 type Msg = { role: 'user' | 'assistant'; content: string; timestamp: Date };
 
@@ -69,14 +69,10 @@ export default function AIAssistant() {
     setLoading(true);
 
     try {
-      // Build summary context from Supabase
       const context = await buildSummaryContext(text.trim());
-
-      // Call Claude via edge function
       const { data, error } = await supabase.functions.invoke('chat', {
         body: { question: text.trim(), context },
       });
-
       if (error) throw error;
 
       setMessages(prev => [...prev, {
@@ -99,8 +95,6 @@ export default function AIAssistant() {
     setMessages([WELCOME_MSG]);
     setInput('');
   };
-
-  const fmt = (d: Date) => d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 
   return (
     <div className="space-y-4 h-[calc(100vh-8rem)]">
@@ -133,27 +127,12 @@ export default function AIAssistant() {
           {/* Messages */}
           <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-3 pr-1 min-h-0">
             {messages.map((msg, i) => (
-              <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                {msg.role === 'assistant' && (
-                  <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center mr-2 shrink-0 mt-1">
-                    <span className="text-sm">🐂</span>
-                  </div>
-                )}
-                <div className={`max-w-[80%] rounded-lg px-4 py-3 ${
-                  msg.role === 'user'
-                    ? 'bg-primary/20 border border-primary text-foreground'
-                    : 'bg-card border border-border text-foreground'
-                }`}>
-                  {msg.role === 'assistant' ? (
-                    <div className="prose prose-sm prose-invert max-w-none text-[13px] [&_p]:my-1 [&_ul]:my-1 [&_li]:my-0.5 [&_strong]:text-primary">
-                      <ReactMarkdown>{msg.content}</ReactMarkdown>
-                    </div>
-                  ) : (
-                    <p className="text-[13px]">{msg.content}</p>
-                  )}
-                  <p className="text-[10px] text-muted-foreground mt-1.5">{fmt(msg.timestamp)}</p>
-                </div>
-              </div>
+              <ChatMessage
+                key={i}
+                msg={msg}
+                onSendFollowUp={sendMessage}
+                loading={loading}
+              />
             ))}
 
             {/* Typing indicator */}
