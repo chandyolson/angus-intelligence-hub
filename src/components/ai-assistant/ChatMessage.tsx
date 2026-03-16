@@ -31,6 +31,7 @@ export function ChatMessage({ msg, onSendFollowUp, loading }: ChatMessageProps) 
           {msg.role === 'assistant' ? (
             <div className="prose-chat text-[13px]">
               <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
                 components={{
                   table: ({ children }) => (
                     <div className="overflow-x-auto my-2 rounded border border-border">
