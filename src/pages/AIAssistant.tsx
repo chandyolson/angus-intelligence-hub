@@ -91,6 +91,7 @@ export default function AIAssistant() {
       }]);
     } finally {
       setLoading(false);
+      setLoadingPhase(null);
     }
   };
 
