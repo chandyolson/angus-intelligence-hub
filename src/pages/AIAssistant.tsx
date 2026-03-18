@@ -70,7 +70,9 @@ export default function AIAssistant() {
     setLoading(true);
 
     try {
-      const context = await buildSummaryContext(text.trim());
+      setLoadingPhase('searching');
+      const context = await buildContext(text.trim());
+      setLoadingPhase('thinking');
       const { data, error } = await supabase.functions.invoke('chat', {
         body: { question: text.trim(), context },
       });
