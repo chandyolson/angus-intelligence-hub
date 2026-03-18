@@ -7,23 +7,23 @@ const KNOWN_SIRES = [
   'ADVANCE', 'COMRADE', 'ABSOLUTE', 'PROPHET', '007', 'CLEANUP',
 ];
 
-async function safeQuery<T>(fn: () => Promise<{ data: T | null; error: any }>): Promise<T | null> {
+async function safeSelect(buildQuery: () => any): Promise<any[] | null> {
   try {
-    const { data, error } = await fn();
+    const { data, error } = await buildQuery();
     if (error) { console.warn('[buildContext] query error:', error.message); return null; }
     return data;
-  } catch (e) { console.warn('[buildContext] query exception:', e); return null; }
+  } catch (e) { console.warn('[buildContext] exception:', e); return null; }
 }
 
 /** Paginated fetch to get all rows past the 1000-row limit */
-async function fetchAll<T>(
+async function fetchAll(
   table: string,
   select: string,
   filters: Record<string, any> = {},
   inFilters: Record<string, string[]> = {},
   gteFilters: Record<string, any> = {},
   notNullCols: string[] = [],
-): Promise<T[]> {
+): Promise<any[]> {
   const PAGE = 1000;
   const all: any[] = [];
   let from = 0;
@@ -40,7 +40,7 @@ async function fetchAll<T>(
     if (data.length < PAGE) break;
     from += PAGE;
   }
-  return all as T[];
+  return all;
 }
 
 const PREG_STAGES = ['AI', 'Second AI', 'Early', 'Middle', 'Late', 'Open', 'In Between'];
@@ -53,14 +53,14 @@ export async function buildContext(question: string): Promise<string> {
   const tagMatch = question.match(/\b(\d{3,4})\b/);
   if (tagMatch) {
     const tag = tagMatch[1];
-    const cowData = await safeQuery(() =>
+    const cowData = await safeSelect(() =>
       supabase.from('animals')
         .select('lifetime_id, tag, year_born, status, sire, dam_sire, operation, value_score, value_score_percentile, c1_conception_score, c2_survival_score, c3_interval_score, c4_calves_per_year_score, c5_gestation_score, c6_birthweight_score')
         .eq('tag', tag).eq('operation', 'Blair').limit(5)
     );
-    if (cowData && (cowData as any[]).length > 0) {
+    if (cowData && cowData.length > 0) {
       contextParts.push(`COW PROFILE:\n${JSON.stringify(cowData, null, 2)}`);
-      const lid = (cowData as any[])[0].lifetime_id;
+      const lid = cowData[0].lifetime_id;
       if (lid) {
         const breeding = await fetchAll('blair_combined',
           'breeding_year, ai_sire_1, ai_sire_2, preg_stage, calving_date, calf_sire, calf_sex, calf_bw, calf_status, gestation_days, cow_sire',
@@ -72,7 +72,7 @@ export async function buildContext(question: string): Promise<string> {
 
   // ── SIRE QUESTIONS ─────────────────────────────────────────
   if (q.includes('sire') || q.includes('conception rate') || q.includes('bull') || q.includes('conception')) {
-    const sireData = await fetchAll<{ ai_sire_1: string; preg_stage: string }>(
+    const sireData = await fetchAll(
       'blair_combined', 'ai_sire_1, preg_stage',
       { operation: 'Blair' }, { preg_stage: PREG_STAGES }, {}, ['ai_sire_1']
     );
@@ -95,15 +95,14 @@ export async function buildContext(question: string): Promise<string> {
   // ── SPECIFIC SIRE MENTIONED — fetch calf outcomes ──────────
   const mentionedSires = KNOWN_SIRES.filter(s => q.includes(s.toLowerCase()));
   for (const sire of mentionedSires) {
-    const calfData = await fetchAll<any>(
+    const calfData = await fetchAll(
       'blair_combined', 'calf_bw, calf_status, calf_sex, gestation_days, breeding_year, lifetime_id',
       { calf_sire: sire, operation: 'Blair' }
     );
     if (calfData.length > 0) {
       contextParts.push(`CALF OUTCOMES FOR ${sire} (as confirmed calf sire, ${calfData.length} calves):\n${JSON.stringify(calfData.slice(0, 80), null, 2)}`);
     }
-    // Also fetch AI breeding data for the sire
-    const aiData = await fetchAll<any>(
+    const aiData = await fetchAll(
       'blair_combined', 'ai_sire_1, preg_stage, breeding_year, lifetime_id',
       { ai_sire_1: sire, operation: 'Blair' }
     );
@@ -114,27 +113,24 @@ export async function buildContext(question: string): Promise<string> {
 
   // ── DAUGHTER COMPARISON / HEIFER / BIRTH WEIGHT BY SIRE ────
   if (q.includes('daughter') || q.includes('heifer') || (q.includes('birth weight') && mentionedSires.length > 0)) {
-    // Fetch animals sired by the mentioned sires, then their calving data
     for (const sire of mentionedSires) {
-      const daughters = await safeQuery(() =>
+      const daughters = await safeSelect(() =>
         supabase.from('animals')
           .select('lifetime_id, tag, year_born, sire, sex, status')
           .eq('sire', sire).eq('operation', 'Blair')
-      ) as any[] | null;
+      );
       if (daughters && daughters.length > 0) {
         contextParts.push(`DAUGHTERS OF ${sire} (${daughters.length} animals):\n${JSON.stringify(daughters.slice(0, 30), null, 2)}`);
-        // Get calving records for these daughters
         const lids = daughters.map((d: any) => d.lifetime_id).filter(Boolean);
         if (lids.length > 0) {
-          // Fetch in batches of 50
           const allCalving: any[] = [];
           for (let i = 0; i < lids.length; i += 50) {
             const batch = lids.slice(i, i + 50);
-            const calvingData = await safeQuery(() =>
+            const calvingData = await safeSelect(() =>
               supabase.from('blair_combined')
                 .select('lifetime_id, breeding_year, calf_bw, calf_sex, calf_status, calf_sire, gestation_days')
                 .in('lifetime_id', batch).eq('operation', 'Blair')
-            ) as any[] | null;
+            );
             if (calvingData) allCalving.push(...calvingData);
           }
           if (allCalving.length > 0) {
@@ -147,7 +143,7 @@ export async function buildContext(question: string): Promise<string> {
 
   // ── OPEN RATE / TRENDS ─────────────────────────────────────
   if (q.includes('open') || q.includes('trend') || q.includes('year over year') || q.includes('breeding season')) {
-    const trendData = await fetchAll<{ breeding_year: number; preg_stage: string }>(
+    const trendData = await fetchAll(
       'blair_combined', 'breeding_year, preg_stage',
       { operation: 'Blair' }, { preg_stage: PREG_STAGES }, { breeding_year: 2021 }
     );
@@ -169,13 +165,13 @@ export async function buildContext(question: string): Promise<string> {
 
   // ── CULLING / RANKINGS ─────────────────────────────────────
   if (q.includes('cull') || q.includes('worst') || q.includes('bottom') || q.includes('ranking') || q.includes('score') || q.includes('best cow') || q.includes('top cow')) {
-    const bottomCows = await safeQuery(() =>
+    const bottomCows = await safeSelect(() =>
       supabase.from('animals')
         .select('lifetime_id, tag, year_born, sire, value_score, value_score_percentile, c1_conception_score, c2_survival_score, c3_interval_score, c4_calves_per_year_score')
         .eq('status', 'Active').eq('operation', 'Blair').not('value_score', 'is', null)
         .order('value_score', { ascending: true }).limit(20)
     );
-    const topCows = await safeQuery(() =>
+    const topCows = await safeSelect(() =>
       supabase.from('animals')
         .select('lifetime_id, tag, year_born, sire, value_score, value_score_percentile, c1_conception_score, c2_survival_score, c3_interval_score, c4_calves_per_year_score')
         .eq('status', 'Active').eq('operation', 'Blair').not('value_score', 'is', null)
@@ -187,7 +183,7 @@ export async function buildContext(question: string): Promise<string> {
 
   // ── CALVING / BIRTH WEIGHT / SURVIVAL ──────────────────────
   if (q.includes('calving') || q.includes('birth weight') || q.includes('dead calf') || q.includes('death loss') || q.includes('survival')) {
-    const calvingStats = await fetchAll<any>(
+    const calvingStats = await fetchAll(
       'blair_combined', 'breeding_year, calf_bw, calf_status, calf_sire, calf_sex, calving_date',
       { operation: 'Blair' }, {}, { breeding_year: 2021 }, ['calving_date']
     );
@@ -210,11 +206,11 @@ export async function buildContext(question: string): Promise<string> {
 
   // ── FALLBACK: basic herd stats ─────────────────────────────
   if (contextParts.length === 0) {
-    const herdStats = await safeQuery(() =>
+    const herdStats = await safeSelect(() =>
       supabase.from('animals')
         .select('value_score, value_score_percentile')
         .eq('status', 'Active').eq('operation', 'Blair').not('value_score', 'is', null)
-    ) as any[] | null;
+    );
     if (herdStats && herdStats.length > 0) {
       const scores = herdStats.map((r: any) => parseFloat(r.value_score)).filter((v: number) => !isNaN(v));
       const avg = Math.round((scores.reduce((a: number, b: number) => a + b, 0) / scores.length) * 10) / 10;
