@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { Send, Trash2, Bot } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
-import { buildSummaryContext } from '@/lib/buildSummaryContext';
+import { buildContext } from '@/lib/buildContext';
 import { ChatMessage } from '@/components/ai-assistant/ChatMessage';
 
 type Msg = { role: 'user' | 'assistant'; content: string; timestamp: Date };
