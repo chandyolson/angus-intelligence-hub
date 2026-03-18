@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { Send, Trash2, Bot } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
-import { buildSummaryContext } from '@/lib/buildSummaryContext';
+import { buildContext } from '@/lib/buildContext';
 import { ChatMessage } from '@/components/ai-assistant/ChatMessage';
 
 type Msg = { role: 'user' | 'assistant'; content: string; timestamp: Date };
@@ -52,6 +52,7 @@ export default function AIAssistant() {
   const [messages, setMessages] = useState<Msg[]>([WELCOME_MSG]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loadingPhase, setLoadingPhase] = useState<'searching' | 'thinking' | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -69,7 +70,9 @@ export default function AIAssistant() {
     setLoading(true);
 
     try {
-      const context = await buildSummaryContext(text.trim());
+      setLoadingPhase('searching');
+      const context = await buildContext(text.trim());
+      setLoadingPhase('thinking');
       const { data, error } = await supabase.functions.invoke('chat', {
         body: { question: text.trim(), context },
       });
@@ -88,6 +91,7 @@ export default function AIAssistant() {
       }]);
     } finally {
       setLoading(false);
+      setLoadingPhase(null);
     }
   };
 
@@ -142,6 +146,9 @@ export default function AIAssistant() {
                   <span className="text-sm">🐂</span>
                 </div>
                 <div className="bg-card border border-border rounded-lg px-4 py-3">
+                  <p className="text-xs text-muted-foreground mb-1">
+                    {loadingPhase === 'searching' ? '🔍 Searching herd data...' : '🤔 Thinking...'}
+                  </p>
                   <div className="flex gap-1 items-center h-5">
                     <span className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:0ms]" />
                     <span className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:150ms]" />
