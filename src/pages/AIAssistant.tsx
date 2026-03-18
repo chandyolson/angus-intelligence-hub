@@ -52,6 +52,7 @@ export default function AIAssistant() {
   const [messages, setMessages] = useState<Msg[]>([WELCOME_MSG]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loadingPhase, setLoadingPhase] = useState<'searching' | 'thinking' | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
