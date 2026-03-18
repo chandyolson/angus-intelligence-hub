@@ -146,6 +146,9 @@ export default function AIAssistant() {
                   <span className="text-sm">🐂</span>
                 </div>
                 <div className="bg-card border border-border rounded-lg px-4 py-3">
+                  <p className="text-xs text-muted-foreground mb-1">
+                    {loadingPhase === 'searching' ? '🔍 Searching herd data...' : '🤔 Thinking...'}
+                  </p>
                   <div className="flex gap-1 items-center h-5">
                     <span className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:0ms]" />
                     <span className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:150ms]" />
