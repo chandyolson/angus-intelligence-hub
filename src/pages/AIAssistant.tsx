@@ -81,7 +81,7 @@ export default function AIAssistant() {
 
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: data.answer || 'No response received.',
+        content: anonymize(data.answer || 'No response received.'),
         timestamp: new Date(),
       }]);
     } catch (e) {
