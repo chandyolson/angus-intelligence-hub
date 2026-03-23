@@ -7,6 +7,7 @@ import { Weight, Download } from 'lucide-react';
 import { useBlairCombined, useAnimals } from '@/hooks/useCattleData';
 import { exportToCSV } from '@/lib/calculations';
 import { useNavigate } from 'react-router-dom';
+import { anonymizeSire } from '@/utils/anonymize';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip,
   ResponsiveContainer, Cell, LabelList, LineChart, Line, ReferenceLine,
