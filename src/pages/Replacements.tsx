@@ -10,6 +10,7 @@ import { Baby, Download, Search, ArrowUpDown, ChevronDown } from 'lucide-react';
 import { useAnimals, useBlairCombined } from '@/hooks/useCattleData';
 import { exportToCSV } from '@/lib/calculations';
 import { useNavigate } from 'react-router-dom';
+import { anonymizeSire } from '@/utils/anonymize';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip,
   ResponsiveContainer, Legend, ReferenceLine, LabelList,
