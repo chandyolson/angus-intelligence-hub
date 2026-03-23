@@ -333,7 +333,7 @@ export default function SireAnalysis() {
           <CardHeader className="pb-2">
             <CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">Gestation vs Birth Weight by Sire</CardTitle>
             <p className="text-[11px] text-muted-foreground mt-1">
-              Dot size = sample size · Quadrants based on herd averages ({scatterData.herdAvgGest}d / {scatterData.herdAvgBW} lbs). Blair operation only.
+              Dot size = sample size · Quadrants based on herd averages ({scatterData.herdAvgGest}d / {scatterData.herdAvgBW} lbs).
             </p>
           </CardHeader>
           <CardContent>
