@@ -157,10 +157,10 @@ export default function CowDetail() {
 
   const chips = [
     { label: 'Year Born', value: animal.year_born },
-    { label: 'Sire', value: animal.sire },
-    { label: 'Dam Sire', value: animal.dam_sire },
+    { label: 'Sire', value: anonymizeSire(animal.sire) },
+    { label: 'Dam Sire', value: anonymizeSire(animal.dam_sire) },
     { label: 'Animal Type', value: animal.animal_type },
-    { label: 'Owner', value: animal.owner },
+    { label: 'Owner', value: anonymizeOperation(animal.owner) },
   ];
 
   const scoreColor = (score: number) => {
