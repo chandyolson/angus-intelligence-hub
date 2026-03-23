@@ -1,6 +1,7 @@
 import { AppSidebar } from '@/components/AppSidebar';
 import { useOperation, OperationFilter } from '@/hooks/useOperationContext';
 import { AlertTriangle } from 'lucide-react';
+import { anonymize, anonymizeOperation } from '@/utils/anonymize';
 
 function OperationSelector() {
   const { operation, setOperation } = useOperation();
