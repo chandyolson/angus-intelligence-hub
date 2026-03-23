@@ -337,7 +337,7 @@ export default function Dashboard() {
         // Shortest gestation sire
         if (sireGestation.length > 0) {
           const shortest = sireGestation[0];
-          insights.push({ icon: <TrendingUp className="h-4 w-4" />, text: `Shortest gestation sire: ${shortest.sire} at ${shortest.avgGestation}d (n=${shortest.count})`, color: 'text-muted-foreground' });
+          insights.push({ icon: <TrendingUp className="h-4 w-4" />, text: `Shortest gestation sire: ${anonymizeSire(shortest.sire)} at ${shortest.avgGestation}d (n=${shortest.count})`, color: 'text-muted-foreground' });
         }
 
         if (insights.length === 0) return null;
