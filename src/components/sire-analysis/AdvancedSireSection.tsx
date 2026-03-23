@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { anonymizeSire } from '@/utils/anonymize';
 import { BreedingCalvingRecord } from '@/types/cattle';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
