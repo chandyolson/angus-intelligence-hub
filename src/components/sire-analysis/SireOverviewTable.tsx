@@ -239,7 +239,7 @@ export default function SireOverviewTable({ records }: { records: BreedingCalvin
     <Card className="bg-card border-border">
       <CardHeader className="pb-2">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">Sire Overview — Blair Operation</CardTitle>
+          <CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">Sire Overview</CardTitle>
           <div className="flex items-center gap-2">
             <Input
               placeholder="Search sire…"
