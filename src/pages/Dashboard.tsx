@@ -477,7 +477,7 @@ export default function Dashboard() {
                 <BarChart data={sireGestation} layout="vertical" margin={{ left: 80 }} onClick={(e: any) => { if (e?.activeLabel) setSelectedGestationSire(e.activeLabel); }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(218, 42%, 20%)" />
                   <XAxis type="number" domain={['dataMin - 2', 'dataMax + 2']} tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 11 }} unit=" d" />
-                  <YAxis type="category" dataKey="sire" tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 10 }} width={75} />
+                  <YAxis type="category" dataKey="sire" tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 10 }} width={75} tickFormatter={(v: string) => anonymizeSire(v)} />
                   <Tooltip content={<CustomTooltip />} />
                   <Bar dataKey="avgGestation" name="Avg Gestation" radius={[0, 4, 4, 0]} fill="hsl(190, 60%, 45%)" className="cursor-pointer" />
                 </BarChart>
