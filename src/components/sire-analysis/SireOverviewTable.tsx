@@ -283,7 +283,7 @@ export default function SireOverviewTable({ records }: { records: BreedingCalvin
                   style={{ backgroundColor: i % 2 === 1 ? 'hsl(var(--sidebar-background))' : undefined }}
                   onClick={() => navigate(`/sires/${encodeURIComponent(r.sire)}`)}
                 >
-                  <TableCell className="font-medium text-foreground">{r.sire}</TableCell>
+                  <TableCell className="font-medium text-foreground">{anonymizeSire(r.sire)}</TableCell>
                   <TableCell className="text-muted-foreground">{r.totalUses}</TableCell>
                   <TableCell className="text-muted-foreground">{r.totalCalves || '—'}</TableCell>
 
