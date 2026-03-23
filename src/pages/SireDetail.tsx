@@ -4,6 +4,7 @@ import { useBreedingCalvingRecords, useAnimals } from '@/hooks/useCattleData';
 import { BreedingCalvingRecord } from '@/types/cattle';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft } from 'lucide-react';
+import { anonymizeSire } from '@/utils/anonymize';
 import { ShimmerSkeleton, ShimmerCard } from '@/components/ui/shimmer-skeleton';
 import { ErrorBox } from '@/components/ui/error-box';
 
