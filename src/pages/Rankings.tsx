@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { anonymizeSire } from '@/utils/anonymize';
 import { useActiveAnimals, useBreedingCalvingRecords } from '@/hooks/useCattleData';
 import { exportToCSV, computeCompositeFromRecords } from '@/lib/calculations';
 import { CowLookup } from '@/components/rankings/CowLookup';
