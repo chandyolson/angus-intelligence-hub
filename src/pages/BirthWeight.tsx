@@ -217,7 +217,7 @@ function SireBarChart({ title, data, herdAvg }: { title: string; data: { sire: s
           <BarChart layout="vertical" data={data} margin={{ top: 5, right: 50, left: 10, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis type="number" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} label={{ value: 'Avg BW (lbs)', position: 'insideBottom', offset: -2, fill: 'hsl(var(--muted-foreground))' }} />
-            <YAxis dataKey="sire" type="category" width={130} tick={{ fill: 'hsl(var(--foreground))', fontSize: 11 }} />
+            <YAxis dataKey="sire" type="category" width={130} tick={{ fill: 'hsl(var(--foreground))', fontSize: 11 }} tickFormatter={(v: string) => anonymizeSire(v)} />
             <RTooltip
               contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8 }}
               formatter={(v: any) => [`${v} lbs`, 'Avg BW']}
