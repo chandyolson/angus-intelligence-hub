@@ -6,8 +6,8 @@ import { anonymize, anonymizeOperation } from '@/utils/anonymize';
 function OperationSelector() {
   const { operation, setOperation } = useOperation();
   const options: { value: OperationFilter; label: string }[] = [
-    { value: 'Blair', label: 'Blair' },
-    { value: 'Snyder', label: 'Snyder' },
+    { value: 'Blair', label: anonymizeOperation('Blair') },
+    { value: 'Snyder', label: anonymizeOperation('Snyder') },
     { value: 'Both', label: 'Both' },
   ];
 
