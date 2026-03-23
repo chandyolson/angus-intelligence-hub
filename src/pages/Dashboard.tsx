@@ -494,7 +494,7 @@ export default function Dashboard() {
                 <BarChart data={sireConception} layout="vertical" margin={{ left: 80 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(218, 42%, 20%)" />
                   <XAxis type="number" domain={[0, 100]} tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 11 }} unit="%" />
-                  <YAxis type="category" dataKey="sire" tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 10 }} width={75} />
+                  <YAxis type="category" dataKey="sire" tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 10 }} width={75} tickFormatter={(v: string) => anonymizeSire(v)} />
                   <Tooltip content={<CustomTooltip />} />
                   <Bar dataKey="conceptionRate" name="Conception Rate" radius={[0, 4, 4, 0]} fill="hsl(40, 63%, 49%)" />
                 </BarChart>
