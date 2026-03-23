@@ -376,7 +376,7 @@ export default function SireAnalysis() {
                     const d = payload[0].payload;
                     return (
                       <div className="bg-card border border-border rounded-md px-3 py-2 text-xs shadow-lg">
-                        <p className="text-primary font-medium">{d.name}</p>
+                        <p className="text-primary font-medium">{anonymizeSire(d.name)}</p>
                         <p className="text-muted-foreground">Gestation: {d.gestation} days</p>
                         <p className="text-muted-foreground">Avg BW: {d.bw} lbs</p>
                         <p className="text-muted-foreground">Survival: {d.survivalPct != null ? `${d.survivalPct}%` : '—'}</p>
