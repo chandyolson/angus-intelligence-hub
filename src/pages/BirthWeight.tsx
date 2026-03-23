@@ -160,7 +160,7 @@ export default function BirthWeight() {
           <Card className="border-emerald-500/30 bg-emerald-500/5">
             <CardContent className="p-4">
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Lightest Cow Sire</p>
-              <p className="text-lg font-bold text-foreground truncate">{lightestCow.sire}</p>
+              <p className="text-lg font-bold text-foreground truncate">{anonymizeSire(lightestCow.sire)}</p>
               <p className="text-sm text-emerald-400 font-semibold">{lightestCow.avg} lbs <span className="text-muted-foreground font-normal">· n={lightestCow.n}</span></p>
             </CardContent>
           </Card>
