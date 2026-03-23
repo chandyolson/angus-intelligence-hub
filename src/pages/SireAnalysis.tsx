@@ -242,7 +242,7 @@ export default function SireAnalysis() {
                 <Trophy className="h-4 w-4 text-success" />
                 <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Top Performer</span>
               </div>
-              <p className="text-lg font-bold text-foreground">{topPerformer.sire}</p>
+              <p className="text-lg font-bold text-foreground">{anonymizeSire(topPerformer.sire)}</p>
               <p className="text-2xl font-bold" style={{ color: rateColor(topPerformer.rate) }}>{topPerformer.rate}%</p>
             </CardContent>
           </Card>
