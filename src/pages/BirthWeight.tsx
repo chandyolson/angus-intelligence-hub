@@ -282,8 +282,8 @@ function FlagTable({ rows, colorFn, filename, navigate }: {
                 >
                   <TableCell className="font-medium">{r.tag || '—'}</TableCell>
                   <TableCell className="font-mono text-xs">{r.lifetime_id}</TableCell>
-                  <TableCell>{r.calf_sire || '—'}</TableCell>
-                  <TableCell>{r.ai_sire_1 || '—'}</TableCell>
+                  <TableCell>{anonymizeSire(r.calf_sire) || '—'}</TableCell>
+                  <TableCell>{anonymizeSire(r.ai_sire_1) || '—'}</TableCell>
                   <TableCell>{r.calving_date || '—'}</TableCell>
                   <TableCell className={colorFn(r.bw)}>{r.bw} lbs</TableCell>
                 </TableRow>
