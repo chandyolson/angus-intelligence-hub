@@ -310,7 +310,7 @@ export default function SireAnalysis() {
               <BarChart layout="vertical" data={bwData} margin={{ left: 110, right: 40 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis type="number" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} />
-                <YAxis dataKey="name" type="category" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} width={105} />
+                <YAxis dataKey="name" type="category" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} width={105} tickFormatter={(v: string) => anonymizeSire(v)} />
                 <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }}
                   formatter={(value: number, _: string, entry: any) => [`${value} lbs (n=${entry.payload.count})`, 'Avg BW']} />
                 <ReferenceLine x={herdAvgBW} stroke="hsl(var(--foreground))" strokeDasharray="5 5"
