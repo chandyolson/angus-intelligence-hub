@@ -141,7 +141,7 @@ export default function AdvancedSireSection({ records }: { records: BreedingCalv
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis type="number" domain={[0, 100]} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
                   tickFormatter={v => `${v}%`} />
-                <YAxis dataKey="name" type="category" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} width={105} />
+                <YAxis dataKey="name" type="category" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} width={105} tickFormatter={(v: string) => anonymizeSire(v)} />
                 <Tooltip
                   contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }}
                   formatter={(value: number, _: string, entry: any) => [`${value}% (n=${entry.payload.n})`, '1st Service AI Rate']}

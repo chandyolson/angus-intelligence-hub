@@ -283,7 +283,7 @@ export default function BreedingTab() {
               <BarChart data={conceptionByCowSire} layout="vertical" margin={{ left: 120, right: 60 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(218, 42%, 20%)" />
                 <XAxis type="number" domain={[0, 100]} tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 11 }} unit="%" />
-                <YAxis dataKey="sire" type="category" tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 10 }} width={115} />
+                <YAxis dataKey="sire" type="category" tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 10 }} width={115} tickFormatter={(v: string) => anonymizeSire(v)} />
                 <Tooltip content={<CustomTooltip />} />
                 <Bar dataKey="ai_conception_rate" name="AI Conception %" radius={[0, 4, 4, 0]}
                   label={({ x, y, width, height, index }: any) => (
