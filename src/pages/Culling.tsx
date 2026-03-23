@@ -465,7 +465,7 @@ function SireLineLongevity({ allAnimals, records, currentYear }: {
           <ComposedChart layout="vertical" data={data} margin={{ top: 5, right: 40, left: 10, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis type="number" domain={[0, 'auto']} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} label={{ value: 'Avg Tenure (yrs)', position: 'insideBottom', offset: -2, fill: 'hsl(var(--muted-foreground))' }} />
-            <YAxis dataKey="sire" type="category" width={130} tick={{ fill: 'hsl(var(--foreground))', fontSize: 11 }} />
+            <YAxis dataKey="sire" type="category" width={130} tick={{ fill: 'hsl(var(--foreground))', fontSize: 11 }} tickFormatter={(v: string) => anonymizeSire(v)} />
             <RTooltip
               contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8 }}
               labelStyle={{ color: 'hsl(var(--foreground))' }}
