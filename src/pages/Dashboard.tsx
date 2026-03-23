@@ -512,7 +512,7 @@ export default function Dashboard() {
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={calfSexRatios}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(218, 42%, 20%)" />
-                <XAxis dataKey="sire" tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 10 }} angle={-30} textAnchor="end" height={60} />
+                <XAxis dataKey="sire" tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 10 }} angle={-30} textAnchor="end" height={60} tickFormatter={(v: string) => anonymizeSire(v)} />
                 <YAxis tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 11 }} unit="%" />
                 <Tooltip content={<CustomTooltip />} />
                 <Bar dataKey="bullPct" name="Bull %" stackId="sex" fill="hsl(190, 60%, 45%)" radius={[0, 0, 0, 0]} />
