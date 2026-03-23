@@ -133,7 +133,7 @@ export default function SireDetail() {
 
       {/* Header */}
       <div className="flex items-start justify-between">
-        <h1 className="text-[20px] font-semibold text-foreground">{decodedSire}</h1>
+        <h1 className="text-[20px] font-semibold text-foreground">{anonymizeSire(decodedSire)}</h1>
       </div>
 
       {/* Summary badges */}

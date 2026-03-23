@@ -413,8 +413,8 @@ export default function CowRoster() {
                       <TableCell className="font-medium text-foreground">{cow.tag || '—'}</TableCell>
                       <TableCell className="text-muted-foreground text-xs">{cow.lifetime_id}</TableCell>
                       <TableCell>{cow.year_born || '—'}</TableCell>
-                      <TableCell>{cow.sire || '—'}</TableCell>
-                      <TableCell>{cow.dam_sire || '—'}</TableCell>
+                      <TableCell>{anonymizeSire(cow.sire) || '—'}</TableCell>
+                      <TableCell>{anonymizeSire(cow.dam_sire) || '—'}</TableCell>
                       <TableCell>{cow.total_calves}</TableCell>
                       <TableCell>{cow.avg_bw || '—'}</TableCell>
                       <TableCell>{cow.ai_conception_rate}%</TableCell>

@@ -8,6 +8,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Download, ArrowUpDown } from 'lucide-react';
+import { anonymizeSire } from '@/utils/anonymize';
 
 interface SireOverviewRow {
   sire: string;
