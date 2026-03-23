@@ -672,7 +672,7 @@ function SireHeiferSection({ records, allAnimals }: { records: any[] | undefined
                 if (name === 'Breedings') return [v, 'Records'];
                 return [v, name];
               }}
-              labelFormatter={(_, payload) => payload?.[0]?.payload?.sire ?? ''}
+              labelFormatter={(_, payload) => anonymizeSire(payload?.[0]?.payload?.sire ?? '')}
             />
             <Scatter data={scatterData} shape="circle">
               {scatterData.map((s, i) => (
