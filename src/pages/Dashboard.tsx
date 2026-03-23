@@ -9,6 +9,7 @@ import {
   LineChart, Line, ReferenceLine, ResponsiveContainer, Cell, PieChart, Pie, Legend,
 } from 'recharts';
 import { AlertTriangle, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { anonymizeSire } from '@/utils/anonymize';
 import { useNavigate } from 'react-router-dom';
 import { ShimmerSkeleton, ShimmerCard } from '@/components/ui/shimmer-skeleton';
 import { ErrorBox } from '@/components/ui/error-box';
@@ -312,7 +313,7 @@ export default function Dashboard() {
         // Top AI sire
         if (sireConception.length > 0) {
           const top = sireConception[0];
-          insights.push({ icon: <TrendingUp className="h-4 w-4" />, text: `Top AI sire: ${top.sire} at ${top.conceptionRate}% (n=${top.count})`, color: 'text-success' });
+          insights.push({ icon: <TrendingUp className="h-4 w-4" />, text: `Top AI sire: ${anonymizeSire(top.sire)} at ${top.conceptionRate}% (n=${top.count})`, color: 'text-success' });
         }
 
         // Open rate flag
@@ -336,7 +337,7 @@ export default function Dashboard() {
         // Shortest gestation sire
         if (sireGestation.length > 0) {
           const shortest = sireGestation[0];
-          insights.push({ icon: <TrendingUp className="h-4 w-4" />, text: `Shortest gestation sire: ${shortest.sire} at ${shortest.avgGestation}d (n=${shortest.count})`, color: 'text-muted-foreground' });
+          insights.push({ icon: <TrendingUp className="h-4 w-4" />, text: `Shortest gestation sire: ${anonymizeSire(shortest.sire)} at ${shortest.avgGestation}d (n=${shortest.count})`, color: 'text-muted-foreground' });
         }
 
         if (insights.length === 0) return null;
@@ -442,7 +443,7 @@ export default function Dashboard() {
             {loading ? <ShimmerSkeleton className="h-64" /> : selectedGestationSire ? (
               <div className="space-y-2">
                 <p className="text-xs text-muted-foreground mb-3">
-                  Records for <span className="text-primary font-medium">{selectedGestationSire}</span>
+                  Records for <span className="text-primary font-medium">{anonymizeSire(selectedGestationSire)}</span>
                 </p>
                 <div className="overflow-x-auto max-h-[300px] overflow-y-auto">
                   <table className="w-full text-xs border-collapse">
@@ -476,7 +477,7 @@ export default function Dashboard() {
                 <BarChart data={sireGestation} layout="vertical" margin={{ left: 80 }} onClick={(e: any) => { if (e?.activeLabel) setSelectedGestationSire(e.activeLabel); }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(218, 42%, 20%)" />
                   <XAxis type="number" domain={['dataMin - 2', 'dataMax + 2']} tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 11 }} unit=" d" />
-                  <YAxis type="category" dataKey="sire" tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 10 }} width={75} />
+                  <YAxis type="category" dataKey="sire" tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 10 }} width={75} tickFormatter={(v: string) => anonymizeSire(v)} />
                   <Tooltip content={<CustomTooltip />} />
                   <Bar dataKey="avgGestation" name="Avg Gestation" radius={[0, 4, 4, 0]} fill="hsl(190, 60%, 45%)" className="cursor-pointer" />
                 </BarChart>
@@ -493,7 +494,7 @@ export default function Dashboard() {
                 <BarChart data={sireConception} layout="vertical" margin={{ left: 80 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(218, 42%, 20%)" />
                   <XAxis type="number" domain={[0, 100]} tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 11 }} unit="%" />
-                  <YAxis type="category" dataKey="sire" tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 10 }} width={75} />
+                  <YAxis type="category" dataKey="sire" tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 10 }} width={75} tickFormatter={(v: string) => anonymizeSire(v)} />
                   <Tooltip content={<CustomTooltip />} />
                   <Bar dataKey="conceptionRate" name="Conception Rate" radius={[0, 4, 4, 0]} fill="hsl(40, 63%, 49%)" />
                 </BarChart>
@@ -511,7 +512,7 @@ export default function Dashboard() {
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={calfSexRatios}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(218, 42%, 20%)" />
-                <XAxis dataKey="sire" tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 10 }} angle={-30} textAnchor="end" height={60} />
+                <XAxis dataKey="sire" tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 10 }} angle={-30} textAnchor="end" height={60} tickFormatter={(v: string) => anonymizeSire(v)} />
                 <YAxis tick={{ fill: 'hsl(219, 23%, 53%)', fontSize: 11 }} unit="%" />
                 <Tooltip content={<CustomTooltip />} />
                 <Bar dataKey="bullPct" name="Bull %" stackId="sex" fill="hsl(190, 60%, 45%)" radius={[0, 0, 0, 0]} />

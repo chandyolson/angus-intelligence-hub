@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ShimmerSkeleton } from '@/components/ui/shimmer-skeleton';
 import { ErrorBox } from '@/components/ui/error-box';
 import { Trophy, AlertTriangle, TrendingUp } from 'lucide-react';
+import { anonymizeSire } from '@/utils/anonymize';
 import AdvancedSireSection from '@/components/sire-analysis/AdvancedSireSection';
 import SireOverviewTable from '@/components/sire-analysis/SireOverviewTable';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ReferenceArea, ResponsiveContainer, Cell, ScatterChart, Scatter, ZAxis, LabelList, ComposedChart, Line } from 'recharts';
@@ -241,7 +242,7 @@ export default function SireAnalysis() {
                 <Trophy className="h-4 w-4 text-success" />
                 <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Top Performer</span>
               </div>
-              <p className="text-lg font-bold text-foreground">{topPerformer.sire}</p>
+              <p className="text-lg font-bold text-foreground">{anonymizeSire(topPerformer.sire)}</p>
               <p className="text-2xl font-bold" style={{ color: rateColor(topPerformer.rate) }}>{topPerformer.rate}%</p>
             </CardContent>
           </Card>
@@ -253,7 +254,7 @@ export default function SireAnalysis() {
                 <AlertTriangle className="h-4 w-4 text-destructive" />
                 <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Most Used &lt;55%</span>
               </div>
-              <p className="text-lg font-bold text-foreground">{mostUsedBelowAvg.sire}</p>
+              <p className="text-lg font-bold text-foreground">{anonymizeSire(mostUsedBelowAvg.sire)}</p>
               <p className="text-2xl font-bold" style={{ color: rateColor(mostUsedBelowAvg.rate) }}>{mostUsedBelowAvg.rate}%</p>
             </CardContent>
           </Card>
@@ -277,7 +278,7 @@ export default function SireAnalysis() {
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis xAxisId="gest" type="number" domain={['dataMin - 2', 'dataMax + 2']} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} />
                 <XAxis xAxisId="bw" type="number" orientation="top" tick={{ fill: 'hsl(var(--primary))', fontSize: 10 }} tickFormatter={(v: number) => `${v} lbs`} />
-                <YAxis dataKey="name" type="category" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} width={105} />
+                <YAxis dataKey="name" type="category" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} width={105} tickFormatter={(v: string) => anonymizeSire(v)} />
                 <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }}
                   formatter={(value: number, name: string, entry: any) => {
                     if (name === 'avgBW') return [`${value} lbs`, 'Avg Birth Weight'];
@@ -309,7 +310,7 @@ export default function SireAnalysis() {
               <BarChart layout="vertical" data={bwData} margin={{ left: 110, right: 40 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis type="number" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} />
-                <YAxis dataKey="name" type="category" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} width={105} />
+                <YAxis dataKey="name" type="category" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} width={105} tickFormatter={(v: string) => anonymizeSire(v)} />
                 <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }}
                   formatter={(value: number, _: string, entry: any) => [`${value} lbs (n=${entry.payload.count})`, 'Avg BW']} />
                 <ReferenceLine x={herdAvgBW} stroke="hsl(var(--foreground))" strokeDasharray="5 5"
@@ -332,7 +333,7 @@ export default function SireAnalysis() {
           <CardHeader className="pb-2">
             <CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">Gestation vs Birth Weight by Sire</CardTitle>
             <p className="text-[11px] text-muted-foreground mt-1">
-              Dot size = sample size · Quadrants based on herd averages ({scatterData.herdAvgGest}d / {scatterData.herdAvgBW} lbs). Blair operation only.
+              Dot size = sample size · Quadrants based on herd averages ({scatterData.herdAvgGest}d / {scatterData.herdAvgBW} lbs).
             </p>
           </CardHeader>
           <CardContent>
@@ -375,7 +376,7 @@ export default function SireAnalysis() {
                     const d = payload[0].payload;
                     return (
                       <div className="bg-card border border-border rounded-md px-3 py-2 text-xs shadow-lg">
-                        <p className="text-primary font-medium">{d.name}</p>
+                        <p className="text-primary font-medium">{anonymizeSire(d.name)}</p>
                         <p className="text-muted-foreground">Gestation: {d.gestation} days</p>
                         <p className="text-muted-foreground">Avg BW: {d.bw} lbs</p>
                         <p className="text-muted-foreground">Survival: {d.survivalPct != null ? `${d.survivalPct}%` : '—'}</p>

@@ -8,6 +8,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Download, ArrowUpDown } from 'lucide-react';
+import { anonymizeSire } from '@/utils/anonymize';
 
 interface SireOverviewRow {
   sire: string;
@@ -239,7 +240,7 @@ export default function SireOverviewTable({ records }: { records: BreedingCalvin
     <Card className="bg-card border-border">
       <CardHeader className="pb-2">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">Sire Overview — Blair Operation</CardTitle>
+          <CardTitle className="text-[13px] uppercase tracking-[0.1em] text-primary font-medium">Sire Overview</CardTitle>
           <div className="flex items-center gap-2">
             <Input
               placeholder="Search sire…"
@@ -283,7 +284,7 @@ export default function SireOverviewTable({ records }: { records: BreedingCalvin
                   style={{ backgroundColor: i % 2 === 1 ? 'hsl(var(--sidebar-background))' : undefined }}
                   onClick={() => navigate(`/sires/${encodeURIComponent(r.sire)}`)}
                 >
-                  <TableCell className="font-medium text-foreground">{r.sire}</TableCell>
+                  <TableCell className="font-medium text-foreground">{anonymizeSire(r.sire)}</TableCell>
                   <TableCell className="text-muted-foreground">{r.totalUses}</TableCell>
                   <TableCell className="text-muted-foreground">{r.totalCalves || '—'}</TableCell>
 

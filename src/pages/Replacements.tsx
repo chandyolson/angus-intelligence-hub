@@ -10,6 +10,7 @@ import { Baby, Download, Search, ArrowUpDown, ChevronDown } from 'lucide-react';
 import { useAnimals, useBlairCombined } from '@/hooks/useCattleData';
 import { exportToCSV } from '@/lib/calculations';
 import { useNavigate } from 'react-router-dom';
+import { anonymizeSire } from '@/utils/anonymize';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip,
   ResponsiveContainer, Legend, ReferenceLine, LabelList,
@@ -671,7 +672,7 @@ function SireHeiferSection({ records, allAnimals }: { records: any[] | undefined
                 if (name === 'Breedings') return [v, 'Records'];
                 return [v, name];
               }}
-              labelFormatter={(_, payload) => payload?.[0]?.payload?.sire ?? ''}
+              labelFormatter={(_, payload) => anonymizeSire(payload?.[0]?.payload?.sire ?? '')}
             />
             <Scatter data={scatterData} shape="circle">
               {scatterData.map((s, i) => (
@@ -702,7 +703,7 @@ function SireHeiferSection({ records, allAnimals }: { records: any[] | undefined
             <TableBody>
               {comparisonData.map((r: any) => (
                 <TableRow key={r.sire}>
-                  <TableCell className="font-medium">{r.sire}</TableCell>
+                  <TableCell className="font-medium">{anonymizeSire(r.sire)}</TableCell>
                   <TableCell>{r.heiferN}</TableCell>
                   <TableCell>{r.heiferAI}%</TableCell>
                   <TableCell>{r.heiferBW > 0 ? `${r.heiferBW} lbs` : '—'}</TableCell>

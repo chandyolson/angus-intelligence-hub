@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { anonymize } from '@/utils/anonymize';
 import { useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, ShieldAlert, FlaskConical, Beef, TrendingUp,
@@ -115,7 +116,7 @@ export function AppSidebar() {
         {/* Branding */}
         <div className="px-5 py-6 border-b border-border cursor-pointer" onClick={() => navigate('/')}>
           <h1 className="text-lg font-bold text-primary leading-tight drop-shadow-[0_0_8px_hsl(40,63%,49%,0.6)]">AI²</h1>
-          <p className="text-[10px] text-muted-foreground tracking-wide uppercase">Blair Bros Angus</p>
+          <p className="text-[10px] text-muted-foreground tracking-wide uppercase">{anonymize("Blair Bros Angus")}</p>
         </div>
 
         {/* Navigation */}

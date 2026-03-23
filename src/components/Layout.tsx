@@ -1,12 +1,13 @@
 import { AppSidebar } from '@/components/AppSidebar';
 import { useOperation, OperationFilter } from '@/hooks/useOperationContext';
 import { AlertTriangle } from 'lucide-react';
+import { anonymize, anonymizeOperation } from '@/utils/anonymize';
 
 function OperationSelector() {
   const { operation, setOperation } = useOperation();
   const options: { value: OperationFilter; label: string }[] = [
-    { value: 'Blair', label: 'Blair' },
-    { value: 'Snyder', label: 'Snyder' },
+    { value: 'Blair', label: anonymizeOperation('Blair') },
+    { value: 'Snyder', label: anonymizeOperation('Snyder') },
     { value: 'Both', label: 'Both' },
   ];
 
@@ -35,7 +36,7 @@ function OperationSelector() {
         ))}
       </div>
       <span className={`text-[10px] font-semibold px-2 py-0.5 rounded border ${colorTag[operation]}`}>
-        {operation === 'Both' ? 'ALL OPS' : operation.toUpperCase()}
+        {operation === 'Both' ? 'ALL OPS' : anonymizeOperation(operation).toUpperCase()}
       </span>
     </div>
   );
@@ -57,7 +58,7 @@ function OperationWarningBanner() {
 function Footer() {
   return (
     <footer className="bg-sidebar border-t border-border px-6 py-2 flex items-center justify-between">
-      <span className="text-[10px] text-muted-foreground tracking-wide">BLAIR BROS ANGUS · AI² ANALYTICS PLATFORM</span>
+      <span className="text-[10px] text-muted-foreground tracking-wide">{anonymize("BLAIR BROS ANGUS")} · AI² ANALYTICS PLATFORM</span>
       <span className="text-[10px] text-muted-foreground tracking-wide">DATA: SUPABASE · 2017–2025</span>
     </footer>
   );

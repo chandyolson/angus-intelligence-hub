@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { anonymizeSire } from '@/utils/anonymize';
 import { useActiveAnimals, useBreedingCalvingRecords } from '@/hooks/useCattleData';
 import { exportToCSV, computeCompositeFromRecords } from '@/lib/calculations';
 import { CowLookup } from '@/components/rankings/CowLookup';
@@ -299,7 +300,7 @@ export default function Rankings() {
       <TableCell className="text-foreground font-medium">{cow.tag || '—'}</TableCell>
       <TableCell className="text-muted-foreground text-xs">{cow.lifetime_id}</TableCell>
       <TableCell>{cow.year_born || '—'}</TableCell>
-      <TableCell>{cow.sire || '—'}</TableCell>
+      <TableCell>{anonymizeSire(cow.sire) || '—'}</TableCell>
       <TableCell>{cow.total_calves}</TableCell>
       <TableCell>{cow.ai_conception_rate}%</TableCell>
        <TableCell>{cow.total_calves === 0 || cow.calf_survival_rate == null ? '—' : `${cow.calf_survival_rate}%`}</TableCell>

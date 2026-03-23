@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAnimal, useCowBreedingRecords, useBreedingCalvingRecords, useActiveAnimals } from '@/hooks/useCattleData';
+import { anonymizeSire, anonymizeOperation } from '@/utils/anonymize';
 import { BreedingCalvingRecord } from '@/types/cattle';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -156,10 +157,10 @@ export default function CowDetail() {
 
   const chips = [
     { label: 'Year Born', value: animal.year_born },
-    { label: 'Sire', value: animal.sire },
-    { label: 'Dam Sire', value: animal.dam_sire },
+    { label: 'Sire', value: anonymizeSire(animal.sire) },
+    { label: 'Dam Sire', value: anonymizeSire(animal.dam_sire) },
     { label: 'Animal Type', value: animal.animal_type },
-    { label: 'Owner', value: animal.owner },
+    { label: 'Owner', value: anonymizeOperation(animal.owner) },
   ];
 
   const scoreColor = (score: number) => {
@@ -273,7 +274,7 @@ export default function CowDetail() {
                 <TableBody>
                   {sortedCalving.map((r, i) => (
                     <TableRow key={i} className="border-border text-[13px]" style={{ backgroundColor: i % 2 === 1 ? '#0E1528' : undefined }}>
-                      <TableCell>{r.breeding_year ?? '—'}</TableCell><TableCell className="text-xs">{r.ai_date_1 ?? '—'}</TableCell><TableCell>{r.calf_sire || r.ai_sire_1 || '—'}</TableCell>
+                      <TableCell>{r.breeding_year ?? '—'}</TableCell><TableCell className="text-xs">{r.ai_date_1 ?? '—'}</TableCell><TableCell>{anonymizeSire(r.calf_sire || r.ai_sire_1 || '') || '—'}</TableCell>
                       <TableCell className={pregColor(r.preg_stage)}>{r.preg_stage ?? '—'}</TableCell><TableCell className="text-xs">{r.calving_date ?? '—'}</TableCell>
                       <TableCell>{r.calf_sex ?? '—'}</TableCell><TableCell>{r.calf_bw ?? '—'}</TableCell>
                       <TableCell className={calfStatusColor(r.calf_status)}>{r.calf_status ?? '—'}</TableCell><TableCell>{'—'}</TableCell>

@@ -7,6 +7,7 @@ import { Weight, Download } from 'lucide-react';
 import { useBlairCombined, useAnimals } from '@/hooks/useCattleData';
 import { exportToCSV } from '@/lib/calculations';
 import { useNavigate } from 'react-router-dom';
+import { anonymizeSire } from '@/utils/anonymize';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip,
   ResponsiveContainer, Cell, LabelList, LineChart, Line, ReferenceLine,
@@ -132,7 +133,7 @@ export default function BirthWeight() {
           <Card className="border-red-500/30 bg-red-500/5">
             <CardContent className="p-4">
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Heaviest AI Sire</p>
-              <p className="text-lg font-bold text-foreground truncate">{heaviestAI.sire}</p>
+              <p className="text-lg font-bold text-foreground truncate">{anonymizeSire(heaviestAI.sire)}</p>
               <p className="text-sm text-red-400 font-semibold">{heaviestAI.avg} lbs <span className="text-muted-foreground font-normal">· n={heaviestAI.n}</span></p>
             </CardContent>
           </Card>
@@ -141,7 +142,7 @@ export default function BirthWeight() {
           <Card className="border-emerald-500/30 bg-emerald-500/5">
             <CardContent className="p-4">
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Lightest AI Sire</p>
-              <p className="text-lg font-bold text-foreground truncate">{lightestAI.sire}</p>
+              <p className="text-lg font-bold text-foreground truncate">{anonymizeSire(lightestAI.sire)}</p>
               <p className="text-sm text-emerald-400 font-semibold">{lightestAI.avg} lbs <span className="text-muted-foreground font-normal">· n={lightestAI.n}</span></p>
             </CardContent>
           </Card>
@@ -150,7 +151,7 @@ export default function BirthWeight() {
           <Card className="border-red-500/30 bg-red-500/5">
             <CardContent className="p-4">
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Heaviest Cow Sire</p>
-              <p className="text-lg font-bold text-foreground truncate">{heaviestCow.sire}</p>
+              <p className="text-lg font-bold text-foreground truncate">{anonymizeSire(heaviestCow.sire)}</p>
               <p className="text-sm text-red-400 font-semibold">{heaviestCow.avg} lbs <span className="text-muted-foreground font-normal">· n={heaviestCow.n}</span></p>
             </CardContent>
           </Card>
@@ -159,7 +160,7 @@ export default function BirthWeight() {
           <Card className="border-emerald-500/30 bg-emerald-500/5">
             <CardContent className="p-4">
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Lightest Cow Sire</p>
-              <p className="text-lg font-bold text-foreground truncate">{lightestCow.sire}</p>
+              <p className="text-lg font-bold text-foreground truncate">{anonymizeSire(lightestCow.sire)}</p>
               <p className="text-sm text-emerald-400 font-semibold">{lightestCow.avg} lbs <span className="text-muted-foreground font-normal">· n={lightestCow.n}</span></p>
             </CardContent>
           </Card>
@@ -216,7 +217,7 @@ function SireBarChart({ title, data, herdAvg }: { title: string; data: { sire: s
           <BarChart layout="vertical" data={data} margin={{ top: 5, right: 50, left: 10, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis type="number" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} label={{ value: 'Avg BW (lbs)', position: 'insideBottom', offset: -2, fill: 'hsl(var(--muted-foreground))' }} />
-            <YAxis dataKey="sire" type="category" width={130} tick={{ fill: 'hsl(var(--foreground))', fontSize: 11 }} />
+            <YAxis dataKey="sire" type="category" width={130} tick={{ fill: 'hsl(var(--foreground))', fontSize: 11 }} tickFormatter={(v: string) => anonymizeSire(v)} />
             <RTooltip
               contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8 }}
               formatter={(v: any) => [`${v} lbs`, 'Avg BW']}
@@ -281,8 +282,8 @@ function FlagTable({ rows, colorFn, filename, navigate }: {
                 >
                   <TableCell className="font-medium">{r.tag || '—'}</TableCell>
                   <TableCell className="font-mono text-xs">{r.lifetime_id}</TableCell>
-                  <TableCell>{r.calf_sire || '—'}</TableCell>
-                  <TableCell>{r.ai_sire_1 || '—'}</TableCell>
+                  <TableCell>{anonymizeSire(r.calf_sire) || '—'}</TableCell>
+                  <TableCell>{anonymizeSire(r.ai_sire_1) || '—'}</TableCell>
                   <TableCell>{r.calving_date || '—'}</TableCell>
                   <TableCell className={colorFn(r.bw)}>{r.bw} lbs</TableCell>
                 </TableRow>

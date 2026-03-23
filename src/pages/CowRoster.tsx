@@ -15,6 +15,7 @@ import { ShimmerSkeleton, ShimmerTableRows } from '@/components/ui/shimmer-skele
 import { ErrorBox } from '@/components/ui/error-box';
 import { EmptyState } from '@/components/ui/empty-state';
 import { computeCompositeFromRecords } from '@/lib/calculations';
+import { anonymizeSire, anonymizeOperation } from '@/utils/anonymize';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface CowRow {
@@ -282,7 +283,7 @@ export default function CowRoster() {
                 <Crown className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                 <div>
                   <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Sire with Most Active Dams</p>
-                  <p className="text-lg font-bold text-foreground">{filterOptions.topSire.name}</p>
+                  <p className="text-lg font-bold text-foreground">{anonymizeSire(filterOptions.topSire.name)}</p>
                   <p className="text-sm text-primary font-semibold">{filterOptions.topSire.count} active daughters</p>
                 </div>
               </CardContent>
@@ -337,8 +338,8 @@ export default function CowRoster() {
           <SelectTrigger className="w-[140px] bg-card border-border text-[13px]"><SelectValue placeholder="Operation" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Operations</SelectItem>
-            <SelectItem value="Blair">Blair</SelectItem>
-            <SelectItem value="Snyder">Snyder</SelectItem>
+            <SelectItem value="Blair">{anonymizeOperation("Blair")}</SelectItem>
+            <SelectItem value="Snyder">{anonymizeOperation("Snyder")}</SelectItem>
           </SelectContent>
         </Select>
         <Select value={statusFilter} onValueChange={v => { setStatusFilter(v); setPage(0); }}>
@@ -412,8 +413,8 @@ export default function CowRoster() {
                       <TableCell className="font-medium text-foreground">{cow.tag || '—'}</TableCell>
                       <TableCell className="text-muted-foreground text-xs">{cow.lifetime_id}</TableCell>
                       <TableCell>{cow.year_born || '—'}</TableCell>
-                      <TableCell>{cow.sire || '—'}</TableCell>
-                      <TableCell>{cow.dam_sire || '—'}</TableCell>
+                      <TableCell>{anonymizeSire(cow.sire) || '—'}</TableCell>
+                      <TableCell>{anonymizeSire(cow.dam_sire) || '—'}</TableCell>
                       <TableCell>{cow.total_calves}</TableCell>
                       <TableCell>{cow.avg_bw || '—'}</TableCell>
                       <TableCell>{cow.ai_conception_rate}%</TableCell>

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { Send, Trash2, Bot } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
+import { anonymize } from '@/utils/anonymize';
 import { buildContext } from '@/lib/buildContext';
 import { ChatMessage } from '@/components/ai-assistant/ChatMessage';
 
@@ -9,7 +10,7 @@ type Msg = { role: 'user' | 'assistant'; content: string; timestamp: Date };
 
 const WELCOME_MSG: Msg = {
   role: 'assistant',
-  content: "Hello! I'm your Blair Herd Assistant powered by Claude. I have access to your full herd data — calving records, sire performance, pregnancy check results, and cow rankings. Ask me anything about your operation and I'll analyze the data and give you a straight answer.",
+  content: anonymize("Hello! I'm your Blair Herd Assistant powered by Claude. I have access to your full herd data — calving records, sire performance, pregnancy check results, and cow rankings. Ask me anything about your operation and I'll analyze the data and give you a straight answer."),
   timestamp: new Date(),
 };
 
@@ -80,7 +81,7 @@ export default function AIAssistant() {
 
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: data.answer || 'No response received.',
+        content: anonymize(data.answer || 'No response received.'),
         timestamp: new Date(),
       }]);
     } catch (e) {
@@ -112,7 +113,7 @@ export default function AIAssistant() {
             <CardContent className="p-4 flex items-start gap-3">
               <Bot className="h-5 w-5 text-primary shrink-0 mt-0.5" />
               <div>
-                <h2 className="text-base font-semibold text-foreground">Blair Herd Assistant</h2>
+                <h2 className="text-base font-semibold text-foreground">{anonymize("Blair Herd Assistant")}</h2>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   Ask anything about your herd — cows, sires, trends, culling candidates, or comparisons.
                 </p>

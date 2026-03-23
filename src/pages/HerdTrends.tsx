@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useAnimals, useBreedingCalvingRecords } from '@/hooks/useCattleData';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertTriangle } from 'lucide-react';
+import { anonymizeSire } from '@/utils/anonymize';
 import { ShimmerSkeleton } from '@/components/ui/shimmer-skeleton';
 import { ErrorBox } from '@/components/ui/error-box';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LabelList, Line, ComposedChart, Legend, LineChart } from 'recharts';
@@ -167,7 +168,7 @@ export default function HerdTrends() {
               Active Herd by Sire
             </CardTitle>
             <p className="text-[11px] text-muted-foreground mt-1">
-              Genetic makeup of active Blair cows by sire. Minimum 5 active cows per sire; smaller groups combined into "Other." Diamond markers show average productive life (years) per sire group.
+              Genetic makeup of active cows by sire. Minimum 5 active cows per sire; smaller groups combined into "Other." Diamond markers show average productive life (years) per sire group.
             </p>
           </CardHeader>
           <CardContent>
@@ -175,7 +176,7 @@ export default function HerdTrends() {
               <ComposedChart layout="vertical" data={damSireData} margin={{ left: 110, right: 60 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis type="number" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} />
-                <YAxis dataKey="name" type="category" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} width={105} />
+                <YAxis dataKey="name" type="category" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} width={105} tickFormatter={(v: string) => anonymizeSire(v)} />
                 <Tooltip
                   contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }}
                   formatter={(value: number, name: string) => [name === 'avgAge' ? `${value} yrs` : `${value} cows`, name === 'avgAge' ? 'Avg Productive Life' : 'Count']}
