@@ -133,7 +133,7 @@ export default function BirthWeight() {
           <Card className="border-red-500/30 bg-red-500/5">
             <CardContent className="p-4">
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Heaviest AI Sire</p>
-              <p className="text-lg font-bold text-foreground truncate">{heaviestAI.sire}</p>
+              <p className="text-lg font-bold text-foreground truncate">{anonymizeSire(heaviestAI.sire)}</p>
               <p className="text-sm text-red-400 font-semibold">{heaviestAI.avg} lbs <span className="text-muted-foreground font-normal">· n={heaviestAI.n}</span></p>
             </CardContent>
           </Card>
