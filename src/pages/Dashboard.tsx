@@ -443,7 +443,7 @@ export default function Dashboard() {
             {loading ? <ShimmerSkeleton className="h-64" /> : selectedGestationSire ? (
               <div className="space-y-2">
                 <p className="text-xs text-muted-foreground mb-3">
-                  Records for <span className="text-primary font-medium">{selectedGestationSire}</span>
+                  Records for <span className="text-primary font-medium">{anonymizeSire(selectedGestationSire)}</span>
                 </p>
                 <div className="overflow-x-auto max-h-[300px] overflow-y-auto">
                   <table className="w-full text-xs border-collapse">

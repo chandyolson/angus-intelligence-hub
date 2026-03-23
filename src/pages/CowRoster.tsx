@@ -283,7 +283,7 @@ export default function CowRoster() {
                 <Crown className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                 <div>
                   <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Sire with Most Active Dams</p>
-                  <p className="text-lg font-bold text-foreground">{filterOptions.topSire.name}</p>
+                  <p className="text-lg font-bold text-foreground">{anonymizeSire(filterOptions.topSire.name)}</p>
                   <p className="text-sm text-primary font-semibold">{filterOptions.topSire.count} active daughters</p>
                 </div>
               </CardContent>

@@ -300,7 +300,7 @@ export default function Rankings() {
       <TableCell className="text-foreground font-medium">{cow.tag || '—'}</TableCell>
       <TableCell className="text-muted-foreground text-xs">{cow.lifetime_id}</TableCell>
       <TableCell>{cow.year_born || '—'}</TableCell>
-      <TableCell>{cow.sire || '—'}</TableCell>
+      <TableCell>{anonymizeSire(cow.sire) || '—'}</TableCell>
       <TableCell>{cow.total_calves}</TableCell>
       <TableCell>{cow.ai_conception_rate}%</TableCell>
        <TableCell>{cow.total_calves === 0 || cow.calf_survival_rate == null ? '—' : `${cow.calf_survival_rate}%`}</TableCell>
