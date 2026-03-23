@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useAnimals, useBreedingCalvingRecords } from '@/hooks/useCattleData';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertTriangle } from 'lucide-react';
+import { anonymizeSire } from '@/utils/anonymize';
 import { ShimmerSkeleton } from '@/components/ui/shimmer-skeleton';
 import { ErrorBox } from '@/components/ui/error-box';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LabelList, Line, ComposedChart, Legend, LineChart } from 'recharts';
