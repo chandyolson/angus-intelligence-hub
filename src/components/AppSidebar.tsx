@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { anonymize } from '@/utils/anonymize';
 import { useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, ShieldAlert, FlaskConical, Beef, TrendingUp,
