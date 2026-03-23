@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { anonymizeSire } from '@/utils/anonymize';
 import { useBlairCombined } from '@/hooks/useCattleData';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
