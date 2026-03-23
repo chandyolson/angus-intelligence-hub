@@ -338,8 +338,8 @@ export default function CowRoster() {
           <SelectTrigger className="w-[140px] bg-card border-border text-[13px]"><SelectValue placeholder="Operation" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Operations</SelectItem>
-            <SelectItem value="Blair">Blair</SelectItem>
-            <SelectItem value="Snyder">Snyder</SelectItem>
+            <SelectItem value="Blair">{anonymizeOperation("Blair")}</SelectItem>
+            <SelectItem value="Snyder">{anonymizeOperation("Snyder")}</SelectItem>
           </SelectContent>
         </Select>
         <Select value={statusFilter} onValueChange={v => { setStatusFilter(v); setPage(0); }}>
