@@ -168,7 +168,7 @@ export default function HerdTrends() {
               Active Herd by Sire
             </CardTitle>
             <p className="text-[11px] text-muted-foreground mt-1">
-              Genetic makeup of active Blair cows by sire. Minimum 5 active cows per sire; smaller groups combined into "Other." Diamond markers show average productive life (years) per sire group.
+              Genetic makeup of active cows by sire. Minimum 5 active cows per sire; smaller groups combined into "Other." Diamond markers show average productive life (years) per sire group.
             </p>
           </CardHeader>
           <CardContent>
