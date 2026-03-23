@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { anonymize } from '@/utils/anonymize';
 import { useNavigate } from 'react-router-dom';
 import { useAnimals, useBlairCombined } from '@/hooks/useCattleData';
 import { computeCowStats, computeCalvingIntervals, computeCompositeFromRecords } from '@/lib/calculations';
