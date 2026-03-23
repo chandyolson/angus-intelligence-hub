@@ -278,7 +278,7 @@ export default function SireAnalysis() {
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis xAxisId="gest" type="number" domain={['dataMin - 2', 'dataMax + 2']} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} />
                 <XAxis xAxisId="bw" type="number" orientation="top" tick={{ fill: 'hsl(var(--primary))', fontSize: 10 }} tickFormatter={(v: number) => `${v} lbs`} />
-                <YAxis dataKey="name" type="category" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} width={105} />
+                <YAxis dataKey="name" type="category" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} width={105} tickFormatter={(v: string) => anonymizeSire(v)} />
                 <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }}
                   formatter={(value: number, name: string, entry: any) => {
                     if (name === 'avgBW') return [`${value} lbs`, 'Avg Birth Weight'];
