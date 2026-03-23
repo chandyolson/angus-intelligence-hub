@@ -36,7 +36,7 @@ function OperationSelector() {
         ))}
       </div>
       <span className={`text-[10px] font-semibold px-2 py-0.5 rounded border ${colorTag[operation]}`}>
-        {operation === 'Both' ? 'ALL OPS' : operation.toUpperCase()}
+        {operation === 'Both' ? 'ALL OPS' : anonymizeOperation(operation).toUpperCase()}
       </span>
     </div>
   );
