@@ -9,6 +9,7 @@ import {
   LineChart, Line, ReferenceLine, ResponsiveContainer, Cell, PieChart, Pie, Legend,
 } from 'recharts';
 import { AlertTriangle, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { anonymizeSire } from '@/utils/anonymize';
 import { useNavigate } from 'react-router-dom';
 import { ShimmerSkeleton, ShimmerCard } from '@/components/ui/shimmer-skeleton';
 import { ErrorBox } from '@/components/ui/error-box';
