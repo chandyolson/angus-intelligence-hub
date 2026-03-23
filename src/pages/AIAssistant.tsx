@@ -10,7 +10,7 @@ type Msg = { role: 'user' | 'assistant'; content: string; timestamp: Date };
 
 const WELCOME_MSG: Msg = {
   role: 'assistant',
-  content: "Hello! I'm your Blair Herd Assistant powered by Claude. I have access to your full herd data — calving records, sire performance, pregnancy check results, and cow rankings. Ask me anything about your operation and I'll analyze the data and give you a straight answer.",
+  content: anonymize("Hello! I'm your Blair Herd Assistant powered by Claude. I have access to your full herd data — calving records, sire performance, pregnancy check results, and cow rankings. Ask me anything about your operation and I'll analyze the data and give you a straight answer."),
   timestamp: new Date(),
 };
 
