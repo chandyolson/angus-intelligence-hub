@@ -313,7 +313,7 @@ export default function Dashboard() {
         // Top AI sire
         if (sireConception.length > 0) {
           const top = sireConception[0];
-          insights.push({ icon: <TrendingUp className="h-4 w-4" />, text: `Top AI sire: ${top.sire} at ${top.conceptionRate}% (n=${top.count})`, color: 'text-success' });
+          insights.push({ icon: <TrendingUp className="h-4 w-4" />, text: `Top AI sire: ${anonymizeSire(top.sire)} at ${top.conceptionRate}% (n=${top.count})`, color: 'text-success' });
         }
 
         // Open rate flag
