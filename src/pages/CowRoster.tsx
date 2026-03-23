@@ -15,6 +15,7 @@ import { ShimmerSkeleton, ShimmerTableRows } from '@/components/ui/shimmer-skele
 import { ErrorBox } from '@/components/ui/error-box';
 import { EmptyState } from '@/components/ui/empty-state';
 import { computeCompositeFromRecords } from '@/lib/calculations';
+import { anonymizeSire, anonymizeOperation } from '@/utils/anonymize';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface CowRow {
