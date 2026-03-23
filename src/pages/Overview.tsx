@@ -168,7 +168,7 @@ export default function Overview() {
       {/* Header */}
       <div className="-mx-6 -mt-6 px-6 pt-6 pb-4 mb-2" style={{ background: 'linear-gradient(180deg, hsl(224, 52%, 14%) 0%, hsl(224, 48%, 11%) 100%)' }}>
         <h1 className="text-[20px] font-semibold text-foreground">Herd Overview</h1>
-        <p className="text-sm text-muted-foreground mt-1">Blair Bros Angus — live analytics from Supabase</p>
+        <p className="text-sm text-muted-foreground mt-1">{anonymize("Blair Bros Angus")} — live analytics from Supabase</p>
       </div>
 
       {loading ? (

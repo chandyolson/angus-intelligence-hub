@@ -58,7 +58,7 @@ function OperationWarningBanner() {
 function Footer() {
   return (
     <footer className="bg-sidebar border-t border-border px-6 py-2 flex items-center justify-between">
-      <span className="text-[10px] text-muted-foreground tracking-wide">BLAIR BROS ANGUS · AI² ANALYTICS PLATFORM</span>
+      <span className="text-[10px] text-muted-foreground tracking-wide">{anonymize("BLAIR BROS ANGUS")} · AI² ANALYTICS PLATFORM</span>
       <span className="text-[10px] text-muted-foreground tracking-wide">DATA: SUPABASE · 2017–2025</span>
     </footer>
   );
